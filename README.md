@@ -1,0 +1,2 @@
+# PKL-PT-PALAWI-RISORSIS
+palawi
