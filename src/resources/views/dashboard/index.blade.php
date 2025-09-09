@@ -1,6 +1,8 @@
 @extends('layouts.dashboard')
 
-@section('title', 'eCommerce Dashboard')
+@section('title', 'Dashboard')
+
+@vite(['resources/css/tailwind.css', 'resources/js/app.js'])
 
 @section('content')
   <div class="p-4 mx-auto max-w-screen-2xl md:p-6 2xl:p-10">
