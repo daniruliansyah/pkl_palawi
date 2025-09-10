@@ -27,7 +27,7 @@
     <!-- ===== Page Wrapper Start ===== -->
     <div class="flex h-screen overflow-hidden">
       <!-- ===== Sidebar Start ===== -->
-       @include('partials.sidebar')
+       @include('partials.sidebar-admin')
       <!-- ===== Sidebar End ===== -->
 
       <!-- ===== Content Area Start ===== -->
