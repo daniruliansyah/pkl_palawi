@@ -8,19 +8,25 @@
     class="flex items-center gap-2 pt-8 sidebar-header pb-7"
   >
     <a href="index.html">
-      <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
-        <img class="dark:hidden" src="./images/logo/logo.svg" alt="Logo" />
-        <img
-          class="hidden dark:block"
-          src="./images/logo/logo-dark.svg"
-          alt="Logo"
-        />
-      </span>
+  <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
+    <img
+      class="dark:hidden w-20 h-auto"
+      src="./images/logo/logo.png"
+      alt="Logo"
+    />
+    <img
+      class="hidden dark:block w-20 h-auto"
+      src="./images/logo/logo-dark.png"
+      alt="Logo"
+    />
+  </span>
+</a>
+
 
       <img
         class="logo-icon"
         :class="sidebarToggle ? 'lg:block' : 'hidden'"
-        src="./images/logo/logo-icon.svg"
+        src="./images/logo/logo-icon.png"
         alt="Logo"
       />
     </a>

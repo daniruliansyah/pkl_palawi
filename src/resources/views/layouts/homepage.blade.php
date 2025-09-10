@@ -14,7 +14,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
   <body
-    x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false, isProfileInfoModal: false }"
     x-init="
          darkMode = JSON.parse(localStorage.getItem('darkMode'));
          $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
@@ -28,6 +28,8 @@
     <div class="flex h-screen overflow-hidden">
       <!-- ===== Sidebar Start ===== -->
        @include('partials.sidebar')
+
+
       <!-- ===== Sidebar End ===== -->
 
       <!-- ===== Content Area Start ===== -->
@@ -50,7 +52,7 @@
                 <!-- Metric Group One -->
 
                 <!-- ====== Chart One Start -->
-                @include('partials.chart.chart-01')
+                {{-- @include('partials.chart.chart-01') --}}
                 <!-- ====== Chart One End -->
               </div>
             </div>
@@ -61,5 +63,8 @@
       <!-- ===== Content Area End ===== -->
     </div>
     <!-- ===== Page Wrapper End ===== -->
+
+<!-- Include modal profile -->
+@include('partials.profile.profile-address-modal')
   </body>
 </html>
