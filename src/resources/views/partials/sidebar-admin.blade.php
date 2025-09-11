@@ -40,7 +40,7 @@
          <!-- Menu Item Karyawan -->
 <li>
   <a
-    href="{{ route('karyawan') }}"
+     href="{{ route('karyawan.index') }}"
     class="menu-item group"
     :class="(selected === 'Karyawan') && (page === 'karyawan') ? 'menu-item-active' : 'menu-item-inactive'"
   >

@@ -1,12 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-// use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return view('pages.index');
 });
 
-
-// Route::get('/karyawan', [KaryawanController::class, 'index'])->name('pages.karyawan.read');');
+Route::resource('karyawan', UserController::class);
 
