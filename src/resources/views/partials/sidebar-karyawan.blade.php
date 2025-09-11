@@ -60,7 +60,7 @@
           </li>
           <!-- end User Profile -->
 
-<!-- Menu Item Calendar -->
+<!-- Menu Item karyawan -->
           <li>
             <a
               href="calendar.html"
@@ -92,8 +92,8 @@
               </span>
             </a>
           </li>
-          <!-- Menu Item Calendar -->
-          
+          <!-- Menu Item karyawan -->
+
           <!-- PENGAJUAN_IZIN -->
           <li>
             <a
