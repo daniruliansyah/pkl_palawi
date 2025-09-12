@@ -6,9 +6,8 @@
 <div class="p-6 mx-auto max-w-screen-lg">
     <h1 class="text-2xl font-bold mb-6">Tambah Karyawan</h1>
 
-    {{-- Blok untuk menampilkan error validasi --}}
     @if ($errors->any())
-        <div class="p-4 mb-6 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
+        <div class="p-4 mb-6 text-sm text-red-800 bg-red-100 rounded-lg" role="alert">
             <span class="font-medium">Oops! Terjadi kesalahan:</span>
             <ul class="mt-1.5 ml-4 list-disc list-inside">
                 @foreach ($errors->all() as $error)
@@ -18,35 +17,27 @@
         </div>
     @endif
 
-    {{-- ======================================================= --}}
-    {{-- ▼▼▼ PENTING: Tambahkan enctype untuk upload file ▼▼▼ --}}
-    {{-- ======================================================= --}}
     <form action="{{ route('karyawan.store') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @csrf
 
-                {{-- Foto Karyawan (Bisa menampilkan foto lama & preview foto baru) --}}
-        <div class="md:col-span-2" 
-            x-data="{photoName: null, photoPreview: null}">
-            
+        {{-- Foto --}}
+        <div class="md:col-span-2" x-data="{ photoPreview: '{{ asset('images/default.png') }}' }">
             <label for="foto" class="mb-2 block text-sm font-medium">Foto Karyawan</label>
 
-            <div x-show="photoPreview" class="mt-2 mb-4">
+            <div class="mt-2 mb-4">
                 <span class="block w-32 h-32 rounded-full"
-                    :style="'background-size: cover; background-repeat: no-repeat; background-position: center center; background-image: url(\'' + photoPreview + '\');'">
+                      :style="'background-size: cover; background-repeat: no-repeat; background-position: center center; background-image: url(' + photoPreview + ');'">
                 </span>
             </div>
 
-            <input type="file" name="foto" id="foto" class="block w-full text-sm text-gray-900 border border-stroke rounded-lg cursor-pointer bg-transparent focus:outline-none file:mr-4 file:py-3 file:px-5 file:rounded-l-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+            <input type="file" name="foto" id="foto"
+                class="block w-full text-sm text-gray-900 border border-stroke rounded-lg cursor-pointer"
                 @change="
-                    photoName = $event.target.files[0].name;
                     const reader = new FileReader();
-                    reader.onload = (e) => {
-                        photoPreview = e.target.result;
-                    };
+                    reader.onload = (e) => { photoPreview = e.target.result; };
                     reader.readAsDataURL($event.target.files[0]);
                 ">
             <p class="mt-1 text-xs text-gray-500">PNG, JPG atau WEBP (MAX. 2MB).</p>
-            <p class="mt-1 text-xs text-gray-500">Kosongkan jika tidak ingin mengubah foto.</p>
         </div>
 
 
@@ -208,7 +199,6 @@
                    value="{{ old('jatah_cuti', 12) }}" required>
         </div>
 
-
         {{-- Tombol --}}
         <div class="md:col-span-2 flex justify-end gap-4 mt-6">
             <a href="{{ route('karyawan.index') }}" class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm text-gray-700 hover:bg-gray-50">Batal</a>
@@ -217,5 +207,6 @@
             </button>
         </div>
     </form>
+    {{-- Form End --}}
 </div>
 @endsection
