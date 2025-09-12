@@ -22,53 +22,29 @@ class UserController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nama_lengkap' => 'required|string|max:100',
-            'nik' => 'required|string|max:20|unique:users',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-        ]);
+{
+    $request->validate([
+        'nama_lengkap' => 'required|string|max:100',
+        'nik' => 'required|string|max:20|unique:users',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|min:6',
+        'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
 
-        User::create([
-            'nama_lengkap' => $request->nama_lengkap,
-            'nip' => $request->nip,
-            'nik' => $request->nik,
-            'no_telp' => $request->no_telp,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'jenis_kelamin' => $request->jenis_kelamin,
-            'alamat' => $request->alamat,
-            'tgl_lahir' => $request->tgl_lahir,
-            'tempat_lahir' => $request->tempat_lahir,
-            'agama' => $request->agama,
-            'foto'=> $request->foto,
-            'status_perkawinan' => $request->status_perkawinan,
-            'area_bekerja' => $request->area_bekerja,
-            'status_aktif' => $request->status_aktif,
-            'npk_baru' => $request->npk_baru,
-            'npwp' => $request->npwp,
-            'join_date' => $request->join_date,
-            'jatah_cuti' => $request->jatah_cuti ?? 12,
-        ]);
+    $data = $request->all();
 
-            // 2. Siapkan data dari request untuk disimpan
-        $data = $request->except(['_token', 'foto']); // Ambil semua kecuali token & foto
+    // password otomatis di-hash karena casts di model
+    // jadi nggak perlu bcrypt()
 
-        // 3. Hapus bcrypt() jika model sudah menggunakan 'hashed' cast
-        // Jika tidak, biarkan baris ini: $data['password'] = bcrypt($request->password);
-        
-        // 4. Proses file foto JIKA ada yang diunggah
-        if ($request->hasFile('foto')) {
-            // Simpan file ke storage/app/public/images dan dapatkan path-nya
-            $path = $request->file('foto')->store('images', 'public');
-            // Masukkan path foto ke dalam array data
-            $data['foto'] = $path;
-        }
-
-        
-        return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil ditambahkan');
+    if ($request->hasFile('foto')) {
+        $path = $request->file('foto')->store('images', 'public');
+        $data['foto'] = $path; // simpan path relatif "images/namafile.jpg"
     }
+
+    User::create($data);
+
+    return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil ditambahkan');
+}
 
 
     public function edit($id)
