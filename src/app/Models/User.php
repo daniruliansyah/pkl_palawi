@@ -29,6 +29,7 @@ class User extends Authenticatable
         'tgl_lahir',
         'tempat_lahir',
         'agama',
+        'foto',
         'status_perkawinan',
         'area_bekerja',
         'status_aktif',

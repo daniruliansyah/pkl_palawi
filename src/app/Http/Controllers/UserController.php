@@ -42,6 +42,7 @@ class UserController extends Controller
             'tgl_lahir' => $request->tgl_lahir,
             'tempat_lahir' => $request->tempat_lahir,
             'agama' => $request->agama,
+            'foto'=> $request->foto,
             'status_perkawinan' => $request->status_perkawinan,
             'area_bekerja' => $request->area_bekerja,
             'status_aktif' => $request->status_aktif,
@@ -51,6 +52,21 @@ class UserController extends Controller
             'jatah_cuti' => $request->jatah_cuti ?? 12,
         ]);
 
+            // 2. Siapkan data dari request untuk disimpan
+        $data = $request->except(['_token', 'foto']); // Ambil semua kecuali token & foto
+
+        // 3. Hapus bcrypt() jika model sudah menggunakan 'hashed' cast
+        // Jika tidak, biarkan baris ini: $data['password'] = bcrypt($request->password);
+        
+        // 4. Proses file foto JIKA ada yang diunggah
+        if ($request->hasFile('foto')) {
+            // Simpan file ke storage/app/public/images dan dapatkan path-nya
+            $path = $request->file('foto')->store('images', 'public');
+            // Masukkan path foto ke dalam array data
+            $data['foto'] = $path;
+        }
+
+        
         return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil ditambahkan');
     }
 

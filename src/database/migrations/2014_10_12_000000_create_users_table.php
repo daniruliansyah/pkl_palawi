@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('alamat');
             $table->date('tgl_lahir');
             $table->string('tempat_lahir', 30);
+            $table->string('foto')->nullable()->default('public/images/default.jpeg');
             $table->string('agama', 10);
             $table->string('status_perkawinan', 20);
             $table->string('area_bekerja');

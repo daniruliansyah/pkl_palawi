@@ -24,6 +24,7 @@
     <table class="min-w-full text-sm text-left">
       <thead>
         <tr class="border-y border-gray-100 dark:border-gray-800 bg-gray-50">
+          <th class="py-3 px-4">Foto</th>
           <th class="py-3 px-4">Nama</th>
           <th class="py-3 px-4">NIP</th>
           <th class="py-3 px-4">NIK</th>
@@ -32,7 +33,7 @@
           <th class="py-3 px-4">JK</th>
           <th class="py-3 px-4">Alamat</th>
           <th class="py-3 px-4">Tgl Lahir</th>
-          <th class="py-3 px-4">Tmpt Lahir</th>
+          <th class="py-3 px-4">Tempat Lahir</th>
           <th class="py-3 px-4">Agama</th>
           <th class="py-3 px-4">Status Kawin</th>
           <th class="py-3 px-4">Area</th>
@@ -48,6 +49,15 @@
       <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
         @forelse($karyawan as $item)
           <tr>
+            <td class="py-3 px-4">
+                @if ($item->foto)
+                    <img src="{{ asset('storage/' . $item->foto) }}" 
+                        alt="Foto" 
+                        class="h-12 w-12 rounded-full object-cover">
+                @else
+                    <span class="text-gray-400">-</span>
+                @endif
+            </td>
             <td class="py-3 px-4">{{ $item->nama_lengkap }}</td>
             <td class="py-3 px-4">{{ $item->nip ?? '-' }}</td>
             <td class="py-3 px-4">{{ $item->nik }}</td>
