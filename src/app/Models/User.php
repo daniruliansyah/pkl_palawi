@@ -42,4 +42,16 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function jabatans()
+    {
+        return $this->belongsToMany(Jabatan::class, 'riwayat_jabatan', 'nip_user', 'id_jabatan')
+                    ->withPivot('tgl_mulai', 'tgl_selesai') // kalau ada field tambahan di pivot
+                    ->withTimestamps();
+    }
+
+    public function riwayatJabatan()
+    {
+        return $this->hasMany(RiwayatJabatan::class, 'nip_user');
+    }
 }

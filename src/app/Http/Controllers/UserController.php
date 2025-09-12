@@ -106,4 +106,10 @@ class UserController extends Controller
 
         return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil dihapus');
     }
+
+    public function show($id)
+    {
+        $karyawan = User::FindOrFail($id);
+        return view('pages.karyawan.detail', compact('karyawan'));
+    }
 }
