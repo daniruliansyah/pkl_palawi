@@ -2,18 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User; // pake model User bawaan
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
     public function index()
     {
-        // Ambil semua data user
         $karyawan = User::all();
-
-        // lempar ke view
-        return view('pages.karyawan.read', compact('karyawan'));
+        return view('pages.karyawan.read-card', compact('karyawan'));
     }
 
     public function create()
@@ -30,6 +28,12 @@ class UserController extends Controller
             'password' => 'required|min:6',
         ]);
 
+        // Upload foto jika ada
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('images', 'public');
+        }
+
         User::create([
             'nama_lengkap' => $request->nama_lengkap,
             'nip' => $request->nip,
@@ -42,7 +46,7 @@ class UserController extends Controller
             'tgl_lahir' => $request->tgl_lahir,
             'tempat_lahir' => $request->tempat_lahir,
             'agama' => $request->agama,
-            'foto'=> $request->foto,
+            'foto' => $fotoPath, // bisa null, nanti di view pakai default
             'status_perkawinan' => $request->status_perkawinan,
             'area_bekerja' => $request->area_bekerja,
             'status_aktif' => $request->status_aktif,
@@ -52,24 +56,8 @@ class UserController extends Controller
             'jatah_cuti' => $request->jatah_cuti ?? 12,
         ]);
 
-            // 2. Siapkan data dari request untuk disimpan
-        $data = $request->except(['_token', 'foto']); // Ambil semua kecuali token & foto
-
-        // 3. Hapus bcrypt() jika model sudah menggunakan 'hashed' cast
-        // Jika tidak, biarkan baris ini: $data['password'] = bcrypt($request->password);
-        
-        // 4. Proses file foto JIKA ada yang diunggah
-        if ($request->hasFile('foto')) {
-            // Simpan file ke storage/app/public/images dan dapatkan path-nya
-            $path = $request->file('foto')->store('images', 'public');
-            // Masukkan path foto ke dalam array data
-            $data['foto'] = $path;
-        }
-
-        
         return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil ditambahkan');
     }
-
 
     public function edit($id)
     {
@@ -82,11 +70,26 @@ class UserController extends Controller
         $karyawan = User::findOrFail($id);
 
         $request->validate([
-            'name' => 'required',
+            'nama_lengkap' => 'required|string|max:100',
+            'nik' => "required|string|max:20|unique:users,nik,{$id}",
             'email' => "required|email|unique:users,email,{$id}",
         ]);
 
-        $karyawan->update($request->all());
+        $data = $request->all();
+
+        // Upload foto baru jika ada
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('images', 'public');
+
+            // Hapus foto lama kalau bukan default
+            if ($karyawan->foto) {
+                Storage::disk('public')->delete($karyawan->foto);
+            }
+
+            $data['foto'] = $fotoPath;
+        }
+
+        $karyawan->update($data);
 
         return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil diupdate');
     }
@@ -94,6 +97,11 @@ class UserController extends Controller
     public function destroy($id)
     {
         $karyawan = User::findOrFail($id);
+
+        if ($karyawan->foto) {
+            Storage::disk('public')->delete($karyawan->foto);
+        }
+
         $karyawan->delete();
 
         return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil dihapus');
