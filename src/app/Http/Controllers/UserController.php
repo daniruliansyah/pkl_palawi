@@ -34,7 +34,7 @@ class UserController extends Controller
             $fotoPath = $request->file('foto')->store('images', 'public');
         }
 
-        User::create([
+        $karyawan = User::create([
             'nama_lengkap' => $request->nama_lengkap,
             'nip' => $request->nip,
             'nik' => $request->nik,
@@ -54,7 +54,20 @@ class UserController extends Controller
             'npwp' => $request->npwp,
             'join_date' => $request->join_date,
             'jatah_cuti' => $request->jatah_cuti ?? 12,
+
+            
         ]);
+
+        $jabatan_ids = $request->jabatan_id;
+        $mulais = $request->tgl_mulai;
+        $selesais = $request->tgl_selesai;
+
+        foreach ($jabatan_ids as $i => $jabatan_id) {
+            $karyawan->jabatans()->attach($jabatan_id, [
+                'tgl_mulai' => $mulais[$i],
+                'tgl_selesai' => $selesais[$i],
+            ]);
+        }
 
         return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil ditambahkan');
     }
