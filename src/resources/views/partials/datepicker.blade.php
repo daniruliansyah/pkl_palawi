@@ -1,9 +1,13 @@
 <div class="relative">
   <input
-    class="datepicker w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-11 pr-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs focus:outline-hidden focus:ring-0 focus-visible:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
-    placeholder="Select dates"
-    data-class="flatpickr-right"
-  />
+  type="text"
+  name="{{ $name }}"
+  id="{{ $id }}"
+  class="datepicker w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-11 pr-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs focus:outline-hidden focus:ring-0 focus-visible:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+  placeholder="{{ $placeholder ?? 'Select dates' }}"
+  data-class="flatpickr-right"
+/>
+
   <div
     class="absolute inset-0 right-auto flex items-center pointer-events-none left-4"
   >
