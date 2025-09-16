@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder {
         JabatanSeeder::class,
         UserSeeder::class,
         SppdSeeder::class,
+        CutiSeeder::class,
     ]);
   }
 }

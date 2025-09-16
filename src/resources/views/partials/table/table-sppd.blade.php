@@ -34,45 +34,69 @@
       </thead>
 
       <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-        @forelse($sppds as $item)
-          <tr>
-            <td class="py-3 px-4">SPPD - {{ $item->keterangan }}</td>
-            <td class="py-3 px-4">{{ $item->created_at->format('d-m-Y') }}</td>
-            <td class="py-3 px-4">
-              <span class="px-2 py-1 rounded-full text-xs font-medium
-                {{ $item->status_gm === 'Disetujui' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                {{ $item->status_gm ?? 'Menunggu' }}
-              </span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="px-2 py-1 rounded-full text-xs font-medium
-                {{ $item->status_sdm 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-              </span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="px-2 py-1 rounded-full text-xs font-medium
-                {{ $item->status_pengajuan === 'Disetujui' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                {{ $item->status_pengajuan }}
-              </span>
-            </td>
-            <td class="py-3 px-4">
-              @if($item->status_gm === 'Disetujui' || $item->status_sdm === 'Disetujui')
-                <a href="{{ route('sppd.download', $item->id) }}"
-                   class="px-3 py-1 text-xs font-medium rounded bg-blue-500 text-white hover:bg-blue-600">
-                  Download PDF
-                </a>
-              @else
-                <span class="text-gray-400 text-xs">Belum tersedia</span>
-              @endif
-            </td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="text-center py-4 text-gray-500">
-              Belum ada pengajuan SPPD.
-            </td>
-          </tr>
-        @endforelse
+          @forelse($sppds as $item)
+              <tr class="dark:hover:bg-gray-700">
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                      SPPD - {{ $item->keterangan }}
+                  </td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                      {{ $item->created_at->format('d-m-Y') }}
+                  </td>
+                  <td class="px-4 py-3">
+                      <span @class([
+                          'px-2 py-1 font-medium text-xs rounded-full',
+                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' => $item->status_gm == 'Disetujui',
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' => $item->status_gm == 'Ditolak',
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' => $item->status_gm != 'Disetujui' && $item->status_gm != 'Ditolak',
+                      ])>
+                          {{ $item->status_gm }}
+                      </span>
+                  </td>
+                  <td class="px-4 py-3">
+                      <span @class([
+                          'px-2 py-1 font-medium text-xs rounded-full',
+                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' => $item->status_sdm == 'Disetujui',
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' => $item->status_sdm == 'Ditolak',
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' => $item->status_sdm != 'Disetujui' && $item->status_sdm != 'Ditolak',
+                      ])>
+                          {{ $item->status_sdm }}
+                      </span>
+                  </td>
+                  <td class="px-4 py-3 font-medium
+                      @if($item->status_gm === 'Disetujui' && $item->status_sdm === 'Disetujui')
+                          text-green-700 dark:text-green-400
+                      @elseif($item->status_gm === 'Ditolak' || $item->status_sdm === 'Ditolak')
+                          text-red-700 dark:text-red-400
+                      @else
+                          text-gray-500 dark:text-gray-400
+                      @endif">
+                      @if($item->status_gm === 'Disetujui' && $item->status_sdm === 'Disetujui')
+                          Selesai
+                      @elseif($item->status_gm === 'Ditolak' || $item->status_sdm === 'Ditolak')
+                          Ditolak
+                      @else
+                          Dalam Proses
+                      @endif
+                  </td>
+                  <td class="px-4 py-3">
+                      {{-- Tombol Download Surat hanya muncul jika semua setuju --}}
+                      @if($item->status_gm === 'Disetujui' && $item->status_sdm === 'Disetujui')
+                          <a href="{{-- route('sppd.download', $item->id) --}}"
+                            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700">
+                              Download
+                          </a>
+                      @else
+                          <span class="text-xs text-gray-400 dark:text-gray-500">Belum tersedia</span>
+                      @endif
+                  </td>
+              </tr>
+          @empty
+              <tr>
+                  <td colspan="6" class="py-4 text-center text-gray-500 dark:text-gray-400">
+                      Belum ada pengajuan SPPD.
+                  </td>
+              </tr>
+          @endforelse
       </tbody>
     </table>
   </div>

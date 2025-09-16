@@ -24,7 +24,7 @@ return new class extends Migration
             $table->datetime('tgl_persetujuan_gm')->nullable();
             $table->string('status_pengajuan', 100)->default('pending Staff Ahli SDM');
             $table->string('no_surat', 100)->nullable();
-            $table->string('file_izin', 100)->nullable;
+            $table->string('file_izin', 100)->nullable(); // <-- Diperbaiki di sini
             $table->timestamps();
         });
     }
