@@ -9,7 +9,7 @@ class Jabatan extends Model
 {
     use HasFactory;
 
-    protected $table = 'jabatans'; // optional kalau nama tabelnya sesuai konvensi
+    protected $table = 'jabatan'; // optional kalau nama tabelnya sesuai konvensi
     protected $fillable = [
         'nama_jabatan',
         'deskripsi',

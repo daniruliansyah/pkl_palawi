@@ -17,4 +17,14 @@ class RiwayatJabatan extends Model
         'tgl_mulai',
         'tgl_selesai',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'nip_user', 'nip');
+    }
+
+    public function jabatan()
+    {
+        return $this->belongsTo(Jabatan::class, 'id_jabatan', 'id');
+    }
 }

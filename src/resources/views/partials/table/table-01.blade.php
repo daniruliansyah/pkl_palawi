@@ -9,16 +9,15 @@
         Data Karyawan
       </h3>
     </div>
-
-    <div class="flex items-center gap-3">
+  </div>
+  <div class="flex items-center gap-3">
       <a
         href="{{ route('karyawan.create') }}"
-        class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-blue-600 px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-blue-700"
+        class="bg-blue-600 text-white p-2 rounded"
       >
         + Tambah Karyawan
       </a>
     </div>
-  </div>
 
   <div class="w-full overflow-x-auto">
     <table class="min-w-full text-sm text-left">
