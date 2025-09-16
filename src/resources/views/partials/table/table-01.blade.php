@@ -12,7 +12,7 @@
 
     <div class="flex items-center gap-3">
       <a
-        href="{{ route('karyawan.create') }}"
+        href="{{ route('kalender.create') }}"
         class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-blue-600 px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-blue-700"
       >
         + Tambah Karyawan
@@ -51,8 +51,8 @@
           <tr>
             <td class="py-3 px-4">
                 @if ($item->foto)
-                    <img src="{{ asset('storage/' . $item->foto) }}" 
-                        alt="Foto" 
+                    <img src="{{ asset('storage/' . $item->foto) }}"
+                        alt="Foto"
                         class="h-12 w-12 rounded-full object-cover">
                 @else
                     <span class="text-gray-400">-</span>

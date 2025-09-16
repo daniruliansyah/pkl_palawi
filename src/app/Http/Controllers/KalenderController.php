@@ -29,4 +29,6 @@ class KalenderController extends Controller
 
         return redirect()->route('kalender.index')->with('sukses', 'Event berhasil ditambahkan!');
     }
+
+    
 }
