@@ -2,6 +2,7 @@
   class="fixed inset-0 items-center justify-center hidden p-5 overflow-y-auto modal z-99999"
   id="eventModal"
 >
+
   <div
     class="modal-close-btn fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
   ></div>

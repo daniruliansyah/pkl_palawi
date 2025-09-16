@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sppd', function (Blueprint $table) {
-            $table->string('nip_user_gm', 20)->after('tgl_persetujuan_sdm');
+            $table->string('nip_user_gm', 20)->after('status_sdm');
             $table->foreign('nip_user_gm')->references('nip')->on('users');
         });
     }

@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sppd', function (Blueprint $table) {
+         Schema::create('sppd', function (Blueprint $table) {
             $table->id();
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
             $table->string('keterangan');
             $table->string('lokasi_tujuan', 100);
-            $table->datetime('tgl_persetujuan_ssdm')->nullable();
             $table->datetime('tgl_persetujuan_sdm')->nullable();
+            $table->string('status_sdm')->default('menunggu');
             $table->datetime('tgl_persetujuan_gm')->nullable();
-            $table->string('status_pengajuan', 100)->default('pending Staff Ahli SDM');
+            $table->string('status_gm')->default('menunggu');
             $table->string('no_surat', 100)->nullable();
             $table->string('file_sppd', 100)->nullable();
             $table->timestamps();

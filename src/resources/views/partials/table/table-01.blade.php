@@ -11,10 +11,8 @@
     </div>
   </div>
   <div class="flex items-center gap-3">
-      <a
-        href="{{ route('karyawan.create') }}"
-        class="bg-blue-600 text-white p-2 rounded"
-      >
+      <a href="{{ route('karyawan.create') }}"
+        class="bg-blue-600 text-white p-2 rounded">
         + Tambah Karyawan
       </a>
     </div>
@@ -50,8 +48,8 @@
           <tr>
             <td class="py-3 px-4">
                 @if ($item->foto)
-                    <img src="{{ asset('storage/' . $item->foto) }}" 
-                        alt="Foto" 
+                    <img src="{{ asset('storage/' . $item->foto) }}"
+                        alt="Foto"
                         class="h-12 w-12 rounded-full object-cover">
                 @else
                     <span class="text-gray-400">-</span>
