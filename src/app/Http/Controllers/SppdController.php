@@ -10,7 +10,7 @@ class SppdController extends Controller
     public function index()
     {
         $sppds = Sppd::with('user')->latest()->get();
-        return view('sppd.index', compact('sppds'));
+        return view('pages.surat_sppd.index', compact('sppds'));
     }
 
     public function create()
@@ -38,4 +38,11 @@ class SppdController extends Controller
         return redirect()->route('sppd.index')
                          ->with('success', 'Pengajuan SPPD berhasil dibuat.');
     }
+
+    public function show($id)
+{
+    $sppd = Sppd::with('user')->findOrFail($id);
+    return view('sppd.show', compact('sppd'));
+}
+
 }

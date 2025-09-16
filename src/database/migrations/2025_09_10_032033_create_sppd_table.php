@@ -13,22 +13,18 @@ return new class extends Migration
     {
          Schema::create('sppd', function (Blueprint $table) {
             $table->id();
-            $table->string('nip_user', 20); // pengaju
-            $table->foreign('nip_user')->references('nip')->on('users')->onDelete('cascade');
-
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
             $table->string('keterangan');
             $table->string('lokasi_tujuan', 100);
-
-            $table->enum('status_pengajuan', ['pending','approved','rejected'])->default('pending');
+            $table->datetime('tgl_persetujuan_sdm')->nullable();
+            $table->string('status_sdm')->default('menunggu');
+            $table->datetime('tgl_persetujuan_gm')->nullable();
+            $table->string('status_gm')->default('menunggu');
             $table->string('no_surat', 100)->nullable();
             $table->string('file_sppd', 100)->nullable();
-
             $table->timestamps();
         });
-
-
     }
 
     /**
