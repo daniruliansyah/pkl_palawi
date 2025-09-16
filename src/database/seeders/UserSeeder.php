@@ -93,6 +93,27 @@ class UserSeeder extends Seeder
             'join_date' => '2023-01-01',
             'jatah_cuti' => 12,
         ],
+
+         [
+            'nama_lengkap' => 'Nadea Yiyian',
+            'nip' => '434221016',
+            'nik' => '36520182939730002',
+            'email' => 'nadea@example.com',
+            'password' => bcrypt('12345678'),
+            'no_telp'   => '081111111111',
+            'jenis_kelamin' => '1',
+            'alamat' => 'Jl. SSDM',
+            'tgl_lahir' => '1991-01-01',
+            'tempat_lahir' => 'Kota SSDM',
+            'agama' => 'Islam',
+            'status_perkawinan' => 'Kawin',
+            'area_bekerja' => 'SSDM',
+            'status_aktif' => '1',
+            'npk_baru' => 'NPK22334455',
+            'npwp' => '22.333.444.5-678.910',
+            'join_date' => '2021-01-01',
+            'jatah_cuti' => 12,
+        ],
     ];
 
     foreach ($users as $user) {

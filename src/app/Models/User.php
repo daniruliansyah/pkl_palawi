@@ -46,12 +46,18 @@ class User extends Authenticatable
     public function jabatans()
     {
         return $this->belongsToMany(Jabatan::class, 'riwayat_jabatan', 'nip_user', 'id_jabatan')
-                    ->withPivot('tgl_mulai', 'tgl_selesai') // kalau ada field tambahan di pivot
+                    ->withPivot('tgl_mulai', 'tgl_selesai')
                     ->withTimestamps();
     }
 
-    public function riwayatJabatan()
+    public function riwayatJabatans()
     {
-        return $this->hasMany(RiwayatJabatan::class, 'nip_user');
+        return $this->hasMany(RiwayatJabatan::class, 'nip_user', 'nip');
+    }
+
+    public function jabatanTerbaru()
+    {
+        return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
+                    ->latestOfMany('tgl_mulai'); 
     }
 }
