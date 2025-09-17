@@ -40,6 +40,14 @@ Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->nam
 
 Route::resource('karyawan', UserController::class);
 Route::resource('sppd', SppdController::class);
+// route untuk update status oleh GM/SDM
+Route::patch('/sppd/{id}/status', [SppdController::class, 'updateStatus'])->name('sppd.updateStatus');
+// download surat sppd
+Route::get('/sppd/{id}/download', [SppdController::class, 'download'])->name('sppd.download');
+// generate surat sppd
+Route::get('sppd/{id}/generate', [SppdController::class, 'generate'])->name('sppd.generate');
+
+
 Route::resource('cuti', CutiController::class);
 Route::resource('kalender', KalenderController::class);
 
