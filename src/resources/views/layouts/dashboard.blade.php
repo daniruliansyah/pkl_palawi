@@ -6,6 +6,7 @@
       name="viewport"
       content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
     <title>{{ config('app.name', 'Laravel') }} - @yield('title')</title>
@@ -13,6 +14,16 @@
     {{-- Vite untuk Tailwind & JS --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr(".datepicker", {
+            dateFormat: "Y-m-d",
+            allowInput: true,
+        });
+    });
+</script>
+
   <body
     x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
     x-init="
