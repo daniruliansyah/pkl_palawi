@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SppdController;
 use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\CutiController;
+use App\Http\Controllers\SPController;
 
 
 /*
@@ -30,26 +31,31 @@ Route::get('/dashboard', function () {
 
 
 Route::middleware('auth')->group(function () {
+    // Rute Profil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // PINDAHKAN SEMUA RUTE APLIKASI KE SINI
+    Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan');
+    Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
+
+    Route::resource('karyawan', UserController::class);
+    
+    Route::resource('sppd', SppdController::class);
+    Route::patch('/sppd/{id}/status', [SppdController::class, 'updateStatus'])->name('sppd.updateStatus');
+    Route::get('/sppd/{id}/download', [SppdController::class, 'download'])->name('sppd.download');
+    Route::get('sppd/{id}/generate', [SppdController::class, 'generate'])->name('sppd.generate');
+
+    Route::resource('cuti', CutiController::class);
+
+    // PASTIKAN BARIS INI ADA PERSIS SEPERTI INI
+    Route::get('/karyawan/cari', [SPController::class, 'cariKaryawan'])->name('employees.search');
+    
+    Route::resource('sp', SPController::class);
+
+    Route::resource('kalender', KalenderController::class);
 });
-
-Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan'); // <-- Tambahkan nama ini
-Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
-
-Route::resource('karyawan', UserController::class);
-Route::resource('sppd', SppdController::class);
-// route untuk update status oleh GM/SDM
-Route::patch('/sppd/{id}/status', [SppdController::class, 'updateStatus'])->name('sppd.updateStatus');
-// download surat sppd
-Route::get('/sppd/{id}/download', [SppdController::class, 'download'])->name('sppd.download');
-// generate surat sppd
-Route::get('sppd/{id}/generate', [SppdController::class, 'generate'])->name('sppd.generate');
-
-
-Route::resource('cuti', CutiController::class);
-Route::resource('kalender', KalenderController::class);
 
 Route::get('/', function () {
     return redirect()->route('login');
