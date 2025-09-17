@@ -1,22 +1,17 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Daftar Karyawan')
+@section('title', 'Daftar SPPD')
 
 @section('content')
-<div class="p-6 max-w-screen-lg mx-auto">
-    <!-- Container besar dengan judul -->
-    <div class="mb-6 p-6 bg-gray-100 rounded-lg shadow">
-        <h1 class="text-2xl font-bold text-gray-800">Daftar Karyawan</h1>
+<div class="container mx-auto px-4 py-6">
+    {{-- Alert sukses --}}
+    @if(session('success'))
+        <div class="mb-4 rounded-lg bg-green-100 px-4 py-3 text-green-800">
+            {{ session('success') }}
+        </div>
+    @endif
 
-
-    <!-- Grid / List Karyawan (2 card per baris) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        @foreach ($karyawan as $item)
-            @include('partials.profile.card-karyawan', ['karyawan' => $item])
-        @endforeach
-    </div>
-    </div>
-
-
+    {{-- Include partial table --}}
+    @include('partials.table.table-sppd', ['sppds' => $sppds])
 </div>
 @endsection
