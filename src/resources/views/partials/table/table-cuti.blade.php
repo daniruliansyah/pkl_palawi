@@ -59,9 +59,9 @@
                         </td>
                         <td class="px-4 py-3">
                             @if($item->file_izin)
-                                <a href="{{ asset('storage/' . $item->file_izin) }}" target="_blank"
-                                   class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
-                                    Lihat File
+                                <a href="{{ asset('storage/' . $item->file_izin) }}" download
+                                    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
+                                    Download File
                                 </a>
                             @else
                                 <span class="text-xs text-gray-400 dark:text-gray-500">Tidak ada</span>
