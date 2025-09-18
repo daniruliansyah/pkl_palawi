@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Sppd;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class SppdController extends Controller
 {
     public function index()
     {
-        $sppds = Sppd::with('user')->latest()->get();
+        $sppds = Sppd::with(['user.jabatanTerbaru.jabatan'])->get();
         return view('pages.surat_sppd.index', compact('sppds'));
     }
 
@@ -47,70 +48,134 @@ class SppdController extends Controller
         Sppd::create($data);
 
         return redirect()->route('sppd.index')
-            ->with('success', 'Pengajuan SPPD berhasil dibuat, menunggu persetujuan SDM.');
+            ->with('success', 'Pengajuan SPPD berhasil dibuat, menunggu persetujuan.');
     }
 
-    public function show($id)
+    public function updateStatus(Request $request, Sppd $sppd)
     {
-        $sppd = Sppd::with('user')->findOrFail($id);
-        return view('sppd.show', compact('sppd'));
-    }
+        $user = auth()->user();
+        $userJabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
 
-    public function updateStatus(Request $request, $id)
-    {
-        $sppd = Sppd::findOrFail($id);
+        $statusField = ($userJabatan == 'General Manager') ? 'status_gm' : 'status_sdm';
+        $sppd->{$statusField} = $request->input('status');
 
-        $request->validate([
-            'status' => 'required|in:disetujui,ditolak',
-            'role'   => 'required|in:gm,sdm',
-        ]);
-
-        if ($request->role === 'sdm') {
-            $sppd->status_sdm   = $request->status;
-            $sppd->nip_user_sdm = auth()->user()->nip;
-        } elseif ($request->role === 'gm') {
-            if ($sppd->status_sdm !== 'disetujui') {
-                return redirect()->back()->with('error', 'Surat harus disetujui SDM terlebih dahulu.');
+        if ($request->input('status') == 'Disetujui') {
+            if ($userJabatan == 'General Manager') {
+                $sppd->nip_user_gm = $user->nip;
+                $sppd->tgl_persetujuan_gm = now();
+            } elseif ($userJabatan == 'Senior Analis Keuangan, SDM & Umum') {
+                $sppd->nip_user_sdm = $user->nip;
+                $sppd->tgl_persetujuan_sdm = now();
             }
-            $sppd->status_gm   = $request->status;
-            $sppd->nip_user_gm = auth()->user()->nip;
+        }
+
+        if ($request->input('status') == 'Ditolak') {
+            $sppd->reason = $request->input('reason');
         }
 
         $sppd->save();
 
-        // ✅ Kalau dua-duanya sudah disetujui → generate surat
-        if ($sppd->status_sdm === 'disetujui' && $sppd->status_gm === 'disetujui') {
-            $sppd->no_surat  = 'SPPD-' . now()->format('Ymd') . '-' . $sppd->id;
-            $sppd->file_sppd = $this->generateSuratPdf($sppd);
-            $sppd->save();
+        if ($sppd->status_sdm === 'Disetujui' && $sppd->status_gm === 'Disetujui') {
+            // Generate nomor surat yang baru
+            $sppd->no_surat = $this->generateNoSurat();
+            $sppd->save(); // Penting: simpan nomor surat sebelum membuat PDF
+
+            $filePath = $this->generateSuratPdf($sppd);
+
+            if ($filePath) {
+                $sppd->file_sppd = $filePath;
+                $sppd->save();
+            }
+
+            return redirect()->route('sppd.index')
+                ->with('success', 'Pengajuan SPPD berhasil disetujui, surat PDF telah dibuat!');
         }
 
-        return redirect()->route('sppd.index')
-            ->with('success', "Status {$request->role} berhasil diubah menjadi {$request->status}.");
+        if ($request->input('status') == 'Disetujui') {
+            return redirect()->route('sppd.index')
+                ->with('success', 'Pengajuan SPPD berhasil disetujui!');
+        } else {
+            return redirect()->route('sppd.index')
+                ->with('success', 'Pengajuan SPPD berhasil ditolak. Alasan telah dikirim.');
+        }
     }
 
-    public function generate($id)
+    protected function numberToRoman($number)
     {
-        $sppd = Sppd::with('user')->findOrFail($id);
-        return view('pages.surat_sppd.surat_resmi', compact('sppd'));
+        $map = array('M' => 1000, 'CM' => 900, 'D' => 500, 'CD' => 400, 'C' => 100, 'XC' => 90, 'L' => 50, 'XL' => 40, 'X' => 10, 'IX' => 9, 'V' => 5, 'IV' => 4, 'I' => 1);
+        $roman = '';
+        while ($number > 0) {
+            foreach ($map as $rom => $val) {
+                if ($number >= $val) {
+                    $number -= $val;
+                    $roman .= $rom;
+                    break;
+                }
+            }
+        }
+        return $roman;
     }
 
-    // 🔧 Tambah function generate PDF
-            protected function generateSuratPdf($sppd)
-        {
+    protected function generateNoSurat()
+    {
+        $currentYear = date('Y');
+        $currentRomanMonth = $this->numberToRoman(date('n'));
+
+        // Cari SPPD terakhir yang dibuat di tahun dan bulan yang sama
+        $lastSppd = Sppd::whereYear('created_at', $currentYear)
+                        ->whereMonth('created_at', date('n'))
+                        ->whereNotNull('no_surat')
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+
+        $lastNumber = 0;
+        if ($lastSppd) {
+            // Ambil nomor urut dari nomor surat terakhir
+            $parts = explode('/', $lastSppd->no_surat);
+            if (isset($parts[0])) {
+                $lastNumber = (int) $parts[0];
+            }
+        }
+
+        // Tambahkan 1 ke nomor urut terakhir dan format menjadi 4 digit
+        $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+
+        return "{$newNumber}/WIL TIMUR/{$currentRomanMonth}/{$currentYear}";
+    }
+
+    protected function generateSuratPdf(Sppd $sppd)
+    {
+        try {
             $fileName = 'sppd_' . $sppd->id . '.pdf';
             $path = storage_path('app/public/sppd/' . $fileName);
 
-            $pdf = Pdf::loadView('pages.surat_sppd.surat_resmi', compact('sppd'));
+            $pdf = Pdf::loadView('pages.surat_sppd.test', compact('sppd'));
             $pdf->save($path);
 
             return 'sppd/' . $fileName;
-        }
 
-    // 🔧 Download file surat
-    public function download($id)
-    {
-        $sppd = Sppd::findOrFail($id);
-        return response()->download(storage_path('app/public/' . $sppd->file_sppd));
+        } catch (\Exception $e) {
+            Log::error("PDF Generation Error: " . $e->getMessage());
+            return null;
+        }
     }
+
+    // SppdController.php
+
+// ...
+
+public function download($id)
+{
+    $sppd = Sppd::findOrFail($id);
+    if ($sppd->file_sppd && Storage::disk('public')->exists($sppd->file_sppd)) {
+        $filePath = storage_path('app/public/' . $sppd->file_sppd);
+
+        // Ganti karakter "/" dengan "-" di nomor surat
+        $safeFileName = str_replace('/', '-', $sppd->no_surat);
+
+        // Mengunduh file dengan nama yang sudah diperbaiki
+        return response()->download($filePath, 'Surat-SPPD-' . $safeFileName . '.pdf');
+    }
+    return redirect()->back()->with('error', 'File surat tidak ditemukan.');
+}
 }

@@ -3,8 +3,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Background animasi -->
-   <div id="particles-js" class="absolute inset-0 z-0 h-screen w-screen bg-gradient-to-b from-green-200 via-white to-green-300"></div>
-
+    <div id="particles-js" class="absolute inset-0 z-0 h-screen w-screen bg-gradient-to-b from-green-200 via-white to-green-300"></div>
 
     <!-- Konten login -->
     <div class="relative z-10 w-full max-w-md bg-white/80 rounded-xl shadow-lg p-6 flex flex-col justify-center mx-auto my-auto h-[500px]">
@@ -69,27 +68,28 @@
                 "shape": {
                     "type": "image",
                     "image": {
-                        "src": "{{ asset('images/daun.png') }}",
-                        "width": 80,
-                        "height": 80
+                        "src": @json(asset('images/daun.png')),
+                        "width": 50,
+                        "height": 50
                     }
                 },
-                "opacity": { "value": 0.9 },
-                "size": { "value": 15, "random": true },
+                "opacity": { "value": 0.8, "random": true, "anim": { "enable": true, "speed": 0.5, "opacity_min": 0.3, "sync": false } },
+                "size": { "value": 12, "random": true },
                 "move": {
                     "enable": true,
-                    "speed": 2,
+                    "speed": 1.5,
                     "direction": "bottom",
                     "random": true,
                     "straight": false,
                     "out_mode": "out",
-                    "bounce": false
+                    "bounce": false,
+                    "attract": { "enable": false, "rotateX": 300, "rotateY": 1200 }
                 },
                 "rotate": {
                     "value": 0,
                     "random": true,
                     "direction": "clockwise",
-                    "animation": { "enable": true, "speed": 5, "sync": false }
+                    "animation": { "enable": true, "speed": 3, "sync": false }
                 }
             },
             "interactivity": {
