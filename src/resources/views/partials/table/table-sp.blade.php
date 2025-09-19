@@ -14,6 +14,7 @@
                 <tr class="border-y border-gray-100 bg-gray-50 dark:border-gray-800">
                     {{-- Kolom Baru Ditambahkan dan Disesuaikan --}}
                     <th class="px-4 py-3">No. Surat</th>
+                    <th class="px-4 py-3">Nama Karyawan</th> {{-- <-- KOLOM BARU --}}
                     <th class="px-4 py-3">Keterangan</th>
                     <th class="px-4 py-3">Tgl. SP Terbit</th>
                     <th class="px-4 py-3">Tgl. Mulai</th>
@@ -27,6 +28,9 @@
                     <tr class="dark:hover:bg-gray-700">
                         <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
                             {{ $item->no_surat ?? '-' }}
+                        </td>
+                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                            {{ $item['nama_lengkap'] }}
                         </td>
                         <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
                             {{ $item->ket_peringatan }}
