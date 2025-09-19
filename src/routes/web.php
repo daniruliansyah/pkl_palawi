@@ -6,7 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SppdController;
 use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\CutiController;
-
+use App\Http\Controllers\RiwayatJabatanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +37,12 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan'); // <-- Tambahkan nama ini
 Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
+Route::get('/editpi/{id}', [UserController::class, 'editpi'])->name('karyawan.editpi');
+Route::put('/updatepi/{id}', [UserController::class, 'updatepi'])->name('karyawan.updatepi');
+Route::get('/editkep/{id}', [UserController::class, 'editkep'])->name('karyawan.editkep');
+Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
+Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit');
+Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update');
 
 Route::resource('karyawan', UserController::class);
 Route::resource('sppd', SppdController::class);
