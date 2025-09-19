@@ -144,21 +144,30 @@ class SppdController extends Controller
     }
 
     protected function generateSuratPdf(Sppd $sppd)
-    {
-        try {
-            $fileName = 'sppd_' . $sppd->id . '.pdf';
-            $path = storage_path('app/public/sppd/' . $fileName);
+{
+    try {
+        $fileName = 'sppd_' . $sppd->id . '.pdf';
+        $path = storage_path('app/public/sppd/' . $fileName);
 
-            $pdf = Pdf::loadView('pages.surat_sppd.test', compact('sppd'));
-            $pdf->save($path);
-
-            return 'sppd/' . $fileName;
-
-        } catch (\Exception $e) {
-            Log::error("PDF Generation Error: " . $e->getMessage());
-            return null;
+        // pastikan folder ada
+        if (!file_exists(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
         }
+
+        $pdf = Pdf::loadView('pages.surat_sppd.test', compact('sppd'))
+            ->setOptions(['isRemoteEnabled' => true])
+            ->setPaper('A4', 'portrait');
+
+        // simpan file PDF ke storage
+        $pdf->save($path);
+
+        return 'sppd/' . $fileName; // path relatif untuk disimpan di DB
+    } catch (\Exception $e) {
+        Log::error("PDF Generation Error: " . $e->getMessage());
+        return null;
     }
+}
+
 
     // SppdController.php
 

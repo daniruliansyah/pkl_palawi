@@ -9,7 +9,7 @@
     <div class="relative z-10 w-full max-w-md bg-white/80 rounded-xl shadow-lg p-6 flex flex-col justify-center mx-auto my-auto h-[500px]">
         <!-- Logo & Judul -->
         <div class="flex flex-col items-center mb-6 text-center">
-            <img src="{{ asset('images/econique.png') }}" alt="Econique Logo" class="w-24 mb-4">
+            <img src="{{ asset('images/econique.jpg') }}" alt="Econique Logo" class="w-24 mb-4">
             <h1 class="text-2xl md:text-2xl font-semibold drop-shadow-md" style="font-family: 'Poppins', sans-serif;">
                 Selamat Datang
             </h1>

@@ -54,7 +54,9 @@
         <table style="width: 100%; margin-bottom: 2rem;">
             <tr>
                 <td style="width: 20%; text-align: left;">
-                    <img src="file:///{{ public_path('img/logo.png') }}" alt="Logo Perusahaan" style="height: 64px;">
+                    {{-- Logo kiri --}}
+                   {{-- <img src="{{ public_path('images/econique.png') }}" alt="Logo" style="max-height: 80px;"> --}}
+                   <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('images/econique.jpg'))) }}" style="max-height:80px;">
                 </td>
                 <td style="width: 60%; text-align: center;">
                     <h1 style="font-size: 1rem; font-weight: bold; text-transform: uppercase;">PT. PERHUTANI ALAM WISATA RISORSIS</h1>
@@ -99,14 +101,16 @@
                     <td>
                         <p>Mengetahui,</p>
                         <p style="font-weight: bold;">General Manager</p>
-                         <img src="{{ asset('public/images/barcode_gm.png') }}" alt="Tanda Tangan GM" class="signature-image">
+                        {{-- <img src="{{ public_path('images/barcode_gm.jpg') }}" alt="Tanda Tangan GM" class="signature-image"> --}}
+                        <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('images/barcode_gm.jpg'))) }}" style="max-height:80px;">
                         <p style="font-weight: bold;">(Nama Lengkap GM)</p>
                     </td>
                     <td style="width: 10%;"></td>
                     <td>
                         <p>Dibuat di Jakarta,</p>
                         <p>{{ \Carbon\Carbon::parse($sppd->created_at)->format('d F Y') }}</p>
-                         <img src="{{ asset('public/images/barcode_sdm.png') }}" alt="Tanda Tangan SDM" class="signature-image">
+                       {{-- <img src="{{ public_path('images/barcode_sdm.jpg') }}" alt="Tanda Tangan SDM" class="signature-image"> --}}
+                       <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('images/barcode_sdm.jpg'))) }}" style="max-height:80px;">
                         <p style="font-weight: bold;">(Nama Lengkap SDM)</p>
                     </td>
                 </tr>
