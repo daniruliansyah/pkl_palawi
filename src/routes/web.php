@@ -50,7 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('cuti', CutiController::class);
 
     // PASTIKAN BARIS INI ADA PERSIS SEPERTI INI
-    Route::get('/karyawan/cari', [SPController::class, 'cariKaryawan'])->name('employees.search');
+    Route::get('cari', [SPController::class, 'cariKaryawan'])->name('cari');
     
     Route::resource('sp', SPController::class);
 

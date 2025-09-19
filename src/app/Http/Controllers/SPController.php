@@ -18,7 +18,7 @@ class SPController extends Controller
         $sps = SP::with('user')->latest()->get();
         return view('pages.sp.index', compact('sps'));
     }
-
+    
     /**
      * Menampilkan form untuk membuat surat peringatan.
      */
@@ -62,7 +62,7 @@ class SPController extends Controller
         $validatedData, // Semua data dari form sudah ada di sini, termasuk 'nip_user'
         [
             'no_surat'      => $noSurat,
-            'file_sp'       => $pathFileSP,
+            // 'file_sp'       => $pathFileSP,
             // Anda mungkin tidak lagi perlu 'tgl_sp_terbit' di sini karena sudah ada di $validatedData
         ]
     ));
@@ -74,17 +74,23 @@ class SPController extends Controller
 
     public function cariKaryawan(Request $request)
     {
-        // Ambil kata kunci pencarian dari parameter 'q'
-        $search = $request->input('q');
+        // ambil parameter pencarian (mendukung 'q' dan 'term')
+        $search = $request->input('q') ?? $request->input('term') ?? '';
 
-        // Lakukan query ke database
-        $user = User::where('nama_lengkap', 'LIKE', "%{$search}%")
-                        ->orWhere('nip', 'LIKE', "%{$search}%")
-                        ->limit(10) // Batasi 10 hasil untuk performa
-                        ->get(['nip', 'nama_lengkap as text']); // Pilih kolom nip dan name (dialiaskan sbg 'text')
+        // jika kosong, kembalikan array kosong untuk mencegah pengembalian seluruh data
+        if (trim($search) === '') {
+            return response()->json(['results' => []]);
+        }
 
-        // Kembalikan hasil dalam format JSON
-        return response()->json($user);
+        $users = User::select('nip as id', 'nama_lengkap as text')
+            ->where(function($q) use ($search) {
+                $q->where('nama_lengkap', 'LIKE', "%{$search}%")
+                ->orWhere('nip', 'LIKE', "%{$search}%");
+            })
+            ->limit(10)
+            ->get();
+
+        return response()->json(['results' => $users]);
     }
     /**
      * Menampilkan detail dari satu 

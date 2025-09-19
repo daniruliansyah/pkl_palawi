@@ -23,7 +23,7 @@
         {{-- Input Pencarian Karyawan --}}
         <div>
             <label for="nip_user" class="block text-sm font-medium text-gray-700">Ditujukan Kepada Karyawan</label>
-            <select id="employee-search" name="nip_user" class="mt-1 block w-full" required>
+            <select id="cari" name="nip_user" class="mt-1 block w-full" required>
                 {{-- Opsi akan diisi oleh JavaScript saat Anda mencari --}}
             </select>
             @error('nip_user')
@@ -54,6 +54,12 @@
             <textarea name="ket_peringatan" id="ket_peringatan" rows="3" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('ket_peringatan') ? 'border-red-500' : 'border-gray-300' }}" required>{{ old('ket_peringatan') }}</textarea>
         </div>
 
+        <div>
+            <label for="file_sp" class="block text-sm font-medium text-gray-700">Upload Surat Peringatan (Opsional)</label>
+            <input type="file" name="file_sp" id="file_sp" accept=".jpg,.jpeg,.png,.pdf" class="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-green-700 hover:file:bg-green-100">
+            <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG, atau PDF. Maksimal 2MB.</p>
+        </div>
+
         <div class="flex justify-end pt-2">
             <a href="{{ route('sp.index') }}" class="mr-4 inline-flex items-center rounded-lg bg-gray-200 px-6 py-2 font-medium text-gray-700 shadow transition-colors duration-200 hover:bg-gray-300">
               Batal
@@ -70,24 +76,25 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#employee-search').select2({
+        $('#cari').select2({
             placeholder: 'Cari berdasarkan NIP atau Nama Karyawan',
             ajax: {
-                url: '{{ route("employees.search") }}',
+                url: '{{ route("cari") }}',
                 dataType: 'json',
                 delay: 250,
-                processResults: function (data) {
+                data: function (params) {
                     return {
-                        results: $.map(data, function (item) {
-                            return {
-                                id: item.nip,
-                                text: item.text + ' (' + item.nip + ')'
-                            }
-                        })
-                    };
+                        q: params.term //send 'q' to server
+                    };              
+                },
+                processResults: function (data) {
+                    // server mengembalikan { results: [...] } jadi kembalikan data langsung
+                    return data;
                 },
                 cache: true
-            }
+            },
+            minimumInputLength: 1, // memaksa user mengetik minimal 1 karakter
+            width: '100%'
         });
     });
 </script>
