@@ -60,4 +60,9 @@ class User extends Authenticatable
         return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
                     ->latestOfMany('tgl_mulai'); 
     }
+
+    public function riwayatSP()
+    {
+        return $this->hasMany(SP::class, 'nip_user', 'nip');
+    }
 }
