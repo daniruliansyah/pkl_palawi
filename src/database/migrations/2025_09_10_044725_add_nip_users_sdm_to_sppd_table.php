@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sppd', function (Blueprint $table) {
-            $table->string('nip_user_sdm', 20)->after('lokasi_tujuan');
-            $table->foreign('nip_user_sdm')->references('nip')->on('users');
+        $table->string('nip_user_sdm', 20)->nullable()->after('lokasi_tujuan');
+        $table->foreign('nip_user_sdm')->references('nip')->on('users');
         });
     }
 

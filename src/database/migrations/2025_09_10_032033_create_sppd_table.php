@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('status_gm')->default('menunggu');
             $table->string('no_surat', 100)->nullable();
             $table->string('file_sppd', 100)->nullable();
+            $table->string('surat_bukti', 255)->nullable();
             $table->timestamps();
         });
     }
