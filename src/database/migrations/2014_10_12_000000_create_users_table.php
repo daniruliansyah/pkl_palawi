@@ -34,8 +34,6 @@ return new class extends Migration
             $table->string('npwp');
             $table->date('join_date');
             $table->integer('jatah_cuti')->default(12);
-            // ✅ Role untuk akses sistem
-            $table->enum('role', ['karyawan', 'senior_divisi', 'SDM', 'GM', 'admin'])->default('karyawan');
             $table->rememberToken();
             $table->timestamps();
 

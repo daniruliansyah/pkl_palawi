@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::table('sppd', function (Blueprint $table) {
             $table->string('nip_user', 20)->after('id');
             $table->foreign('nip_user')->references('nip')->on('users');
+
+            
         });
     }
 

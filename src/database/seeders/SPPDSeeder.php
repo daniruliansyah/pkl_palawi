@@ -3,43 +3,44 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\Sppd;
+use App\Models\User;
 use Carbon\Carbon;
 
 class SppdSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        DB::table('sppd')->insert([
-            'nip_user'            => '123456789', // nip pengaju
-            'tgl_mulai'           => '2025-09-20',
-            'tgl_selesai'         => '2025-09-25',
-            'keterangan'          => 'Perjalanan dinas ke Surabaya untuk rapat kerja',
-            'lokasi_tujuan'       => 'Surabaya',
-            'nip_user_sdm'        => '33445566',
-            'tgl_persetujuan_sdm' => Carbon::now(),
-            'nip_user_gm'         => '44556677',
-            'tgl_persetujuan_gm'  => Carbon::now(),
-            'created_at'          => Carbon::now(),
-            'updated_at'          => Carbon::now(),
-        ]);
+        // Ambil user berdasarkan email atau kriteria lain
+        $userKaryawan = User::where('email', 'dummy@example.com')->first();
+        $userSDM     = User::where('email', 'sdm@example.com')->first();
+        $userGM      = User::where('email', 'gm@example.com')->first();
 
-        DB::table('sppd')->insert([
-            'nip_user'            => '123456789', // nip pengaju
-            'tgl_mulai'           => '2025-09-21',
-            'tgl_selesai'         => '2025-09-25',
-            'keterangan'          => 'ayam dinas ke Surabaya untuk rapat kerja',
-            'lokasi_tujuan'       => 'Surabaya',
-            'nip_user_sdm'        => '33445566',
-            'tgl_persetujuan_sdm' => Carbon::now(),
-            'nip_user_gm'         => '44556677',
-            'tgl_persetujuan_gm'  => Carbon::now(),
-            'created_at'          => Carbon::now(),
-            'updated_at'          => Carbon::now(),
-            'status_gm'           => 'Ditolak',
-        ]);
+        if (!$userKaryawan || !$userSDM || !$userGM) {
+            $this->command->info("Seeder SPPD dibatalkan: User belum ada.");
+            return;
+        }
+
+        // Buat beberapa data SPPD
+        $sppds = [
+            [
+                'nip_user'      => $userKaryawan->nip,
+                'tgl_mulai'     => Carbon::now()->addDays(3)->format('Y-m-d'),
+                'tgl_selesai'   => Carbon::now()->addDays(5)->format('Y-m-d'),
+                'keterangan'    => 'Perjalanan dinas ke Surabaya untuk rapat kerja',
+                'lokasi_tujuan' => 'Surabaya',
+                'status_sdm'    => 'menunggu',
+                'status_gm'     => 'menunggu',
+                'nip_user_sdm'  => $userSDM->nip,
+                'tgl_persetujuan_sdm' => Carbon::now(),
+                'nip_user_gm'   => $userGM->nip,
+                'tgl_persetujuan_gm' => Carbon::now(),
+            ],
+            // Bisa tambah SPPD lain disini
+        ];
+
+        foreach ($sppds as $data) {
+            Sppd::create($data);
+        }
     }
 }
