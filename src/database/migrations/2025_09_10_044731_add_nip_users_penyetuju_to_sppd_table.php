@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sppd', function (Blueprint $table) {
-        $table->string('nip_user_sdm', 20)->nullable()->after('lokasi_tujuan');
-        $table->foreign('nip_user_sdm')->references('nip')->on('users');
+           $table->string('nip_penyetuju', 20)->nullable()->after('status');
+        $table->foreign('nip_penyetuju')->references('nip')->on('users');
         });
     }
 
@@ -23,8 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('sppd', function (Blueprint $table) {
-            $table->dropForeign(['nip_user_sdm']);
-            $table->dropColumn('nip_user_sdm');
+            $table->dropForeign(['nip_penyetuju']);
+            $table->dropColumn('nip_penyetuju');
         });
     }
 };

@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'nama_lengkap' => 'User Karyawan',
-                'nip' => '12345678900',
+                'nip' => '123456789',
                 'nik' => '98765432101234560',
                 'email' => 'dummy@example.com',
                 'password' => bcrypt('password'),
