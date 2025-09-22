@@ -19,6 +19,9 @@ class UserSeeder extends Seeder
 
         $users = [
             [
+                'nama_lengkap' => 'User Karyawan',
+                'nip' => '123456789',
+                'nik' => '98765432101234560',
                 'nama_lengkap' => 'Dummy User',
                 'nip' => '123456789',
                 'nik' => '9876543210123456',

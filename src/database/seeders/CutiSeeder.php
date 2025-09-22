@@ -22,7 +22,7 @@ class CutiSeeder extends Seeder
             'jumlah_hari'           => 3,
             'keterangan'            => 'Cuti tahunan untuk liburan keluarga.',
             'tgl_upload'            => Carbon::now()->subDays(10), // Diunggah 10 hari lalu
-            'nip_user_ssdm'         => '22334455',
+            'nip_user_ssdm'         => '44556677',
             'tgl_persetujuan_gm'    => Carbon::now()->subDays(8), // Disetujui 8 hari lalu
             'nip_user_gm'           => '33445566',
             'tgl_persetujuan_sdm'   => Carbon::now()->subDays(9), // Disetujui 9 hari lalu
