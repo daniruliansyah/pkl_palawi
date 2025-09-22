@@ -87,64 +87,10 @@
 
                       <div>
                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                          Area Kerja
+                          NIK
                         </p>
                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan -> area_bekerja }}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                          Email
-                        </p>
-                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan -> email }}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                          No. Telp
-                        </p>
-                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan -> no_telp }}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                          Jabatan
-                        </p>
-                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan->jabatanTerbaru?->jabatan?->nama_jabatan ?? '-' }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <a href="{{ route('karyawan.tambahjabatan', $karyawan->id) }}" class="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
-                      <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path fill-rule="evenodd" clip-rule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill=""></path>
-                      </svg>
-                      Edit
-                  </a>
-                </div>
-              </div>
-              <div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
-                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-                      Asal
-                    </h4>
-
-                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
-                      <div>
-                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                          Tempat Lahir
-                        </p>
-                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan -> tempat_lahir }}
+                          {{ $karyawan -> nik }}
                         </p>
                       </div>
 
@@ -159,10 +105,100 @@
 
                       <div>
                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                          NIK
+                          Tempat Lahir
                         </p>
                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan -> nik }}
+                          {{ $karyawan -> tempat_lahir }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Jenis Kelamin
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                           {{ $karyawan->jenis_kelamin == 1 ? 'Laki-laki' : 'Perempuan' }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Agama
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> agama }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Email
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> email }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Nomor Telepon
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> no_telp }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Status Pernikahan
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> status_perkawinan }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a href="{{ route('karyawan.editpi', $karyawan->id) }}" class="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
+                      <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill=""></path>
+                      </svg>
+                      Edit
+                  </a>
+                </div>
+              </div>
+              <div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
+                      Kepegawaian
+                    </h4>
+
+                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          NPK
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> npk_baru }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Jabatan
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan->jabatanTerbaru?->jabatan?->nama_jabatan ?? '-' }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Area Kerja
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> area_bekerja }}
                         </p>
                       </div>
 
@@ -177,14 +213,60 @@
                     </div>
                   </div>
 
-                  <button onclick="isProfileAddressModal = true" class="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
-                    <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" clip-rule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill=""></path>
-                    </svg>
-                    Edit
-                  </button>
+                  <a href="{{ route('karyawan.editkep', $karyawan->id) }}" class="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
+                      <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill=""></path>
+                      </svg>
+                      Edit
+                  </a>
                 </div>
               </div>
+
+              <div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
+                            Riwayat Jabatan
+                        </h4>
+                        <div class="text-sm font-medium text-gray-800 dark:text-white/90">
+                            @forelse ($karyawan->riwayatJabatans as $riwayat)
+                                <div class="flex items-center gap-4 mb-2">
+                                    <div class="flex-1">
+                                        <p>{{ $riwayat->jabatan->nama_jabatan }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                            Area: {{ $riwayat->area_bekerja }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 whitespace-nowrap">
+                                        <p>{{ \Carbon\Carbon::parse($riwayat->tgl_mulai)->format('d/m/Y') }} -
+                                        @if ($riwayat->tgl_selesai)
+                                            {{ \Carbon\Carbon::parse($riwayat->tgl_selesai)->format('d/m/Y') }}
+                                        @else
+                                            Sekarang
+                                        @endif
+                                        </p>
+                                        <a href="{{ route('riwayat.edit', ['karyawan' => $karyawan->id, 'riwayat' => $riwayat->id]) }}" class="text-blue-500 hover:text-blue-700">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                              <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                                          </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-gray-500">Tidak ada riwayat jabatan.</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    {{-- Tombol 'tambah riwayat' --}}
+                    <a href="{{ route('karyawan.tambahjabatan', $karyawan->id) }}" class="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
+                        <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill=""></path>
+                        </svg>
+                        tambah riwayat
+                    </a>
+                </div>
             </div>
 </div>
 @endsection

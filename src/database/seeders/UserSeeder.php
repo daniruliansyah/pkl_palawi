@@ -12,16 +12,16 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil dulu jabatan yang sudah di-seed di JabatanSeeder
+        // Ambil jabatan dari JabatanSeeder
         $jabatanGM = Jabatan::where('nama_jabatan', 'General Manager')->first();
         $jabatanSDM = Jabatan::where('nama_jabatan', 'Senior Analis Keuangan, SDM & Umum')->first();
         $jabatanKaryawan = Jabatan::where('nama_jabatan', 'Senior Analis Pengelolaan Destinasi')->first();
 
         $users = [
             [
-                'nama_lengkap' => 'User Karyawan',
-                'nip' => '12345678900',
-                'nik' => '98765432101234560',
+                'nama_lengkap' => 'Dummy User',
+                'nip' => '123456789',
+                'nik' => '9876543210123456',
                 'email' => 'dummy@example.com',
                 'password' => bcrypt('password'),
                 'no_telp' => '081234567890',
@@ -31,13 +31,32 @@ class UserSeeder extends Seeder
                 'tempat_lahir' => 'Contoh Kota',
                 'agama' => 'Islam',
                 'status_perkawinan' => 'Belum Kawin',
-                'area_bekerja' => 'IT',
                 'status_aktif' => '1',
                 'npk_baru' => 'NPK123456',
                 'npwp' => '12.345.678.9-012.345',
                 'join_date' => '2020-01-01',
                 'jatah_cuti' => 12,
-                'jabatan' => $jabatanKaryawan, // opsional untuk reference
+                'jabatan' => $jabatanKaryawan,
+            ],
+            [
+                'nama_lengkap' => 'User SSDM',
+                'nip' => '22334455',
+                'nik' => '1111222233334444',
+                'email' => 'ssdm@example.com',
+                'password' => bcrypt('password'),
+                'no_telp' => '081111111111',
+                'jenis_kelamin' => '1',
+                'alamat' => 'Jl. SSDM',
+                'tgl_lahir' => '1991-01-01',
+                'tempat_lahir' => 'Kota SSDM',
+                'agama' => 'Islam',
+                'status_perkawinan' => 'Kawin',
+                'status_aktif' => '1',
+                'npk_baru' => 'NPK22334455',
+                'npwp' => '22.333.444.5-678.910',
+                'join_date' => '2021-01-01',
+                'jatah_cuti' => 12,
+                'jabatan' => $jabatanSDM,
             ],
             [
                 'nama_lengkap' => 'User SDM',
@@ -52,7 +71,6 @@ class UserSeeder extends Seeder
                 'tempat_lahir' => 'Kota SDM',
                 'agama' => 'Islam',
                 'status_perkawinan' => 'Kawin',
-                'area_bekerja' => 'SDM',
                 'status_aktif' => '1',
                 'npk_baru' => 'NPK33445566',
                 'npwp' => '33.444.555.6-789.101',
@@ -73,7 +91,6 @@ class UserSeeder extends Seeder
                 'tempat_lahir' => 'Kota GM',
                 'agama' => 'Islam',
                 'status_perkawinan' => 'Kawin',
-                'area_bekerja' => 'GM',
                 'status_aktif' => '1',
                 'npk_baru' => 'NPK44556677',
                 'npwp' => '44.555.666.7-890.112',
@@ -81,6 +98,26 @@ class UserSeeder extends Seeder
                 'jatah_cuti' => 12,
                 'jabatan' => $jabatanGM,
                 'role' => 'GM',
+            ],
+            [
+                'nama_lengkap' => 'Nadea Yiyian',
+                'nip' => '434221016',
+                'nik' => '36520182939730002',
+                'email' => 'nadea@example.com',
+                'password' => bcrypt('12345678'),
+                'no_telp' => '081111111111',
+                'jenis_kelamin' => '1',
+                'alamat' => 'Jl. SSDM',
+                'tgl_lahir' => '1991-01-01',
+                'tempat_lahir' => 'Kota SSDM',
+                'agama' => 'Islam',
+                'status_perkawinan' => 'Kawin',
+                'status_aktif' => '1',
+                'npk_baru' => 'NPK22334455',
+                'npwp' => '22.333.444.5-678.910',
+                'join_date' => '2021-01-01',
+                'jatah_cuti' => 12,
+                'jabatan' => $jabatanKaryawan,
             ],
         ];
 
@@ -98,7 +135,6 @@ class UserSeeder extends Seeder
                 'tempat_lahir' => $userData['tempat_lahir'],
                 'agama' => $userData['agama'],
                 'status_perkawinan' => $userData['status_perkawinan'],
-                'area_bekerja' => $userData['area_bekerja'],
                 'status_aktif' => $userData['status_aktif'],
                 'npk_baru' => $userData['npk_baru'],
                 'npwp' => $userData['npwp'],
@@ -106,7 +142,6 @@ class UserSeeder extends Seeder
                 'jatah_cuti' => $userData['jatah_cuti'],
             ]);
 
-            // Tambahkan riwayat jabatan
             RiwayatJabatan::create([
                 'nip_user' => $user->nip,
                 'id_jabatan' => $userData['jabatan']->id,
