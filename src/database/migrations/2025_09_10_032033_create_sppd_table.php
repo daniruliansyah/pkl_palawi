@@ -13,14 +13,16 @@ return new class extends Migration
     {
          Schema::create('sppd', function (Blueprint $table) {
             $table->id();
+            $table->string('pemberi_tugas');
+            $table->integer('jumlah_hari');
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
             $table->string('keterangan');
+            $table->string('lokasi_berangkat', 100);
             $table->string('lokasi_tujuan', 100);
-            $table->datetime('tgl_persetujuan_sdm')->nullable();
-            $table->string('status_sdm')->default('menunggu');
-            $table->datetime('tgl_persetujuan_gm')->nullable();
-            $table->string('status_gm')->default('menunggu');
+            $table->string('alat_angkat');
+            $table->datetime('tgl_persetujuan')->nullable();
+            $table->string('status')->default('menunggu');
             $table->string('no_surat', 100)->nullable();
             $table->string('file_sppd', 100)->nullable();
             $table->string('surat_bukti', 255)->nullable();
