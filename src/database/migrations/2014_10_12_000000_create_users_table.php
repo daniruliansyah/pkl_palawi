@@ -28,7 +28,6 @@ return new class extends Migration
             $table->string('foto')->nullable()->default('public/images/default.jpeg');
             $table->string('agama', 10);
             $table->string('status_perkawinan', 20);
-            $table->string('area_bekerja');
             $table->boolean('status_aktif');
             $table->string('npk_baru');
             $table->string('npwp');
