@@ -29,12 +29,9 @@ class SppdSeeder extends Seeder
                 'tgl_selesai'   => Carbon::now()->addDays(5)->format('Y-m-d'),
                 'keterangan'    => 'Perjalanan dinas ke Surabaya untuk rapat kerja',
                 'lokasi_tujuan' => 'Surabaya',
-                'status_sdm'    => 'menunggu',
-                'status_gm'     => 'menunggu',
+                'status'    => 'menunggu',
                 'nip_user_sdm'  => $userSDM->nip,
-                'tgl_persetujuan_sdm' => Carbon::now(),
-                'nip_user_gm'   => $userGM->nip,
-                'tgl_persetujuan_gm' => Carbon::now(),
+                'tgl_persetujuan' => Carbon::now(),
             ],
             // Bisa tambah SPPD lain disini
         ];
