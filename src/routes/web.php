@@ -74,7 +74,6 @@ Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanContr
 
     Route::resource('kalender', KalenderController::class);
 });
-
 Route::get('/', function () {
     return redirect()->route('login');
 });

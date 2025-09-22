@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surat SPPD - {{ $sppd->no_surat }}</title>
     <style>
+        @page {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        margin-left: 25px;
+        margin-right: 25px;
+        } 
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
