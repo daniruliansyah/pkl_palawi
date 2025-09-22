@@ -197,12 +197,17 @@ class UserController extends Controller
                      ->with('success', 'Data pribadi karyawan berhasil diperbarui.');
     }
 
+    public function editkep($id){
+        $karyawan = User::findOrFail($id);
+        return view('pages.karyawan.editkep', compact('karyawan'));
+    }
+
     public function updatekep(Request $request, $id)
     {
     // 1. Validasi data yang masuk
     $request->validate([
-        'nama_lengkap' => 'required|string|max:100',
-        'nik' => 'required|string|max:20|unique:users,nik,' . $id,
+        'npk_baru' => 'required|string|max:100',
+        'npwp' => 'required|string|max:100',
     ]);
 
     // 2. Temukan data karyawan yang akan diupdate
@@ -210,15 +215,8 @@ class UserController extends Controller
 
     // 3. Update data karyawan dengan data dari form
     $karyawan->update([
-        'npk' => $request->nama_lengkap,
-        'jabatan' => $request->nik,
-        'tgl_lahir' => $request->tgl_lahir,
-        'tempat_lahir' => $request->tempat_lahir,
-        'jenis_kelamin' => $request->jenis_kelamin,
-        'agama' => $request->agama,
-        'status_perkawinan' => $request->status_perkawinan,
-        'email' => $request->email,
-        'no_telp' => $request->no_telp,
+        'npk_baru' => $request->npk_baru,
+        'npwp'     => $request->npwp,
     ]);
 
     // 4. Redirect kembali ke halaman detail dengan pesan sukses
