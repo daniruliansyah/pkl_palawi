@@ -44,7 +44,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('cuti', CutiController::class);
     Route::resource('kalender', KalenderController::class);
 });
-
 Route::get('/', function () {
     return redirect()->route('login');
 });
