@@ -6,6 +6,12 @@
                 Daftar Surat Peringatan 
             </h3>
         </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('sp.create') }}"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                + Buat Surat Peringatan
+            </a>
+        </div>
     </div>
 
     <div class="w-full overflow-x-auto">
