@@ -57,6 +57,10 @@
                             </select>
                         </div>
                         <div>
+                            <label for="area_bekerja" class="mb-2 block text-sm font-medium">Area Kerja</label>
+                            <input type="text" x-model="jabatan.area_bekerja" name="area_bekerja" class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                        </div>
+                        <div>
                             <label for="tgl_mulai" class="mb-2 block text-sm font-medium">Tanggal Mulai</label>
                             <input type="date" x-model="jabatan.tgl_mulai" name="tgl_mulai" class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                         </div>
@@ -82,6 +86,3 @@
     {{-- Form End --}}
 </div>
 @endsection
-
-
-saya mau tampilan edit riwayat jabatan yang dipilih sama seperti ini, namun untuk value (otomatis terisi) dari data yang ada sebelum di edit.

@@ -9,9 +9,22 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $karyawan = User::all();
+        // Ambil nilai dari input 'search' jika ada
+        $search = $request->input('search');
+
+        // Mulai query untuk model User
+        $query = User::query();
+
+        // Jika ada kata kunci pencarian, tambahkan kondisi WHERE
+        if ($search) {
+            $query->where('nama_lengkap', 'like', '%' . $search . '%');
+        }
+
+        // Eksekusi query untuk mendapatkan data karyawan
+        $karyawan = $query->get();
+
         return view('pages.karyawan.read-card', compact('karyawan'));
     }
 
