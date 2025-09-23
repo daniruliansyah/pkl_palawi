@@ -17,15 +17,19 @@ return new class extends Migration
             $table->integer('jumlah_hari');
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
-            $table->string('keterangan');
+            $table->text('keterangan_lain')->nullable();
+            $table->text('keterangan_sppd');
             $table->string('lokasi_berangkat', 100);
             $table->string('lokasi_tujuan', 100);
             $table->string('alat_angkat');
+            $table->string('no_rekening');
+            $table->string('nama_rekening');
             $table->datetime('tgl_persetujuan')->nullable();
             $table->string('status')->default('menunggu');
             $table->string('no_surat', 100)->nullable();
             $table->string('file_sppd', 100)->nullable();
-            $table->string('surat_bukti', 255)->nullable();
+            $table->text('alasan_penolakan')->nullable();
+
             $table->timestamps();
         });
     }
