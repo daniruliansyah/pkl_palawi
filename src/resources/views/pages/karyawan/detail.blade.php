@@ -186,6 +186,15 @@
 
                       <div>
                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          NPWP
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> npwp }}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                           Jabatan
                         </p>
                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
@@ -198,16 +207,16 @@
                           Area Kerja
                         </p>
                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan -> area_bekerja }}
+                          {{ $karyawan->jabatanTerbaru?->area_bekerja ?? '-' }}
                         </p>
                       </div>
 
                       <div>
                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                          NPWP
+                          Pangkat
                         </p>
                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {{ $karyawan -> npwp }}
+                          -durung migrate-
                         </p>
                       </div>
                     </div>

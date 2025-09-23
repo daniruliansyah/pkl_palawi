@@ -29,6 +29,7 @@ class RiwayatJabatanController extends Controller
             'jabatan_id' => 'required|exists:jabatan,id',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'nullable|date|after_or_equal:tgl_mulai',
+            'area_bekerja' => 'required|string',
         ]);
         
         // Pastikan riwayat jabatan yang akan diupdate memang milik karyawan tersebut
@@ -40,6 +41,7 @@ class RiwayatJabatanController extends Controller
             'id_jabatan' => $request->jabatan_id,
             'tgl_mulai' => $request->tgl_mulai,
             'tgl_selesai' => $request->tgl_selesai,
+            'area_bekerja' =>$request->area_bekerja,
         ]);
 
         return redirect()->route('karyawan.show', $karyawan->id)
