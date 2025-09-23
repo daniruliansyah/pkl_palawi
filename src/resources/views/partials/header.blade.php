@@ -613,10 +613,10 @@
           @click.prevent="dropdownOpen = ! dropdownOpen"
         >
           <span class="mr-3 h-11 w-11 overflow-hidden rounded-full">
-            <img src="./images/user/owner.jpg" alt="User" />
+            <img src="{{ asset('storage/' . Auth::user()->foto) }}" alt="User" class="w-10 h-10 rounded-full object-cover"/>
           </span>
 
-          <span class="text-theme-sm mr-1 block font-medium"> Musharof </span>
+          <span class="text-theme-sm mr-1 block font-medium"> {{ Auth::user()->nama_lengkap }} </span>
 
           <svg
             :class="dropdownOpen && 'rotate-180'"
@@ -646,12 +646,12 @@
             <span
               class="text-theme-sm block font-medium text-gray-700 dark:text-gray-400"
             >
-              Musharof Chowdhury
+              {{ Auth::user()->nama_lengkap }}
             </span>
             <span
               class="text-theme-xs mt-0.5 block text-gray-500 dark:text-gray-400"
             >
-              randomuser@pimjo.com
+              {{ Auth::user()->email }}
             </span>
           </div>
 
