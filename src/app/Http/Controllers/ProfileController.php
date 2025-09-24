@@ -2,21 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
+    public function show(Request $request): View
+    {
+        return view('pages.profile.index', [
+            'user' => $request->user(),
+        ]);
+    }
+
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
+        return view('pages.profile.edit', [
             'user' => $request->user(),
         ]);
     }
@@ -24,18 +32,46 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $user = \App\Models\User::find(Auth::id());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Validasi sederhana
+        $request->validate([
+            'alamat'   => 'nullable|string|max:255',
+            'no_telp'  => 'nullable|string|max:20',
+            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'foto'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // Update data umum
+        $user->alamat  = $request->alamat;
+        $user->no_telp = $request->no_telp;
+        $user->email   = $request->email;
+
+        // Update password kalau diisi
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
         }
 
-        $request->user()->save();
+        // Upload foto baru kalau ada
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama kalau ada
+            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+                Storage::disk('public')->delete($user->foto);
+            }
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+            // Simpan foto baru
+            $fotoPath = $request->file('foto')->store('images', 'public');
+            $user->foto = $fotoPath;
+        }
+
+        $user->save();
+
+        return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui.');
     }
+
 
     /**
      * Delete the user's account.

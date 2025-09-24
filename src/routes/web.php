@@ -33,6 +33,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // tambahan
+    Route::get('/profile/detail', [ProfileController::class, 'show'])->name('profile.show');
+
+Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan'); // <-- Tambahkan nama ini
+Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
+Route::get('/editpi/{id}', [UserController::class, 'editpi'])->name('karyawan.editpi');
+Route::put('/updatepi/{id}', [UserController::class, 'updatepi'])->name('karyawan.updatepi');
+Route::get('/editkep/{id}', [UserController::class, 'editkep'])->name('karyawan.editkep');
+Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
+Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit');
+Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update');
 
     // Rute Karyawan dan Riwayat Jabatan
     Route::resource('karyawan', UserController::class);
