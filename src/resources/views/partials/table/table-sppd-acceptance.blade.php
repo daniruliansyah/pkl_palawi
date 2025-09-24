@@ -1,149 +1,182 @@
-<div
- class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6"
->
- {{-- Alert sukses (Pop-up) --}}
- @if(session('success'))
-   <div class="mb-4 rounded-lg bg-green-100 px-4 py-3 text-green-800">
-     {{ session('success') }}
-   </div>
- @endif
-
- <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-   <div>
-     <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-       Daftar Pengajuan SPPD
-     </h3>
-   </div>
-
-   <div class="flex items-center gap-3">
-     <a
-       href="{{ route('sppd.create') }}"
-       class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-blue-600 px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-blue-700"
-     >
-       + Ajukan SPPD Baru
-     </a>
-   </div>
- </div>
-
- <div class="w-full overflow-x-auto">
-   <table class="min-w-full text-sm text-left">
-     <thead>
-       <tr class="border-y border-gray-100 dark:border-gray-800 bg-gray-50">
-         <th class="py-3 px-4">Nama Surat</th>
-         <th class="py-3 px-4">Dibuat Oleh</th>
-         <th class="py-3 px-4">Tanggal Dibuat</th>
-         <th class="py-3 px-4">Persetujuan GM</th>
-         <th class="py-3 px-4">Persetujuan SDM</th>
-         <th class="py-3 px-4">Status</th>
-         <th class="py-3 px-4">Aksi</th>
-       </tr>
-     </thead>
-
-     <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-         @forelse($sppds as $item)
-             <tr class="dark:hover:bg-gray-700">
-               <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
-                   SPPD - {{ $item->keterangan }}
-               </td>
-               <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                   {{ $item->user->nama_lengkap ?? '-' }}
-               </td>
-               <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                   {{ $item->created_at->format('d-m-Y') }}
-               </td>
-               <td class="px-4 py-3">
-                   <span @class([
-                       'px-2 py-1 font-medium text-xs rounded-full',
-                       'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' => $item->status_gm == 'Disetujui',
-                       'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' => $item->status_gm == 'Ditolak',
-                       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' => $item->status_gm != 'Disetujui' && $item->status_gm != 'Ditolak',
-                   ])>
-                       {{ $item->status_gm }}
-                   </span>
-               </td>
-               <td class="px-4 py-3">
-                   <span @class([
-                       'px-2 py-1 font-medium text-xs rounded-full',
-                       'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' => $item->status_sdm == 'Disetujui',
-                       'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' => $item->status_sdm == 'Ditolak',
-                       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' => $item->status_sdm != 'Disetujui' && $item->status_sdm != 'Ditolak',
-                   ])>
-                       {{ $item->status_sdm }}
-                   </span>
-               </td>
-               <td class="px-4 py-3 font-medium
-                   @if($item->status_gm === 'Disetujui' && $item->status_sdm === 'Disetujui')
-                       text-green-700 dark:text-green-400
-                   @elseif($item->status_gm === 'Ditolak' || $item->status_sdm === 'Ditolak')
-                       text-red-700 dark:text-red-400
-                   @else
-                       text-gray-500 dark:text-gray-400
-                   @endif">
-                   @if($item->status_gm === 'Disetujui' && $item->status_sdm === 'Disetujui')
-                       Selesai
-                   @elseif($item->status_gm === 'Ditolak' || $item->status_sdm === 'Ditolak')
-                       Ditolak
-                   @else
-                       Dalam Proses
-                   @endif
-               </td>
-               <td class="px-4 py-3">
-                   @php
-                       $userJabatan = auth()->user()->jabatanTerbaru->jabatan->nama_jabatan ?? '';
-                       $isGM = $userJabatan == 'General Manager';
-                       $isSDM = $userJabatan == 'Senior Analis Keuangan, SDM & Umum';
-                       $canApprove = ($isGM && $item->status_gm == 'menunggu') || ($isSDM && $item->status_sdm == 'menunggu');
-                   @endphp
-                   @if($item->status_gm === 'Disetujui' && $item->status_sdm === 'Disetujui')
-                       <a href="{{ route('sppd.download', $item->id) }}" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-blue-700">
-                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                               <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.146a.75.75 0 0 0-1.079-.675l-4.479 2.146-.013.006-.05.022a.598.598 0 0 1-.352.016l-4.478-2.146A.75.75 0 0 0 4.5 12.104V14.25m.75-2.146a.75.75 0 0 0-1.079-.675L4.5 12.104V14.25m.75-2.146a.75.75 0 0 0-1.079-.675L4.5 12.104V14.25m15 0v2.146a.75.75 0 0 1-1.079.675L9 16.104V14.25m10.5-2.146a.75.75 0 0 0-1.079-.675L9 16.104V14.25M6.75 14.25v2.146a.75.75 0 0 0 1.079.675l4.479-2.146.013-.006.05-.022a.598.598 0 0 1 .352-.016l4.478 2.146A.75.75 0 0 0 19.5 16.396V14.25" />
-                           </svg>
-                           Lihat Surat
-                       </a>
-                   @elseif($item->status_gm === 'Ditolak' || $item->status_sdm === 'Ditolak')
-                       <span class="text-red-500 italic text-xs">Ditolak oleh {{ $item->status_gm === 'Ditolak' ? 'GM' : 'SDM' }}</span>
-                   @elseif($canApprove)
-                       <div x-data="{ openModal: false }">
-                           <form action="{{ route('sppd.updateStatus', $item->id) }}" method="POST" class="inline-block">
-                               @csrf
-                               @method('PATCH')
-                               <input type="hidden" name="role" value="{{ $userJabatan }}">
-                               <button name="status" value="Disetujui" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">✅ Terima</button>
-                           </form>
-
-                           <button @click="openModal = true" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded ml-1">❌ Tolak</button>
-
-                           <div x-show="openModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
-                               <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 relative">
-                                   <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Alasan Penolakan</h3>
-                                   <form action="{{ route('sppd.updateStatus', $item->id) }}" method="POST">
-                                       @csrf
-                                       @method('PATCH')
-                                       <input type="hidden" name="role" value="{{ $userJabatan }}">
-                                       <input type="hidden" name="status" value="Ditolak">
-                                       <textarea name="reason" rows="4" class="w-full border rounded p-2 dark:bg-gray-700 dark:text-white" placeholder="Masukkan alasan penolakan..." required></textarea>
-                                       <div class="flex justify-end gap-2 mt-4">
-                                           <button type="button" @click="openModal = false" class="px-3 py-1 rounded border">Batal</button>
-                                           <button type="submit" class="px-3 py-1 rounded bg-red-500 text-white">Kirim</button>
-                                       </div>
-                                   </form>
-                               </div>
-                           </div>
-                       </div>
-                   @else
-                       <span class="text-gray-400 italic text-xs">Sudah diproses</span>
-                   @endif
-               </td>
-             </tr>
-         @empty
-             <tr>
-                 <td colspan="7" class="py-4 text-center text-gray-500 dark:text-gray-400">
-                     Belum ada pengajuan SPPD.
-                 </td>
-             </tr>
-         @endforelse
-     </tbody>
-   </table>
- </div>
+<div class="flex items-center justify-between p-4 bg-white rounded-lg shadow-md mb-6">
+    <h2 class="text-xl font-semibold text-gray-800">Daftar Pengajuan SPPD</h2>
+    <a href="{{ route('sppd.create') }}" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        + Ajukan SPPD Baru
+    </a>
 </div>
+
+{{-- Alert sukses --}}
+@if(session('success'))
+    <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show" class="fixed top-4 right-4 z-50 rounded-lg bg-green-500 text-white p-4 shadow-lg">
+        {{ session('success') }}
+    </div>
+@endif
+
+<div class="overflow-hidden bg-white rounded-lg shadow-md">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nama Surat
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Dibuat Oleh
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tanggal Dibuat
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Persetujuan
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status Final
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Surat
+                    </th>
+                    {{-- Kondisi untuk menampilkan kolom Aksi, biar ga tampil di user karyawan --}}
+                    @if(Auth::user()->jabatanTerbaru->jabatan->nama_jabatan === 'General Manager' || Auth::user()->jabatanTerbaru->jabatan->nama_jabatan === 'Senior Analis Keuangan, SDM & Umum')
+                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Aksi
+                    </th>
+                    @endif
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse($sppds as $sppd)
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        SPPD - {{ $sppd->lokasi_tujuan }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ $sppd->user->nama_lengkap ?? 'User Tidak Ditemukan' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ $sppd->created_at->format('d-m-Y') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        @if($sppd->status === 'menunggu')
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Menunggu Persetujuan {{ $sppd->pemberi_tugas }}
+                        </span>
+                        @elseif($sppd->status === 'Disetujui')
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Disetujui oleh {{ $sppd->pemberi_tugas }}
+                        </span>
+                        @else
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            Ditolak oleh {{ $sppd->pemberi_tugas }}
+                        </span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        @if($sppd->status === 'menunggu')
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Proses
+                        </span>
+                        @elseif($sppd->status === 'Disetujui')
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Selesai
+                        </span>
+                        @else
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            Ditolak
+                        </span>
+                        @if ($sppd->alasan_penolakan)
+                            <p class="text-xs mt-1 text-gray-500">Alasan: {{ $sppd->alasan_penolakan }}</p>
+                        @endif
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        @if($sppd->status === 'Disetujui' && $sppd->file_sppd)
+                            <a href="{{ route('sppd.download', $sppd->id) }}" class="text-indigo-600 hover:text-indigo-900 mx-1">
+                                <i class="fas fa-download mr-1"></i> Unduh Surat
+                            </a>
+                        @else
+                            <span class="text-gray-400">Belum Tersedia</span>
+                        @endif
+                    </td>
+                    {{-- Kondisi untuk menampilkan kolom Aksi --}}
+                    @if(Auth::user()->jabatanTerbaru->jabatan->nama_jabatan === 'General Manager' || Auth::user()->jabatanTerbaru->jabatan->nama_jabatan === 'Senior Analis Keuangan, SDM & Umum')
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                        @if($sppd->status === 'menunggu')
+                            @if(Auth::user()->jabatanTerbaru->jabatan->id === $sppd->pemberi_tugas_id)
+                                <form action="{{ route('sppd.updateStatus', $sppd->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="Disetujui">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        Setujui
+                                    </button>
+                                </form>
+                                <button onclick="showRejectModal('{{ $sppd->id }}')"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    Tolak
+                                </button>
+                            @else
+                                <span class="text-gray-500">Menunggu</span>
+                            @endif
+                        @else
+                            <span class="text-gray-500">Tidak Ada Aksi</span>
+                        @endif
+                    </td>
+                    @endif
+                </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada pengajuan SPPD yang perlu Anda setujui.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{-- Modal untuk alasan penolakan (sudah benar) --}}
+<div id="rejectModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
+                Alasan Penolakan
+            </h3>
+            <div class="mt-2">
+                <p class="text-sm text-gray-500">
+                    Mohon berikan alasan penolakan pengajuan SPPD ini.
+                </p>
+            </div>
+            <form id="rejectForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="status" value="Ditolak">
+                <div class="mt-4">
+                    <label for="alasan_penolakan" class="block text-sm font-medium text-gray-700">Alasan</label>
+                    <textarea name="alasan_penolakan" id="alasan_penolakan" rows="4" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required></textarea>
+                </div>
+                <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Tolak Surat
+                    </button>
+                    <button type="button" onclick="closeRejectModal()" class="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+   function showRejectModal(sppdId) {
+    document.getElementById('rejectModal').classList.remove('hidden');
+    const form = document.getElementById('rejectForm');
+    form.action = `/sppd/${sppdId}/status`; // Ini perubahannya!
+}
+
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.add('hidden');
+        document.getElementById('alasan_penolakan').value = '';
+    }
+</script>

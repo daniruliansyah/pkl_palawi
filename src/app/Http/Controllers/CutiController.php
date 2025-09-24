@@ -8,30 +8,19 @@ use Illuminate\Support\Facades\Auth;
 
 class CutiController extends Controller
 {
-    /**
-     * Menampilkan daftar semua pengajuan cuti.
-     */
     public function index()
     {
-        // Mengambil data cuti beserta relasi user, diurutkan dari yang terbaru
-        $cutis = Cuti::with('user')->latest()->get();
-        return view('pages.cuti.index', compact('cutis'));
+        $cutis = Cuti::with('user.jabatanTerbaru.jabatan')->latest()->get();
+        return view('pages.cuti.index-ssdm', compact('cutis'));
     }
 
-    /**
-     * Menampilkan form untuk membuat pengajuan cuti baru.
-     */
     public function create()
     {
         return view('pages.cuti.create');
     }
 
-    /**
-     * Menyimpan pengajuan cuti baru ke database.
-     */
     public function store(Request $request)
-    {
-        // 1. Validasi semua input dari form dan simpan hasilnya
+    {        
         $validatedData = $request->validate([
             'jenis_izin'    => 'required|string',
             'tgl_mulai'     => 'required|date',
@@ -42,21 +31,18 @@ class CutiController extends Controller
         ]);
 
         $pathFileIzin = null;
-
-        // 2. Proses unggahan berkas jika ada
+        
         if ($request->hasFile('file_izin')) {
             $pathFileIzin = $request->file('file_izin')->store('file_izin', 'public');
         }
 
-        // --- BAGIAN YANG HILANG: LOGIKA PEMBUATAN NOMOR SURAT ---
+        // LOGIKA PEMBUATAN NOMOR SURAT
         $tahun = date('Y');
         $bulan = date('m');
         $lastCuti = Cuti::whereYear('created_at', $tahun)->whereMonth('created_at', $bulan)->latest('id')->first();
         $nomorUrut = $lastCuti ? (int)substr($lastCuti->no_surat, -3) + 1 : 1;
         $noSurat = sprintf("CUTI/%s/%s/%03d", $tahun, $bulan, $nomorUrut);
-        // --- SELESAI ---
 
-        // 3. Simpan data ke database menggunakan data yang sudah divalidasi
         Cuti::create(array_merge(
             $validatedData, // Semua data dari form ada di sini, termasuk 'jenis_izin'
             [
@@ -71,18 +57,66 @@ class CutiController extends Controller
             ]
         ));
 
-        // 4. Arahkan kembali ke halaman index dengan pesan sukses
         return redirect()->route('cuti.index')
                          ->with('success', 'Pengajuan Cuti berhasil dibuat.');
     }
 
-    /**
-     * Menampilkan detail dari satu pengajuan cuti.
-     */
+    public function updateStatus(Request $request, Cuti $cuti)
+    {
+        $user = auth()->user();
+        $userJabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
+
+        $statusField = ($userJabatan == 'General Manager') ? 'status_gm' : 'status_sdm' : 'status_ssdm';
+        $cuti->{$statusField} = $request->input('status');
+
+        if ($request->input('status') == 'Disetujui') {
+            if ($userJabatan == 'General Manager') {
+                $cuti->nip_user_gm = $user->nip;
+                $cuti->tgl_persetujuan_gm = now();
+            } elseif ($userJabatan == 'Senior Analis Keuangan, SDM & Umum') {
+                $cuti->nip_user_sdm = $user->nip;
+                $cuti->tgl_persetujuan_sdm = now();
+            }
+            } elseif ($userJabatan == 'Senior Divisi A') {
+                $cuti->nip_user_sdm = $user->nip;
+                $cuti->tgl_persetujuan_ssdm = now();
+            }
+        }
+
+        if ($request->input('status') == 'Ditolak') {
+            $cuti->reason = $request->input('reason');
+        }
+
+        $cuti->save();
+
+        if ($cuti->status_sdm === 'Disetujui' && $cuti->status_gm === 'Disetujui') {
+            // Generate nomor surat yang baru
+            $cuti->no_surat = $this->generateNoSurat();
+            $cuti->save(); // Penting: simpan nomor surat sebelum membuat PDF
+
+            $filePath = $this->generateSuratPdf($cuti);
+
+            if ($filePath) {
+                $cuti->file_cuti = $filePath;
+                $cuti->save();
+            }
+
+            return redirect()->route('cuti.index')
+                ->with('success', 'Pengajuan SPPD berhasil disetujui, surat PDF telah dibuat!');
+        }
+
+        if ($request->input('status') == 'Disetujui') {
+            return redirect()->route('cuti.index')
+                ->with('success', 'Pengajuan SPPD berhasil disetujui!');
+        } else {
+            return redirect()->route('cuti.index')
+                ->with('success', 'Pengajuan SPPD berhasil ditolak. Alasan telah dikirim.');
+        }
+    }
+
     public function show($id)
     {
         $cuti = Cuti::with('user')->findOrFail($id);
-        // Pastikan path view sudah benar (sesuai dengan index & create)
         return view('pages.cuti.show', compact('cuti'));
     }
 }

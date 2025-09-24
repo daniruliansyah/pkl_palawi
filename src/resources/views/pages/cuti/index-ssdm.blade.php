@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Daftar SPPD')
+@section('title', 'Daftar Cuti')
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
@@ -12,6 +12,6 @@
     @endif
 
     {{-- Include partial table --}}
-    @include('partials.table.table-sppd', ['sppds' => $sppds])
+    @include('partials.table.table-cuti-acceptance', ['cutis' => $cutis])
 </div>
 @endsection

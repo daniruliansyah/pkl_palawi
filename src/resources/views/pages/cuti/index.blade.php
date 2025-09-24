@@ -12,6 +12,6 @@
     @endif
 
     {{-- Include partial table --}}
-    @include('partials.table.table-cuti', ['cutis' => $cutis])
+    @include('partials.table.table-cuti-karyawan', ['cutis' => $cutis])
 </div>
 @endsection

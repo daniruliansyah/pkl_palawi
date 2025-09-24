@@ -22,11 +22,12 @@
                     <th class="px-4 py-3">No. Surat</th>
                     <th class="px-4 py-3">Keterangan</th>
                     <th class="px-4 py-3">Tgl. Upload</th>
-                    <th class="px-4 py-3">Status Pengajuan</th>
-                    <th class="px-4 py-3">Persetujuan Staf SDM</th>
+                    <th class="px-4 py-3">Persetujuan SSDM</th>
                     <th class="px-4 py-3">Persetujuan SDM</th>
                     <th class="px-4 py-3">Persetujuan GM</th>
                     <th class="px-4 py-3">File Izin</th>
+                    <th class="px-4 py-3">Status Pengajuan</th>
+                    <th class="py-3 px-4">Aksi</th>
                 </tr>
             </thead>
 
