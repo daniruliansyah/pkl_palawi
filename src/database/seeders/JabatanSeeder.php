@@ -29,7 +29,11 @@ class JabatanSeeder extends Seeder
         ]);
 
         Jabatan::create([
-            'nama_jabatan' => ' Analis Sosial dan Lingkungan',
+            'nama_jabatan' => 'Analis Sosial dan Lingkungan',
+        ]);
+
+        Jabatan::create([
+            'nama_jabatan' => 'Karyawan Biasa',
         ]);
     }
 }
