@@ -12,6 +12,6 @@
     @endif
 
     {{-- Include partial table --}}
-    @include('partials.table.table-sp', ['sps' => $sps])
+    @include('partials.table.table-sp', ['sp' => $sp])
 </div>
 @endsection

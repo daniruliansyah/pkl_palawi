@@ -27,6 +27,7 @@ class SP extends Model
         'ket_peringatan',
         'tgl_sp_terbit',
         'file_sp',   // Ditambahkan (untuk menyimpan path file)
+        'file_bukti', // Ditambahkan (untuk menyimpan path file bukti)
         'no_surat',
     ];
 

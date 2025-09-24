@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('ket_peringatan');
             $table->date('tgl_sp_terbit');
             $table->string('no_surat', 100);
-            $table->string('file_sp', 100)->nullable;
+            $table->string('file_sp', 100);
+            $table->string('file_bukti', 100)->nullable();
             $table->timestamps();
         });
     }
