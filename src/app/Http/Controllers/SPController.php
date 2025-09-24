@@ -108,29 +108,27 @@ class SPController extends Controller
     /**
      * Pencarian karyawan berdasarkan nama atau NIP.
      */
-   public function cariKaryawan(Request $request)
-    {
-        $search = $request->input('q');
+public function cariKaryawan(Request $request)
+{
+    $search = $request->input('q');
 
-        // Cari user berdasarkan NIP atau nama lengkap
-        $users = User::where('nip', 'like', "%{$search}%")
-                     ->orWhere('nama_lengkap', 'like', "%{$search}%")
-                     ->limit(10)
-                     ->get(['nip', 'nama_lengkap']);
+    $users = User::where('nip', 'like', "%{$search}%")
+                 ->orWhere('nama_lengkap', 'like', "%{$search}%")
+                 ->limit(10)
+                 ->get(); // Hapus 'nip', 'nama_lengkap' dari get()
 
-        // Format data agar sesuai dengan Select2 (id dan text)
-        $formattedUsers = $users->map(function ($user) {
-            return [
-                'id' => $user->nip,
-                'text' => "{$user->nama_lengkap} ({$user->nip})",
-            ];
-        });
+    $formattedUsers = $users->map(function ($user) {
+        return [
+            'id' => $user->nip,
+            'text' => "{$user->nama_lengkap} ({$user->nip})",
+        ];
+    });
 
-        // Kirim hasil dalam format yang benar untuk Select2
-        return response()->json([
-            'results' => $formattedUsers,
-        ]);
-    }
+    return response()->json([
+        'results' => $formattedUsers,
+    ]);
+}
+
 
     /**
      * Mengunduh file surat peringatan (file_sp).

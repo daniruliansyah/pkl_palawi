@@ -28,6 +28,7 @@ Route::get('/dashboard', function () {
     return view('layouts.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+
 Route::middleware('auth')->group(function () {
     // Rute Profil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -57,12 +58,17 @@ Route::middleware('auth')->group(function () {
     Route::put('/cuti/{cuti}/update-status', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
     Route::delete('/cuti/{cuti}/cancel', [CutiController::class, 'cancel'])->name('cuti.cancel');
 
-    // Rute SP
-    Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
-    Route::resource('sp', SPController::class);
-
     // Rute Kalender
     Route::resource('kalender', KalenderController::class);
+
+    // Route::get('sp/create', [SPController::class, 'create'])->name('sp.create');
+    // Route::post('sp/store', [SPController::class, 'store'])->name('sp.store');
+    // Route::get('sp', [SPController::class, 'index'])->name('sp.index');
+    Route::resource('sp', SPController::class);
+    Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download');
+    Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti');
+    Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
+
 });
 
 require __DIR__.'/auth.php';
