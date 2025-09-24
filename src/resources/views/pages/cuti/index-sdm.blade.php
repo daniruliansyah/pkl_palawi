@@ -1,10 +1,10 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Persetujuan Cuti Atasan')
+@section('title', 'Persetujuan Cuti SDM')
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
-    {{-- Notifikasi Sukses atau Error --}}
+    {{-- Notifikasi --}}
     @if(session('success'))
         <div class="mb-4 rounded-lg bg-green-100 px-4 py-3 text-green-800">
             {{ session('success') }}
@@ -21,9 +21,9 @@
         <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h3 class="text-lg font-semibold text-gray-800">
-                    Daftar Pengajuan Cuti (Menunggu Persetujuan Anda)
+                    Daftar Pengajuan Cuti (Menunggu Persetujuan SDM)
                 </h3>
-                <p class="text-sm text-gray-500">Berikut adalah daftar pengajuan cuti yang memerlukan tindakan.</p>
+                <p class="text-sm text-gray-500">Berikut adalah daftar pengajuan cuti yang memerlukan tindakan dari Anda.</p>
             </div>
         </div>
 
@@ -138,11 +138,11 @@
                             <td class="px-4 py-3">
                                 <span @class([
                                     'px-2 py-1 text-xs font-medium rounded-full',
-                                    'bg-green-100 text-green-800' => $cuti->status_ssdm == 'Disetujui',
-                                    'bg-red-100 text-red-800' => $cuti->status_ssdm == 'Ditolak',
-                                ])>{{ $cuti->status_ssdm }}</span>
-                                @if($cuti->tgl_persetujuan_ssdm)
-                                <span class="block text-xs text-gray-400 mt-1">{{ \Carbon\Carbon::parse($cuti->tgl_persetujuan_ssdm)->format('d M Y') }}</span>
+                                    'bg-green-100 text-green-800' => $cuti->status_sdm == 'Disetujui',
+                                    'bg-red-100 text-red-800' => $cuti->status_sdm == 'Ditolak',
+                                ])>{{ $cuti->status_sdm }}</span>
+                                @if($cuti->tgl_persetujuan_sdm)
+                                <span class="block text-xs text-gray-400 mt-1">{{ \Carbon\Carbon::parse($cuti->tgl_persetujuan_sdm)->format('d M Y') }}</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3">

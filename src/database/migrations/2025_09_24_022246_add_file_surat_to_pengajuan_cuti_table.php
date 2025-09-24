@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pengajuan_cuti', function (Blueprint $table) {
-            $table->string('nip_user', 20)->after('id');
-            $table->foreign('nip_user')->references('nip')->on('users');
+            $table->string('file_surat')->nullable()->after('alasan_penolakan');
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pengajuan_cuti', function (Blueprint $table) {
-            $table->dropForeign(['nip_user']);
-            $table->dropColumn('nip_user');
+            $table->dropColumn('file_surat');
         });
     }
 };

@@ -1,15 +1,11 @@
-<div
-    class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
-    <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 shadow-sm sm:px-6">
+    <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-                Daftar Pengajuan Cuti
-            </h3>
+            <h3 class="text-lg font-semibold text-gray-800">Riwayat Pengajuan Cuti Anda</h3>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('cuti.create') }}"
-                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
-                + Ajukan Cuti
+        <div>
+            <a href="{{ route('cuti.create') }}" class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                Ajukan Cuti Baru
             </a>
         </div>
     </div>
@@ -17,63 +13,108 @@
     <div class="w-full overflow-x-auto">
         <table class="min-w-full text-sm text-left">
             <thead>
-                <tr class="border-y border-gray-100 bg-gray-50 dark:border-gray-800">
-                    {{-- Kolom Baru Ditambahkan dan Disesuaikan --}}
-                    <th class="px-4 py-3">No. Surat</th>
-                    <th class="px-4 py-3">Keterangan</th>
-                    <th class="px-4 py-3">Tgl. Upload</th>
-                    <th class="px-4 py-3">Persetujuan SSDM</th>
-                    <th class="px-4 py-3">Persetujuan SDM</th>
-                    <th class="px-4 py-3">Persetujuan GM</th>
-                    <th class="px-4 py-3">File Izin</th>
-                    <th class="px-4 py-3">Status Pengajuan</th>
-                    <th class="py-3 px-4">Aksi</th>
+                <tr class="border-y border-gray-100 bg-gray-50 text-gray-600">
+                    <th class="py-3 px-4 font-medium">No. Surat</th>
+                    <th class="py-3 px-4 font-medium">Jenis Cuti</th>
+                    <th class="py-3 px-4 font-medium">Tanggal Diajukan</th>
+                    <th class="py-3 px-4 font-medium">Status Senior</th>
+                    <th class="py-3 px-4 font-medium">Status SDM</th>
+                    <th class="py-3 px-4 font-medium">Status GM</th>
+                    <th class="py-3 px-4 font-medium">Status Final</th>
+                    <th class="py-3 px-4 font-medium text-center">Aksi</th>
                 </tr>
             </thead>
 
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                @forelse($cutis as $item)
-                    <tr class="dark:hover:bg-gray-700">
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                            {{ $item->no_surat ?? '-' }}
-                        </td>
-                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
-                            {{ $item->keterangan }}
-                        </td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                            {{-- Format tanggal agar mudah dibaca --}}
-                            {{ $item->tgl_upload ? \Carbon\Carbon::parse($item->tgl_upload)->format('d-m-Y H:i') : '-' }}
-                        </td>
+            <tbody class="divide-y divide-gray-100">
+                @forelse($cutis as $cuti)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-gray-500">{{ $cuti->no_surat ?? '-' }}</td>
+                        <td class="px-4 py-3 text-gray-700">{{ $cuti->jenis_izin }}</td>
+                        <td class="px-4 py-3 text-gray-500">{{ $cuti->created_at->format('d-m-Y') }}</td>
+                        {{-- Status Senior --}}
                         <td class="px-4 py-3">
-                            <span class="px-2 py-1 font-medium text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                                {{ $item->status_pengajuan }}
-                            </span>
+                            <span @class([
+                                'px-2 py-1 text-xs font-medium rounded-full',
+                                'bg-green-100 text-green-800' => $cuti->status_ssdm == 'Disetujui',
+                                'bg-red-100 text-red-800' => $cuti->status_ssdm == 'Ditolak',
+                                'bg-yellow-100 text-yellow-800' => $cuti->status_ssdm == 'Menunggu Persetujuan',
+                            ])>{{ $cuti->status_ssdm }}</span>
                         </td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                            {{ $item->tgl_persetujuan_ssdm ? \Carbon\Carbon::parse($item->tgl_persetujuan_ssdm)->format('d-m-Y H:i') : 'Menunggu' }}
-                        </td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                            {{ $item->tgl_persetujuan_sdm ? \Carbon\Carbon::parse($item->tgl_persetujuan_sdm)->format('d-m-Y H:i') : 'Menunggu' }}
-                        </td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                            {{ $item->tgl_persetujuan_gm ? \Carbon\Carbon::parse($item->tgl_persetujuan_gm)->format('d-m-Y H:i') : 'Menunggu' }}
-                        </td>
+                        {{-- Status SDM --}}
                         <td class="px-4 py-3">
-                            @if($item->file_izin)
-                                <a href="{{ asset('storage/' . $item->file_izin) }}" download
-                                    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
-                                    Download File
-                                </a>
+                             @php
+                                // Jika level sebelumnya ditolak, tampilkan Ditolak
+                                $statusSdm = ($cuti->status_ssdm == 'Ditolak') ? 'Ditolak' : $cuti->status_sdm;
+                             @endphp
+                             <span @class([
+                                'px-2 py-1 text-xs font-medium rounded-full',
+                                'bg-green-100 text-green-800' => $statusSdm == 'Disetujui',
+                                'bg-red-100 text-red-800' => $statusSdm == 'Ditolak',
+                                'bg-yellow-100 text-yellow-800' => $statusSdm == 'Menunggu Persetujuan',
+                                'bg-gray-100 text-gray-800' => $statusSdm == 'Menunggu',
+                            ])>{{ $statusSdm }}</span>
+                        </td>
+                        {{-- Status GM --}}
+                        <td class="px-4 py-3">
+                            @php
+                                // Jika salah satu level sebelumnya ditolak, tampilkan Ditolak
+                                $statusGm = ($cuti->status_ssdm == 'Ditolak' || $cuti->status_sdm == 'Ditolak') ? 'Ditolak' : $cuti->status_gm;
+                            @endphp
+                            <span @class([
+                                'px-2 py-1 text-xs font-medium rounded-full',
+                                'bg-green-100 text-green-800' => $statusGm == 'Disetujui',
+                                'bg-red-100 text-red-800' => $statusGm == 'Ditolak',
+                                'bg-yellow-100 text-yellow-800' => $statusGm == 'Menunggu Persetujuan',
+                                'bg-gray-100 text-gray-800' => $statusGm == 'Menunggu',
+                            ])>{{ $statusGm }}</span>
+                        </td>
+                        {{-- Status Final --}}
+                        <td class="px-4 py-3">
+                            @if($cuti->status_gm == 'Disetujui')
+                                <span class="font-semibold text-green-600">Disetujui</span>
+                            @elseif($cuti->status_ssdm == 'Ditolak' || $cuti->status_sdm == 'Ditolak' || $cuti->status_gm == 'Ditolak')
+                                <div class="text-red-600">
+                                    <span class="font-semibold">Ditolak</span>
+                                    @php
+                                        // Menentukan siapa yang menolak terakhir
+                                        $penolak = null;
+                                        if ($cuti->status_gm == 'Ditolak') $penolak = $cuti->gm;
+                                        elseif ($cuti->status_sdm == 'Ditolak') $penolak = $cuti->sdm;
+                                        elseif ($cuti->status_ssdm == 'Ditolak') $penolak = $cuti->ssdm;
+                                    @endphp
+                                    @if($penolak)
+                                        <p class="text-xs text-gray-500 italic">oleh: {{ Str::words($penolak->nama_lengkap, 2, '') }}</p>
+                                    @endif
+                                    @if($cuti->alasan_penolakan)
+                                    <p class="text-xs text-gray-500 italic" title="{{ $cuti->alasan_penolakan }}">Alasan: {{ Str::limit($cuti->alasan_penolakan, 20) }}</p>
+                                    @endif
+                                </div>
                             @else
-                                <span class="text-xs text-gray-400 dark:text-gray-500">Tidak ada</span>
+                                <span class="text-yellow-600">Dalam Proses</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            @if($cuti->status_gm == 'Disetujui' && $cuti->file_surat)
+                                <a href="{{ Storage::url($cuti->file_surat) }}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">
+                                    Download Surat
+                                </a>
+                            @elseif($cuti->status_ssdm == 'Menunggu Persetujuan')
+                                <form action="{{ route('cuti.cancel', $cuti->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin membatalkan pengajuan ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:underline text-sm font-medium">
+                                        Batalkan
+                                    </button>
+                                </form>
+                            @else
+                                -
                             @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        {{-- Sesuaikan colspan dengan jumlah kolom baru (8) --}}
-                        <td colspan="8" class="py-4 text-center text-gray-500 dark:text-gray-400">
-                            Belum ada pengajuan Cuti.
+                        <td colspan="8" class="py-8 text-center text-gray-500">
+                            Anda belum memiliki riwayat pengajuan cuti.
                         </td>
                     </tr>
                 @endforelse
@@ -81,3 +122,4 @@
         </table>
     </div>
 </div>
+

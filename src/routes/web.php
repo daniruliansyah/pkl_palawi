@@ -54,6 +54,8 @@ Route::middleware('auth')->group(function () {
 
     // Rute Cuti
     Route::resource('cuti', CutiController::class);
+    Route::put('/cuti/{cuti}/update-status', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
+    Route::delete('/cuti/{cuti}/cancel', [CutiController::class, 'cancel'])->name('cuti.cancel');
 
     // Rute SP
     Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
