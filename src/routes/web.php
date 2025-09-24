@@ -36,15 +36,6 @@ Route::middleware('auth')->group(function () {
     // tambahan
     Route::get('/profile/detail', [ProfileController::class, 'show'])->name('profile.show');
 
-Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan'); // <-- Tambahkan nama ini
-Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
-Route::get('/editpi/{id}', [UserController::class, 'editpi'])->name('karyawan.editpi');
-Route::put('/updatepi/{id}', [UserController::class, 'updatepi'])->name('karyawan.updatepi');
-Route::get('/editkep/{id}', [UserController::class, 'editkep'])->name('karyawan.editkep');
-Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
-Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit');
-Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update');
-
     // Rute Karyawan dan Riwayat Jabatan
     Route::resource('karyawan', UserController::class);
     Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan');
@@ -64,9 +55,11 @@ Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanContr
     // Rute Cuti
     Route::resource('cuti', CutiController::class);
 
-    // Rute SP dan Kalender
-    Route::get('cari', [SPController::class, 'cariKaryawan'])->name('cari');
+    // Rute SP
+    Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
     Route::resource('sp', SPController::class);
+
+    // Rute Kalender
     Route::resource('kalender', KalenderController::class);
 });
 
