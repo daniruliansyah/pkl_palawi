@@ -97,28 +97,21 @@
         </form>
     </div>
 </div>
-
 @push('scripts')
 <script>
     $(document).ready(function() {
         $('#nip_user').select2({
             placeholder: 'Cari berdasarkan NIP atau Nama Karyawan',
             allowClear: true,
-            containerCssClass: 'mt-1 block w-full border border-gray-300 rounded-lg py-2.5 px-4 text-sm font-medium text-gray-700 shadow-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100',
-            dropdownCssClass: 'rounded-lg border border-gray-300 shadow-md',
             ajax: {
                 url: '{{ route("cari-karyawan") }}',
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {
-                    return {
-                        q: params.term
-                    };
+                    return { q: params.term };
                 },
                 processResults: function(data) {
-                    return {
-                        results: data.results
-                    };
+                    return data;
                 },
                 cache: true
             },
@@ -132,5 +125,4 @@
     });
 </script>
 @endpush
-
 @endsection
