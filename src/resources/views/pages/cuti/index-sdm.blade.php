@@ -25,6 +25,11 @@
                 </h3>
                 <p class="text-sm text-gray-500">Berikut adalah daftar pengajuan cuti yang memerlukan tindakan dari Anda.</p>
             </div>
+            <div>
+            <a href="{{ route('cuti.create') }}" class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                Ajukan Cuti Baru
+            </a>
+        </div>
         </div>
 
         <div class="w-full overflow-x-auto">
