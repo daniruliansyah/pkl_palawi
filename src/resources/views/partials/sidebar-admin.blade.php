@@ -2,6 +2,31 @@
   :class="sidebarToggle ? 'translate-x-0 lg:w-[90px]' : '-translate-x-full'"
   class="sidebar fixed left-0 top-0 z-50 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-300 bg-white px-5 transition-transform duration-300 ease-linear lg:static lg:translate-x-0"
 >
+
+@php
+    // Memastikan penggunaan Facade Auth
+    use Illuminate\Support\Facades\Auth;
+    
+    // Mendapatkan user yang sedang login
+    // Asumsi: $user sudah dimuat dengan eager loading 'jabatanTerbaru.jabatan'
+    $user = Auth::user(); 
+    $isSeniorSDM = false;
+
+    // Cek hierarki relasi: User -> RiwayatJabatan -> Jabatan
+    if ($user && $user->jabatanTerbaru && $user->jabatanTerbaru->jabatan) {
+        // Ambil nama jabatan dari relasi terdalam
+        $jabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
+
+        // Cek apakah jabatan mengandung string "senior" DAN "sdm" (case-insensitive)
+        $hasSenior = (stripos($jabatan, 'senior') !== false);
+        $hasSDM = (stripos($jabatan, 'sdm') !== false);
+
+        if ($hasSenior && $hasSDM) {
+            $isSeniorSDM = true;
+        }
+    }
+@endphp
+
   <!-- Logo -->
   <div :class="sidebarToggle ? 'justify-center' : 'justify-between'" class="flex items-center gap-2 pt-8 pb-7">
     <a href="index.html">
@@ -53,15 +78,16 @@
           <!-- Dropdown -->
           <ul :class="selected === 'Forms' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
             <li>
-              <a href="form-elements.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">List Pengajuan</a>
+              <a href={{ route('cuti.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan Izin</a>
             </li>
             <li>
-              <a href="form-elements.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">History Pengajuan</a>
+              <a href="form-elements.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat Surat Cuti</a>
             </li>
           </ul>
         </li>
 
         <!-- Peringatan -->
+      @if ($isSeniorSDM)
         <li>
           <a
             href="#"
@@ -79,10 +105,11 @@
           </a>
 
           <ul :class="selected === 'Tables' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
-            <li><a href="basic-tables.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">List Peringatan</a></li>
-            <li><a href="basic-tables.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat Peringatan</a></li>
+            <li><a href={{ route('sp.create') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Buat Peringatan</a></li>
+            <li><a href={{ route('sp.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Daftar SP</a></li>
           </ul>
         </li>
+      @endif
 
         <!-- Perjalanan Dinas -->
         <li>
@@ -102,7 +129,7 @@
           </a>
 
           <ul :class="selected === 'Pages' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
-            <li><a href="blank.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">List Pengajuan SPPD</a></li>
+            <li><a href={{ route('sppd.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan SPPD</a></li>
             <li><a href="404.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat SPPD</a></li>
           </ul>
         </li>
