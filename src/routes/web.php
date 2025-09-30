@@ -28,6 +28,8 @@ Route::get('/dashboard', function () {
     return view('layouts.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Route untuk verifikasi surat via QR Code (DITARUH DI LUAR AUTH agar publik bisa scan)
+Route::get('/sppd/verifikasi/{id}', [SppdController::class, 'verifikasi'])->name('sppd.verifikasi');
 
 Route::middleware('auth')->group(function () {
     // Rute Profil
@@ -61,9 +63,7 @@ Route::middleware('auth')->group(function () {
     // Rute Kalender
     Route::resource('kalender', KalenderController::class);
 
-    // Route::get('sp/create', [SPController::class, 'create'])->name('sp.create');
-    // Route::post('sp/store', [SPController::class, 'store'])->name('sp.store');
-    // Route::get('sp', [SPController::class, 'index'])->name('sp.index');
+    // Rute SP
     Route::resource('sp', SPController::class);
     Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download');
     Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti');

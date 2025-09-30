@@ -1,52 +1,42 @@
 <x-guest-layout>
-    <!-- Google Font Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Background animasi -->
     <div id="particles-js" class="absolute inset-0 z-0 h-screen w-screen bg-gradient-to-b from-green-200 via-white to-green-300"></div>
 
-    <!-- Konten login -->
-    <div class="relative z-10 w-full max-w-md bg-white/80 rounded-xl shadow-lg p-6 flex flex-col justify-center mx-auto my-auto h-[500px]">
-        <!-- Logo & Judul -->
+    <div class="relative z-10 w-full max-w-md bg-white/80 rounded-xl shadow-lg p-6 flex flex-col justify-center mx-4 sm:mx-auto my-auto h-auto min-h-fit">
         <div class="flex flex-col items-center mb-6 text-center">
             <img src="{{ asset('images/econique.jpg') }}" alt="Econique Logo" class="w-24 mb-4">
             <h1 class="text-2xl md:text-2xl font-semibold drop-shadow-md" style="font-family: 'Poppins', sans-serif;">
                 Selamat Datang
             </h1>
             <h2 class="text-3xl md:text-3xl font-bold drop-shadow-sm" style="font-family: 'Poppins', sans-serif;">
-                 ECONIQUE-yey
+                ECONIQUE-yey
             </h2>
         </div>
 
-        <!-- Session Status -->
         <x-auth-session-status class="mb-4" :status="session('status')" />
 
-        <!-- Form -->
         <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-4">
             @csrf
 
-            <!-- Email -->
             <x-input-label for="email" :value="__('Email')" class="text-[#1A4314]" />
             <x-text-input id="email" class="block mt-1 w-full border-[#1A4314] focus:ring-[#1A4314] focus:border-[#1A4314]"
                           type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
 
-            <!-- Password -->
             <x-input-label for="password" :value="__('Password')" class="text-[#1A4314]" />
             <x-text-input id="password" class="block mt-1 w-full border-[#1A4314] focus:ring-[#1A4314] focus:border-[#1A4314]"
                           type="password" name="password" required autocomplete="current-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
 
-            <!-- Remember Me -->
             <div class="flex items-center">
                 <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-[#1A4314] shadow-sm focus:ring-[#1A4314]" name="remember">
                 <label for="remember_me" class="ms-2 text-sm text-gray-600">Ingat saya</label>
             </div>
 
-            <!-- Button & Forgot -->
-            <div class="flex flex-col md:flex-row items-center justify-between mt-2 gap-2">
+            <div class="flex flex-col md:flex-row items-center justify-between mt-2 gap-3">
                 @if (Route::has('password.request'))
-                    <a class="underline text-sm text-[#1A4314] hover:text-green-900 text-center md:text-left w-full md:w-auto" href="{{ route('password.request') }}">
+                    <a class="underline text-sm text-[#1A4314] hover:text-green-900 w-full text-center md:w-auto md:text-left" href="{{ route('password.request') }}">
                         Lupa password?
                     </a>
                 @endif
@@ -58,7 +48,6 @@
         </form>
     </div>
 
-    <!-- Particles.js CDN & Script -->
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>
     window.onload = function() {
