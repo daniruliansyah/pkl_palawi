@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -50,19 +52,74 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-    public function riwayatJabatans()
+    public function riwayatJabatans(): HasMany
     {
         return $this->hasMany(RiwayatJabatan::class, 'nip_user', 'nip');
     }
 
-    public function jabatanTerbaru()
+    public function jabatanTerbaru(): HasOne
     {
         return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
-                    ->latestOfMany('tgl_mulai'); 
+                    ->latestOfMany('tgl_mulai');
     }
 
-    public function riwayatSP()
+    public function riwayatSP(): HasMany
     {
         return $this->hasMany(SP::class, 'nip_user', 'nip');
     }
+
+    // --- LOGIKA PENGECEKAN PERAN ---
+
+    private function getNamaJabatan(): ?string
+    {
+        return $this->jabatanTerbaru?->jabatan?->nama_jabatan;
+    }
+
+    public function isGm(): bool
+    {
+        $namaJabatan = $this->getNamaJabatan();
+        return $namaJabatan && stripos($namaJabatan, 'General Manager') !== false;
+    }
+
+    /**
+     * Memeriksa apakah user adalah SDM (berdasarkan nama jabatan spesifik).
+     */
+    public function isSdm(): bool
+    {
+        $namaJabatan = $this->getNamaJabatan();
+        return $namaJabatan && stripos($namaJabatan, 'Senior Analis Keuangan, SDM & Umum') !== false;
+    }
+
+    /**
+     * Memeriksa apakah user adalah Senior, TAPI bukan SDM atau GM.
+     */
+    public function isSenior(): bool
+    {
+        $namaJabatan = $this->getNamaJabatan();
+        if (!$namaJabatan || $this->isGm() || $this->isSdm()) {
+            return false;
+        }
+        return (stripos($namaJabatan, 'Senior') !== false || stripos($namaJabatan, 'Manager') !== false);
+    }
+
+    /**
+     * Method baru: Memeriksa apakah user adalah karyawan biasa.
+     */
+    public function isKaryawanBiasa(): bool
+    {
+        // Karyawan biasa adalah mereka yang BUKAN GM, BUKAN SDM, dan BUKAN Senior.
+        return !$this->isGm() && !$this->isSdm() && !$this->isSenior();
+    }
+
+    public function canCreatePeringatan(): bool
+    {
+        // Wewenang membuat SP dimiliki oleh peran SDM
+        return $this->isSdm();
+    }
+
+    public function canManageKaryawan(): bool
+    {
+        return $this->isGm() || $this->isSdm();
+    }
 }
+
