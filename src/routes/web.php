@@ -8,6 +8,7 @@ use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\CutiController;
 use App\Http\Controllers\RiwayatJabatanController;
 use App\Http\Controllers\SPController;
+use App\Http\Controllers\NotifikasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +69,13 @@ Route::middleware('auth')->group(function () {
     Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download');
     Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti');
     Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
+
+
+    // URL: /api/notifications
+    Route::get('/notifications', [NotifikasiController::class, 'index']);
+
+    // URL: /api/notifications/tandaiSudahDibaca
+    Route::post('/notifications/tandaiSudahDibaca', [NotifikasiController::class, 'tandaiSudahDibaca']);
 
 });
 

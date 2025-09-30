@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Notifikasi;
+use App\Models\User;
 
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
@@ -44,6 +46,7 @@ class SppdController extends Controller
 
     public function store(Request $request)
     {
+        // ... (Logika validasi dan perhitungan jumlah hari tidak diubah) ...
         $request->validate([
             'pemberi_tugas_id' => 'required|exists:jabatan,id',
             'tgl_mulai'        => 'required|date',
@@ -83,12 +86,41 @@ class SppdController extends Controller
             'status'          => 'menunggu',
         ]);
 
+        // =========================================================
+        // START: LOGIKA NOTIFIKASI - SPPD BARU DIAJUKAN (UNTUK GM/ATASAN)
+        // =========================================================
+        try {
+            // 1. Cari user yang memiliki jabatan sebagai pemberi tugas
+            // Asumsi: Kita harus mencari user yang jabatannya (jabatanTerbaru) cocok dengan pemberi_tugas_id.
+            $atasan = User::whereHas('jabatanTerbaru.jabatan', function ($query) use ($jabatan) {
+                $query->where('id', $jabatan->id);
+            })->first();
+
+            if ($atasan) {
+                Notifikasi::create([
+                    'user_id'            => $atasan->id,
+                    'jenis_surat'        => 'SPPD',
+                    'nama_pengirim'      => auth()->user()->nama_lengkap,
+                    'isi_pesan'          => 'Telah mengajukan SPPD baru dan membutuhkan persetujuan Anda.',
+                    'status_persetujuan' => 'Menunggu Persetujuan',
+                    'foto_pengirim'      => auth()->user()->foto,
+                    'sudah_dibaca'       => false,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Notifikasi Gagal Dibuat (Store SPPD): " . $e->getMessage());
+        }
+        // =========================================================
+        // END: LOGIKA NOTIFIKASI
+        // =========================================================
+
         return redirect()->route('sppd.index')->with('success', 'SPPD berhasil diajukan!');
     }
 
     public function updateStatus(Request $request, Sppd $sppd)
     {
         try {
+            // ... (Logika validasi, wewenang, dan update status tidak diubah) ...
             $request->validate([
                 'status'           => 'required|in:Disetujui,Ditolak',
                 'alasan_penolakan' => 'nullable|string|required_if:status,Ditolak',
@@ -100,6 +132,9 @@ class SppdController extends Controller
             if ($userJabatanId !== $sppd->pemberi_tugas_id) {
                 return back()->with('error', 'Anda tidak memiliki wewenang untuk melakukan aksi ini.');
             }
+
+            // 1. Dapatkan pembuat SPPD (Penerima Notifikasi)
+            $pembuatSppd = User::where('nip', $sppd->nip_user)->first();
 
             if ($request->status === 'Disetujui') {
                 $sppd->status          = 'Disetujui';
@@ -113,6 +148,25 @@ class SppdController extends Controller
                 if ($filePath) {
                     $sppd->file_sppd = $filePath;
                     $sppd->save();
+
+                    // =========================================================
+                    // START: LOGIKA NOTIFIKASI - SPPD DISETUJUI (UNTUK PEMBUAT SPPD)
+                    // =========================================================
+                    if ($pembuatSppd) {
+                        Notifikasi::create([
+                            'user_id'            => $pembuatSppd->id, // Penerima: Pembuat SPPD
+                            'jenis_surat'        => 'SPPD',
+                            'nama_pengirim'      => $user->nama_lengkap, // Pengirim: GM/Atasan yang menyetujui
+                            'isi_pesan'          => 'Surat SPPD Anda telah **Disetujui** dan siap diunduh.',
+                            'status_persetujuan' => 'Disetujui',
+                            'foto_pengirim'      => $user->foto,
+                            'sudah_dibaca'       => false,
+                        ]);
+                    }
+                    // =========================================================
+                    // END: LOGIKA NOTIFIKASI
+                    // =========================================================
+
                 } else {
                     return redirect()->route('sppd.index')
                         ->with('warning', 'Disetujui, tapi gagal membuat file surat. Cek logs.');
@@ -122,11 +176,30 @@ class SppdController extends Controller
                     ->with('success', 'Pengajuan SPPD berhasil disetujui dan surat telah dibuat.');
             }
 
+            // Jika status Ditolak
             $sppd->status          = 'Ditolak';
             $sppd->tgl_persetujuan = now();
             $sppd->nip_penyetuju   = $user->nip;
             $sppd->alasan_penolakan= $request->alasan_penolakan;
             $sppd->save();
+
+            // =========================================================
+            // START: LOGIKA NOTIFIKASI - SPPD DITOLAK (UNTUK PEMBUAT SPPD)
+            // =========================================================
+            if ($pembuatSppd) {
+                Notifikasi::create([
+                    'user_id'            => $pembuatSppd->id, // Penerima: Pembuat SPPD
+                    'jenis_surat'        => 'SPPD',
+                    'nama_pengirim'      => $user->nama_lengkap, // Pengirim: GM/Atasan yang menolak
+                    'isi_pesan'          => 'Surat SPPD Anda **Ditolak** dengan alasan: ' . $request->alasan_penolakan,
+                    'status_persetujuan' => 'Ditolak',
+                    'foto_pengirim'      => $user->foto,
+                    'sudah_dibaca'       => false,
+                ]);
+            }
+            // =========================================================
+            // END: LOGIKA NOTIFIKASI
+            // =========================================================
 
             return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil ditolak.');
         } catch (\Exception $e) {
@@ -134,7 +207,6 @@ class SppdController extends Controller
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
-
     protected function numberToRoman($number)
     {
         $map = [

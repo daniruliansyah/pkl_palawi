@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Notifikasi;
 
 class User extends Authenticatable
 {
@@ -58,11 +59,16 @@ class User extends Authenticatable
     public function jabatanTerbaru()
     {
         return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
-                    ->latestOfMany('tgl_mulai'); 
+                    ->latestOfMany('tgl_mulai');
     }
 
     public function riwayatSP()
     {
         return $this->hasMany(SP::class, 'nip_user', 'nip');
+    }
+    public function notifikasi()
+    {
+        // 'user_id' adalah Foreign Key di tabel 'pemberitahuans'
+        return $this->hasMany(Notifikasi::class, 'user_id');
     }
 }
