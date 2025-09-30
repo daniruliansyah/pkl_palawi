@@ -1,18 +1,10 @@
-@extends('layouts.dashboard')
-
-@section('title', 'Daftar Surat Peringatan')
-
-@section('content')
-<div class="p-4">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold text-gray-800">Daftar Surat Peringatan</h2>
-        <a href="{{ route('sp.create') }}" class="inline-flex items-center rounded-lg bg-green-500 px-6 py-2 font-medium text-white shadow-md transition-colors duration-200 hover:bg-green-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-            </svg>
-            Tambah SP
-        </a>
-    </div>
+<div
+     class="flex items-center justify-between p-4 bg-white rounded-lg shadow-md mb-6">
+    <h2 class="text-xl font-semibold text-gray-800">Daftar Pengajuan SP</h2>
+    <a href="{{ route('sp.create') }}" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        + Ajukan SP Baru
+    </a>
+</div>
 
     @if (session('success'))
         <div class="mb-4 rounded-lg bg-green-100 p-4 text-sm text-green-700" role="alert">
@@ -40,7 +32,7 @@
                         Keterangan
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                        Aksi
+                        Surat
                     </th>
                 </tr>
             </thead>
@@ -90,4 +82,4 @@
         </table>
     </div>
 </div>
-@endsection
+

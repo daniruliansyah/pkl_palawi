@@ -89,11 +89,19 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        @if($sppd->status === 'Disetujui' && $sppd->file_sppd)
+                        {{-- @if($sppd->status === 'Disetujui' && $sppd->file_sppd)
                             <a href="{{ route('sppd.download', $sppd->id) }}" class="text-indigo-600 hover:text-indigo-900 mx-1">
                                 <i class="fas fa-download mr-1"></i> Unduh Surat
                             </a>
-                        @else
+                        @else --}}
+
+                         @if($sppd->status === 'Disetujui' && $sppd->file_sppd)
+                            <a href="{{ route('sppd.download', $sppd->id) }}" class="text-indigo-600 hover:text-indigo-900 mx-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2h2v2H6V6zm2 4H6v2h2v-2zm2-2h2v2h-2V8zm2 2h-2v2h2v-2zm-2 4H6v2h2v-2zm2 0h2v2h-2v-2z" />
+                                </svg>
+                            </a>
+                            @else
                             <span class="text-gray-400">Belum Tersedia</span>
                         @endif
                     </td>

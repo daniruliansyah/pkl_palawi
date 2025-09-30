@@ -18,34 +18,39 @@
         .bordered-table th, .bordered-table td {
             border: 1px solid #000;
             padding: 5px;
-            vertical-align: top; /* Mengatur konten ke atas sel */
+            vertical-align: top;
         }
         .bordered-table th { background-color: #f2f2f2; }
-        .bordered-table td { height: 35px; } /* Menambahkan tinggi minimal untuk setiap sel data */
+        .bordered-table td { height: 35px; }
 
-        /* Menentukan lebar kolom */
-        .col-no { width: 5%; }
-        .col-datang-pulang { width: 20%; }
-        .col-tujuan { width: 35%; }
-        .col-pejabat { width: 20%; } /* Atur lebar sesuai kebutuhan, total harus 100% */
+        /* Gaya TTD yang dikoreksi untuk DomPDF */
+        .ttd-box { width: 45%; text-align: center; }
+        .ttd-spacer { width: 10%; }
+        .qr-code-container { margin: 5px 0 10px 0; }
+        .qr-code-image { width: 100px; height: 100px; display: block; margin: 0 auto; }
     </style>
 </head>
 <body>
     {{-- helper embed image --}}
     @php
-        $embed = function($relativePath) {
-            $full = public_path($relativePath);
-            if (!file_exists($full)) return '';
-            $mime = @mime_content_type($full) ?: 'image/png';
-            $data = base64_encode(file_get_contents($full));
-            return "data:{$mime};base64,{$data}";
-        };
+    $embed = function($relativePath) {
+        $full = public_path($relativePath);
+        if (!file_exists($full)) {
+            // Jika file tidak ada, ini akan menyebabkan error pada DomPDF.
+            // Pastikan images/econique.jpg ADA di public folder.
+            return ''; // Mengembalikan string kosong jika file tidak ditemukan
+        }
+        $mime = @mime_content_type($full) ?: 'image/png';
+        $data = base64_encode(file_get_contents($full));
+        return "data:{$mime};base64,{$data}";
+    };
     @endphp
 
     <div class="container">
         <table style="margin-bottom:10px;">
             <tr>
                 <td style="width:20%; vertical-align:middle;">
+                    {{-- Logo perusahaan --}}
                     <img src="{{ $embed('images/econique.jpg') }}" alt="Logo" style="max-height:80px;">
                 </td>
                 <td style="width:60%;" class="text-center">
@@ -93,36 +98,42 @@
         <div style="margin-top:30px;">
             <table style="width:100%;">
                 <tr>
-                    <td style="text-align:center; width:45%;">
+                    {{-- Blok Tanda Tangan Pemberi Perintah (dengan QR Code) --}}
+                    <td class="ttd-box">
                         <p>Dikeluarkan di Surabaya,</p>
-                        <p> Pada Tanggal, {{ \Carbon\Carbon::parse($sppd->created_at)->format('d F Y') }}</p>
+                        <p> Pada Tanggal, {{ \Carbon\Carbon::parse($sppd->tgl_persetujuan ?? $sppd->created_at)->format('d F Y') }}</p>
                         <p>Yang memberi perintah,</p>
-                        <p style="font-weight:bold;">{{ $sppd->pemberi_tugas }}</p>
-                        @if($sppd->pemberi_tugas === 'General Manager')
-                            <img src="{{ $embed('images/barcode_gm.jpg') }}" alt="ttd GM" class="signature-image">
-                        @elseif($sppd->pemberi_tugas === 'Senior Analis Keuangan, SDM & Umum')
-                            <img src="{{ $embed('images/barcode_sdm.jpg') }}" alt="ttd SDM" class="signature-image">
-                        @endif
-                        <p style="font-weight:bold;">
-                            @if($sppd->penyetuju)
-                                {{ $sppd->penyetuju->nama_lengkap }}
+                        <p style="font-weight:bold; margin-bottom: 5px;">{{ $sppd->pemberi_tugas }}</p>
+
+                        <div class="qr-code-container">
+                            @if(isset($qrCodeBase64) && $qrCodeBase64)
+                                <img src="{{ $qrCodeBase64 }}" alt="QR Code Verifikasi" class="qr-code-image">
                             @else
-                                (Nama Lengkap)
+                                <p style="font-size: 8px; color: red;">[QR Code Gagal Dimuat. Cek log dan ekstensi GD/Imagick.]</p>
                             @endif
+                        </div>
+
+                        <p style="font-weight:bold; margin-top: 5px;">
+                            {{ $sppd->penyetuju->nama_lengkap ?? '(Nama Lengkap Penyetuju)' }}
                         </p>
+                        <p style="margin-top: -5px;">(Tanda Tangan Elektronik)</p>
+
                     </td>
 
-                    <td style="width:10%;"></td>
+                    <td class="ttd-spacer"></td>
 
-                    <td style="text-align:center; width:45%;">
+                    {{-- Blok Tanda Tangan Yang Diberi Perintah --}}
+                    <td class="ttd-box">
                         <p>Yang diberi Perintah</p>
                         <br><br><br>
-                        <p style="font-weight:bold;">{{ $sppd->user->nama_lengkap ?? '-' }}</p>
+                        {{-- Jarak untuk tanda tangan manual --}}
+                        <p style="font-weight:bold; margin-top: 50px;">{{ $sppd->user->nama_lengkap ?? '-' }}</p>
                     </td>
                 </tr>
             </table>
         </div>
 
+        {{-- Tabel Pelaporan Perjalanan Dinas (Halaman Baru) --}}
         <div class="container bordered-table" style="page-break-before: always;">
             <table>
                 <thead>
@@ -141,11 +152,12 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td style="height: 60px;"></td> </tr>
+                        <td style="height: 60px;"></td>
+                    </tr>
                     @endfor
                 </tbody>
             </table>
-            <p style="margin-top:10px;">Tanggal Cetak: {{ \Carbon\Carbon::now()->format('d F Y H:i:s') }}</p>
+            <p style="margin-top:10px; font-size: 9px;">Tanggal Cetak: {{ \Carbon\Carbon::now()->format('d F Y H:i:s') }}</p>
         </div>
     </div>
 </body>
