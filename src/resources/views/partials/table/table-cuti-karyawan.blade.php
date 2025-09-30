@@ -1,3 +1,8 @@
+{{-- Kotak informasi sisa jatah cuti --}}
+<div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+    <p><span class="font-semibold">Sisa Jatah Cuti Tahunan Anda:</span> {{ $sisaCuti ?? 'N/A' }} hari.</p>
+</div>
+
 <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 shadow-sm sm:px-6">
     <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -43,8 +48,7 @@
                         {{-- Status SDM --}}
                         <td class="px-4 py-3">
                              @php
-                                // Jika level sebelumnya ditolak, tampilkan Ditolak
-                                $statusSdm = ($cuti->status_ssdm == 'Ditolak') ? 'Ditolak' : $cuti->status_sdm;
+                                 $statusSdm = ($cuti->status_ssdm == 'Ditolak') ? 'Ditolak' : $cuti->status_sdm;
                              @endphp
                              <span @class([
                                 'px-2 py-1 text-xs font-medium rounded-full',
@@ -57,7 +61,6 @@
                         {{-- Status GM --}}
                         <td class="px-4 py-3">
                             @php
-                                // Jika salah satu level sebelumnya ditolak, tampilkan Ditolak
                                 $statusGm = ($cuti->status_ssdm == 'Ditolak' || $cuti->status_sdm == 'Ditolak') ? 'Ditolak' : $cuti->status_gm;
                             @endphp
                             <span @class([
@@ -76,7 +79,6 @@
                                 <div class="text-red-600">
                                     <span class="font-semibold">Ditolak</span>
                                     @php
-                                        // Menentukan siapa yang menolak terakhir
                                         $penolak = null;
                                         if ($cuti->status_gm == 'Ditolak') $penolak = $cuti->gm;
                                         elseif ($cuti->status_sdm == 'Ditolak') $penolak = $cuti->sdm;
@@ -122,3 +124,4 @@
         </table>
     </div>
 </div>
+

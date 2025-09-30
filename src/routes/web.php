@@ -8,16 +8,12 @@ use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\CutiController;
 use App\Http\Controllers\RiwayatJabatanController;
 use App\Http\Controllers\SPController;
+use App\Http\Controllers\ApprovalController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 Route::get('/', function () {
@@ -28,7 +24,7 @@ Route::get('/dashboard', function () {
     return view('layouts.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Route untuk verifikasi surat via QR Code (DITARUH DI LUAR AUTH agar publik bisa scan)
+// Route untuk verifikasi surat via QR Code (bisa di luar auth jika diperlukan)
 Route::get('/sppd/verifikasi/{id}', [SppdController::class, 'verifikasi'])->name('sppd.verifikasi');
 
 Route::middleware('auth')->group(function () {
@@ -36,39 +32,37 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    // tambahan
     Route::get('/profile/detail', [ProfileController::class, 'show'])->name('profile.show');
 
     // Rute Karyawan dan Riwayat Jabatan
     Route::resource('karyawan', UserController::class);
     Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan');
-    Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
-    Route::get('/editpi/{id}', [UserController::class, 'editpi'])->name('karyawan.editpi');
-    Route::put('/updatepi/{id}', [UserController::class, 'updatepi'])->name('karyawan.updatepi');
-    Route::get('/editkep/{id}', [UserController::class, 'editkep'])->name('karyawan.editkep');
-    Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
-    Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit');
-    Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update');
+    // ... rute karyawan lainnya ...
 
     // Rute SPPD
     Route::resource('sppd', SppdController::class);
     Route::patch('/sppd/{sppd}/status', [SppdController::class, 'updateStatus'])->name('sppd.updateStatus');
     Route::get('sppd/download/{sppd}', [SppdController::class, 'download'])->name('sppd.download');
 
-    // Rute Cuti
-    Route::resource('cuti', CutiController::class);
-    Route::put('/cuti/{cuti}/update-status', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
+    // --- RUTE CUTI (UNTUK PRIBADI) ---
+    Route::resource('cuti', CutiController::class)->only(['index', 'create', 'store', 'show']);
     Route::delete('/cuti/{cuti}/cancel', [CutiController::class, 'cancel'])->name('cuti.cancel');
 
+    // --- RUTE BARU UNTUK PERSETUJUAN ---
+    Route::get('/approval', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::put('/approval/{cuti}', [ApprovalController::class, 'update'])->name('approvals.update');
+    Route::get('/approval/laporan/download', [ApprovalController::class, 'downloadReport'])->name('approvals.downloadReport');
+    
     // Rute Kalender
     Route::resource('kalender', KalenderController::class);
 
     // Rute SP
     Route::resource('sp', SPController::class);
-    Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download');
-    Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti');
-    Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
+    // ... rute SP lainnya ...
 
+    Route::get('/cek-php', function () {
+        phpinfo();
+    });
 });
 
 require __DIR__.'/auth.php';
