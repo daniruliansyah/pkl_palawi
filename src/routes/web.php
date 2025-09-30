@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/detail', [ProfileController::class, 'show'])->name('profile.show');
 
     // Rute Karyawan dan Riwayat Jabatan
-    Route::resource('karyawan', UserController::class);
+    Route::resource('karyawan', UserController::class)->middleware('check.karyawan.access');
     Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan');
     // ... rute karyawan lainnya ...
 
@@ -57,8 +57,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('kalender', KalenderController::class);
 
     // Rute SP
-    Route::resource('sp', SPController::class);
-    // ... rute SP lainnya ...
+    Route::resource('sp', SPController::class)->middleware('check.peringatan.access');
+    Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download')->middleware('check.peringatan.access');
+    Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti')->middleware('check.peringatan.access');
+    Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan')->middleware('check.peringatan.access');
 
     Route::get('/cek-php', function () {
         phpinfo();

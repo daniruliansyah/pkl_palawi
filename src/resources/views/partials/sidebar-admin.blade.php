@@ -11,18 +11,28 @@
     // Asumsi: $user sudah dimuat dengan eager loading 'jabatanTerbaru.jabatan'
     $user = Auth::user(); 
     $isSeniorSDM = false;
+    $isStaffSDM = false;
 
-    // Cek hierarki relasi: User -> RiwayatJabatan -> Jabatan
+    // Asumsi Auth::user() tersedia di Blade
+    $user = Auth::user();
+
+    // 1. Cek apakah user dan relasinya valid
     if ($user && $user->jabatanTerbaru && $user->jabatanTerbaru->jabatan) {
-        // Ambil nama jabatan dari relasi terdalam
         $jabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
 
-        // Cek apakah jabatan mengandung string "senior" DAN "sdm" (case-insensitive)
-        $hasSenior = (stripos($jabatan, 'senior') !== false);
+        // Cek apakah jabatan mengandung 'sdm' (ini umum untuk kedua kondisi)
         $hasSDM = (stripos($jabatan, 'sdm') !== false);
 
+        // 2. Tentukan status Senior SDM
+        $hasSenior = (stripos($jabatan, 'senior') !== false);
         if ($hasSenior && $hasSDM) {
             $isSeniorSDM = true;
+        }
+
+        // 3. Tentukan status Staff SDM
+        $hasStaff = (stripos($jabatan, 'staff') !== false);
+        if ($hasStaff && $hasSDM) {
+            $isStaffSDM = true;
         }
     }
 @endphp
@@ -44,19 +54,21 @@
       <h3 class="mb-4 text-xs uppercase text-gray-400">Menu</h3>
       <ul class="flex flex-col gap-4">
         <!-- Karyawan -->
-        <li>
-          <a
-            href="{{ route('karyawan.index') }}"
-            @click="selected = 'Karyawan'"
-            class="menu-item flex items-center gap-3 p-2 rounded hover:bg-green-50 transition-colors"
-            :class="selected === 'Karyawan' ? 'bg-green-50 font-semibold text-gray-800' : 'bg-white text-gray-700'"
-          >
-            <svg class="w-6 h-6 flex-shrink-0 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.015-7 4.5V21h14v-2.5c0-2.485-3.134-4.5-7-4.5z"/>
-            </svg>
-            <span class="menu-item-text" :class="sidebarToggle ? 'hidden' : 'block'">Karyawan</span>
-          </a>
-        </li>
+        @if ($isStaffSDM || $isSeniorSDM)
+          <li>
+            <a
+              href="{{ route('karyawan.index') }}"
+              @click="selected = 'Karyawan'"
+              class="menu-item flex items-center gap-3 p-2 rounded hover:bg-green-50 transition-colors"
+              :class="selected === 'Karyawan' ? 'bg-green-50 font-semibold text-gray-800' : 'bg-white text-gray-700'"
+            >
+              <svg class="w-6 h-6 flex-shrink-0 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 2.015-7 4.5V21h14v-2.5c0-2.485-3.134-4.5-7-4.5z"/>
+              </svg>
+              <span class="menu-item-text" :class="sidebarToggle ? 'hidden' : 'block'">Karyawan</span>
+            </a>
+          </li>
+        @endif
 
         <!-- Pengajuan Izin -->
         <li>

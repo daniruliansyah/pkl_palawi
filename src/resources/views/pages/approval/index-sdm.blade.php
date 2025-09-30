@@ -14,10 +14,15 @@
 
     {{-- Tabel 1: Menunggu Persetujuan --}}
     <div class="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 shadow-sm sm:px-6">
-        <div class="mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">Daftar Pengajuan Cuti (Menunggu Persetujuan SDM)</h3>
-            <p class="text-sm text-gray-500">Berikut adalah daftar pengajuan cuti yang memerlukan tindakan dari Anda.</p>
+        <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">
+                    Daftar Pengajuan Cuti (Menunggu Persetujuan SDM)
+                </h3>
+                <p class="text-sm text-gray-500">Berikut adalah daftar pengajuan cuti yang memerlukan tindakan dari Anda.</p>
+            </div>
         </div>
+
         <div class="w-full overflow-x-auto">
             <table class="min-w-full text-sm text-left">
                 <thead>
