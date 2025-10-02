@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder {
         UserSeeder::class,
         SppdSeeder::class,
         CutiSeeder::class,
+        CalendarSeeder::class,
     ]);
   }
 }
