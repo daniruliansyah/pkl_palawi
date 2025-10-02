@@ -65,6 +65,33 @@ Route::middleware('auth')->group(function () {
     Route::get('/cek-php', function () {
         phpinfo();
     });
+
+    // Route::get('/calender', function () {
+    //     return view('pages.calendar.index');
+    // })->middleware('auth')->name('personal.notes');
+
+    // Route::middleware(['auth'])->prefix('calendar')->group(function () {
+    //     // 1. Tampilan Utama Kalender (Blade View)
+    //     // Route ini akan menampilkan file blade kalender.
+    //     // Kita akan buat fungsi 'showCalendar' di Controller nanti.
+    //     Route::get('/calendar', [KalenderController::class, 'showCalendar'])->name('calendar.index');
+        
+    //     // 2. API: Mengambil semua notes user yang sedang login (READ)
+    //     Route::get('/notes', [KalenderController::class, 'index'])->name('calendar.api.index');
+        
+    //     // 3. API: Menyimpan atau mengupdate notes (CREATE/UPDATE)
+    //     Route::post('/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
+
+    //     // 4. API: Menghapus catatan (DELETE)
+    //     Route::delete('/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
+    // });
+
+    Route::get('/calendar/calendar', [KalenderController::class, 'showCalendar'])->name('calendar.index');
+    Route::get('/calendar/notes', [KalenderController::class, 'index'])->name('calendar.api.index');
+    Route::post('/calendar/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
+    Route::delete('/calendar/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
+
+
 });
 
 require __DIR__.'/auth.php';
