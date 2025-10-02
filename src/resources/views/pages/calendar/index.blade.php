@@ -35,13 +35,13 @@
             <div class="grid grid-cols-7 gap-1">
                 <template x-for="day in daysInMonth" :key="day.dateKey">
                     <div class="h-20 p-1 flex flex-col transition-all duration-150"
-                         :class="{
+                        :class="{
                             'text-gray-400': !day.isCurrentMonth,
                             'bg-gray-50': day.isToday,
                             'border-2 border-blue-400 rounded-lg': day.dateKey === selectedDate,
                             'hover:bg-blue-50 cursor-pointer rounded-lg': day.isCurrentMonth
                         }"
-                         @click="day.isCurrentMonth && selectDate(day.dateKey)">
+                        @click="day.isCurrentMonth && selectDate(day.dateKey)">
 
                         <span class="text-xs font-semibold" 
                             :class="{ 'text-blue-600': day.isToday && day.isCurrentMonth }">
@@ -51,11 +51,11 @@
                         {{-- Indikator notes --}}
                         <div x-show="notesData[day.dateKey]" class="mt-1 w-full flex justify-center">
                             <div class="h-1 w-1.5 rounded-full"
-                                 :class="{
+                                :class="{
                                     'bg-red-500': notesData[day.dateKey]?.urgency === 'high',
                                     'bg-yellow-500': notesData[day.dateKey]?.urgency === 'medium',
                                     'bg-green-500': notesData[day.dateKey]?.urgency === 'low'
-                                 }">
+                                }">
                             </div>
                         </div>
                     </div>
@@ -79,12 +79,13 @@
             </div>
 
             {{-- Saat Tidak Ada Catatan --}}
-            <div x-show="!isLoading && !hasNotes" class="text-center py-10 text-gray-500">
-                Tidak ada catatan untuk NIP ini.
+            <div x-show="!isLoading && !notesData[selectedDate] && selectedDate !== null" class="text-center py-10 text-gray-500">
+                <p>Tidak ada catatan untuk tanggal ini.</p>
+                <button @click="currentNote = { id: null, notes: '', urgency: 'medium', note_date: selectedDate }; hasNotes = true" class="mt-3 text-blue-600 hover:text-blue-800 font-medium">Buat Catatan Baru</button>
             </div>
             
-            {{-- Saat Data Ada --}}
-            <div x-show="!isLoading && hasNotes">
+            {{-- Form Catatan (Muncul jika ada catatan atau jika tombol 'Buat Catatan Baru' ditekan) --}}
+            <div x-show="!isLoading && (notesData[selectedDate] || currentNote.id === null)">
                 <form @submit.prevent="saveNote()">
                     <div class="mb-4">
                         <label for="note_text" class="block text-sm font-medium text-gray-700">Isi Catatan</label>
@@ -112,9 +113,9 @@
                 </form>
 
                 <div x-show="message" 
-                     :class="messageType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
-                     class="p-3 mt-4 rounded-md text-sm" 
-                     x-text="message">
+                    :class="messageType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
+                    class="p-3 mt-4 rounded-md text-sm" 
+                    x-text="message">
                 </div>
             </div>
         </div>
@@ -140,20 +141,24 @@
             },
             
             isLoading: false,
-            hasNotes: false,
             message: '',
             messageType: 'success',
 
             initCalendar() {
                 this.currentMonth = this.currentDate.getMonth();
                 this.currentYear = this.currentDate.getFullYear();
+                
+                // Set default selectedDate ke tanggal hari ini (penting untuk form)
+                const today = new Date();
+                this.selectedDate = this.formatDate(today); 
+
                 this.renderCalendar();
                 this.fetchNotes();
-                const today = new Date();
-                this.selectedDate = this.formatDate(today);
-                this.loadNoteForSelectedDate(); 
             },
 
+            // --- UTILITY FUNCTIONS ---
+            
+            // Mengubah objek Date menjadi string YYYY-MM-DD
             formatDate(date) {
                 const y = date.getFullYear();
                 const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -161,31 +166,44 @@
                 return `${y}-${m}-${d}`;
             },
 
+            // Mengubah string tanggal dari API (misal: "2025-10-02T...") menjadi YYYY-MM-DD
+            dateToString(dateString) {
+                // Cukup ambil 10 karakter pertama (YYYY-MM-DD)
+                return dateString.substring(0, 10);
+            },
+
+            // Mengubah YYYY-MM-DD menjadi format tampilan yang lebih mudah dibaca
             formatSelectedDate() {
                 if (!this.selectedDate) return '';
                 const parts = this.selectedDate.split('-');
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                // Format: DD-MM-YYYY (disesuaikan dengan tampilan)
+                return `${parts[2]}-${parts[1]}-${parts[0]}`; 
             },
             
+            // --- CALENDAR LOGIC ---
+
             renderCalendar() {
                 this.daysInMonth = [];
                 const firstDayOfMonth = new Date(this.currentYear, this.currentMonth, 1);
                 const lastDayOfMonth = new Date(this.currentYear, this.currentMonth + 1, 0);
-                const startDayOfWeek = firstDayOfMonth.getDay();
+                const startDayOfWeek = firstDayOfMonth.getDay(); 
                 const daysInPrevMonth = new Date(this.currentYear, this.currentMonth, 0).getDate();
                 const todayKey = this.formatDate(new Date());
 
+                // Hari dari bulan sebelumnya
                 for (let i = startDayOfWeek; i > 0; i--) {
                     const date = new Date(this.currentYear, this.currentMonth - 1, daysInPrevMonth - i + 1);
                     this.daysInMonth.push({ date, dateKey: this.formatDate(date), isCurrentMonth: false, isToday: false });
                 }
 
+                // Hari di bulan ini
                 for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
                     const date = new Date(this.currentYear, this.currentMonth, i);
                     const dateKey = this.formatDate(date);
                     this.daysInMonth.push({ date, dateKey, isCurrentMonth: true, isToday: dateKey === todayKey });
                 }
 
+                // Hari dari bulan berikutnya
                 const totalCells = this.daysInMonth.length;
                 const remainingCells = 42 - totalCells;
                 for (let i = 1; i <= remainingCells; i++) {
@@ -223,38 +241,37 @@
 
                 const note = this.notesData[this.selectedDate];
                 if (note) {
-                    this.currentNote = { ...note };
+                    // Spread operator (...) untuk mengcopy properti note yang ada
+                    this.currentNote = { ...note }; 
                 } else {
+                    // Reset form ke keadaan kosong jika tidak ada catatan
                     this.currentNote = { id: null, notes: '', urgency: 'medium', note_date: this.selectedDate };
                 }
             },
 
+            // --- API CALLS ---
+            
             fetchNotes() {
                 this.isLoading = true;
-                this.hasNotes = false;
-                console.log("Mulai fetch..."); // 👀 Debug
+                this.notesData = {}; // Reset data
                 
-                const nip_user = "{{ Auth::user()->nip }}";
-
-                axios.get(`/calendar/notes?nip_user=${nip_user}`)
+                // Tidak perlu mengirim NIP di query string karena sudah diambil di Controller dari Auth::user()
+                axios.get(`/calendar/notes`) 
                 .then(response => {
-                    console.log("Response: ", response.data); // 👀 Debug
-                    this.notesData = {};
                     if (response.data.status === 'success' && response.data.notes) {
-                        if (response.data.notes.length > 0) {
-                            this.hasNotes = true;
-                            response.data.notes.forEach(note => {
-                                this.notesData[note.note_date] = note;
-                            });
-                        }
+                        response.data.notes.forEach(note => {
+                            // KRITIKAL: Konversi format tanggal API ke format YYYY-MM-DD
+                            const dateKey = this.dateToString(note.note_date);
+                            this.notesData[dateKey] = note;
+                        });
                     }
                     this.loadNoteForSelectedDate();
                 })
                 .catch(error => {
-                    console.error('Error fetching notes:', error);
+                    console.error('Error fetching notes:', error.response || error);
+                    this.showStatus('Gagal memuat catatan. Cek koneksi API.', 'error');
                 })
                 .finally(() => {
-                    console.log("Selesai fetch."); // 👀 Debug
                     this.isLoading = false;
                 });
             },
@@ -275,12 +292,15 @@
                 })
                 .then(response => {
                     if (response.data.status === 'success') {
-                        this.hasNotes = true;
-                        this.notesData[response.data.data.note_date] = response.data.data;
-                        this.currentNote.id = response.data.data.id;
+                        // KRITIKAL: Gunakan tanggal yang diformat dari respons data
+                        const dateKey = this.dateToString(response.data.data.note_date); 
+                        
+                        this.notesData[dateKey] = response.data.data;
+                        this.currentNote = { ...response.data.data }; // Update currentNote
                         this.showStatus(response.data.message, 'success');
                     }
                 })
+                // ... (Fungsi catch dan finally lainnya tetap sama)
                 .catch(error => {
                     let errorMessage = 'Gagal menyimpan catatan.';
                     if (error.response && error.response.data.errors) {
@@ -293,6 +313,8 @@
                     this.isLoading = false;
                 });
             },
+
+            // ... (Fungsi deleteNote() dan showStatus() lainnya tetap sama)
 
             confirmDeleteNote() {
                 if (!confirm('Apakah Anda yakin ingin menghapus catatan ini?')) return;
