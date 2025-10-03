@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable; // <-- PASTIKAN Notifiable ADA DI SINI
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'nama_lengkap',
@@ -53,30 +53,44 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-    public function riwayatJabatans()
+    /**
+     * Relasi ke semua Riwayat Jabatan.
+     */
+    public function riwayatJabatans(): HasMany
     {
         return $this->hasMany(RiwayatJabatan::class, 'nip_user', 'nip');
     }
 
-    // Relasi Jabatan yang Paling Baru
-    public function jabatanTerbaru()
+    /**
+     * Relasi Jabatan yang Paling Baru (Terbaru berdasarkan tgl_mulai).
+     */
+    public function jabatanTerbaru(): HasOne
     {
         return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
                     ->latestOfMany('tgl_mulai');
     }
 
-    // Relasi ke Surat Peringatan (SP)
-    public function riwayatSP()
+    /**
+     * Relasi ke Surat Peringatan (SP).
+     */
+    public function riwayatSP(): HasMany
     {
         return $this->hasMany(SP::class, 'nip_user', 'nip');
     }
 
     // --- LOGIKA PENGECEKAN PERAN ---
+
+    /**
+     * Mengambil nama jabatan terbaru.
+     */
     private function getNamaJabatan(): ?string
     {
         return $this->jabatanTerbaru?->jabatan?->nama_jabatan;
     }
 
+    /**
+     * Memeriksa apakah user adalah General Manager.
+     */
     public function isGm(): bool
     {
         $namaJabatan = $this->getNamaJabatan();
@@ -84,7 +98,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Memeriksa apakah user adalah SDM (berdasarkan nama jabatan spesifik).
+     * Memeriksa apakah user adalah Senior Analis Keuangan, SDM & Umum.
      */
     public function isSdm(): bool
     {
@@ -93,7 +107,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Memeriksa apakah user adalah Senior, TAPI bukan SDM atau GM.
+     * Memeriksa apakah user adalah Senior/Manager, TAPI bukan SDM atau GM.
      */
     public function isSenior(): bool
     {
@@ -105,23 +119,27 @@ class User extends Authenticatable
     }
 
     /**
-     * Method baru: Memeriksa apakah user adalah karyawan biasa.
+     * Memeriksa apakah user adalah karyawan biasa (Bukan GM, SDM, atau Senior/Manager).
      */
     public function isKaryawanBiasa(): bool
     {
-        // Karyawan biasa adalah mereka yang BUKAN GM, BUKAN SDM, dan BUKAN Senior.
         return !$this->isGm() && !$this->isSdm() && !$this->isSenior();
     }
 
+    /**
+     * Memeriksa apakah user berwenang membuat Surat Peringatan (SP).
+     */
     public function canCreatePeringatan(): bool
     {
-        // Wewenang membuat SP dimiliki oleh peran SDM
+        // Wewenang membuat SP umumnya dimiliki oleh peran SDM
         return $this->isSdm();
     }
 
+    /**
+     * Memeriksa apakah user berwenang mengelola data karyawan (misalnya CRUD data pribadi/jabatan).
+     */
     public function canManageKaryawan(): bool
     {
         return $this->isGm() || $this->isSdm();
     }
 }
-
