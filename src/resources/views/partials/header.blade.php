@@ -4,6 +4,7 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   x-data="{menuToggle: false}"
   class="sticky top-0 z-99999 flex w-full border-gray-200 bg-white lg:border-b dark:border-gray-800 dark:bg-gray-900"
 >
@@ -1830,6 +1831,248 @@
                         </ul>
 
 >>>>>>> Stashed changes
+=======
+    x-data="{
+        // PROPERTI HEADER ORIGINAL
+        sidebarToggle: false,
+        menuToggle: false,
+
+        // PROPERTI NOTIFIKASI
+        nDrop: false,
+        nData: [],
+        notifying: false,
+        markSingleUrl: '{{ route('notifikasi.mark-single-read', ['notification' => 'PLACEHOLDER_ID']) }}'.replace('PLACEHOLDER_ID', ''),
+        csrfToken: '',
+
+        // METHOD 1: Mark Single (Sintaks ES6)
+        markAsRead(id) {
+            const url = this.markSingleUrl + id;
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': this.csrfToken
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    this.nData = this.nData.map(n =>
+                        n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+                    );
+                    this.notifying = this.nData.some(n => n.read_at === null);
+                }
+            })
+            .catch(error => console.error('Gagal menandai notifikasi tunggal:', error));
+        },
+
+        // METHOD 2: Mark All (Sintaks ES6)
+        markAllAsRead() {
+            console.log('markAllAsRead called. Notifying state:', this.notifying);
+            if (this.notifying) {
+                this.notifying = false;
+
+                fetch('{{ route('notifikasi.mark-all-read') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        this.notifying = true;
+                        throw new Error('Mark-read failed: ' + response.statusText);
+                    }
+                    this.nData = this.nData.map(n => ({
+                        ...n,
+                        read_at: n.read_at === null ? new Date().toISOString() : n.read_at
+                    }));
+                })
+                .catch(error => {
+                    console.error('Gagal menandai semua notifikasi:', error);
+                    this.notifying = true;
+                });
+            }
+        },
+
+        // METHOD KRITIS: Untuk inisialisasi CSRF dan Fetch data
+        initCsrf() {
+            const meta = document.querySelector('meta[name=\'csrf-token\']');
+            this.csrfToken = meta ? meta.content : '';
+        },
+
+        init() {
+            this.initCsrf();
+
+            fetch('{{ route('notifikasi.index') }}')
+                .then(response => response.ok ? response.json() : Promise.reject('Fetch failed: ' + response.statusText))
+                .then(data => {
+                    this.nData = data.notifications || [];
+                    this.notifying = data.nData.some(n => n.read_at === null);
+
+                    console.log('Notif Loaded:', this.nData.length, 'Unread Check:', this.notifying);
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }
+    }"
+    class="sticky top-0 z-50 flex w-full border-gray-200 bg-white lg:border-b dark:border-gray-800 dark:bg-gray-900"
+>
+    <div class="flex grow flex-col items-center justify-between gap-4 px-4 py-2 sm:flex-row sm:px-6">
+        <div
+            :class="menuToggle ? 'flex' : 'hidden'"
+            class="w-full flex flex-wrap items-center justify-between gap-4 sm:flex sm:justify-end"
+        >
+            <div class="flex flex-wrap items-center gap-3 sm:gap-5">
+
+                {{-- BLOK NOTIFIKASI --}}
+                <div class="relative" x-data="{ nDrop: false }">
+                    <button
+                        class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                        @click.prevent="
+                            nDrop = !nDrop;
+
+                            if (nDrop) {
+                                fetch('{{ route('notifikasi.mark-all-read') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                }).then(() => {
+                                    document.querySelectorAll('#notif-badge').forEach(el => el.remove());
+                                });
+                            }
+                        "
+                    >
+                        {{-- badge orange --}}
+                        @if($unread->count() > 0)
+                            <span id="notif-badge" class="absolute top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-orange-400">
+                                <span class="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
+                            </span>
+                        @endif
+
+                        <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z"/>
+                        </svg>
+                    </button>
+
+                    {{-- dropdown --}}
+                    <div
+                        x-show="nDrop"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="absolute right-0 mt-3 w-80 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
+                    >
+                        <div class="p-1 text-xs text-center border-b border-gray-200 dark:border-gray-700">
+                            <p class="text-gray-900 dark:text-white">Notifikasi ({{ $unread->count() }})</p>
+                        </div>
+
+                        <div class="py-1 divide-y divide-gray-100 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                            <template x-for="n in (nData || [])" :key="n.id">
+                                <a
+                                    href="javascript:void(0)"
+                                    @click.prevent="markAsRead(n.id)"
+                                    :class="{'bg-gray-50 dark:bg-gray-700': n.read_at === null}"
+                                    class="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                                >
+                                    <div class="flex items-start">
+                                        <img
+                                            :src="n.data.user_image || '{{ asset('images/default.jpg') }}'"
+                                            class="w-8 h-8 rounded-full mr-3 object-cover"
+                                        >
+                                        <div class="flex-1 overflow-hidden">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white"
+                                               x-text="n.data.sender || 'System'"></p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                                               x-html="n.data.message"></p>
+                                            <span class="text-[10px] text-gray-400"
+                                               x-text="n.created_at"></span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </template>
+
+                            <template x-if="(nData || []).length === 0">
+                                <p class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    Tidak ada notifikasi baru.
+                                </p>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                {{-- END BLOK NOTIFIKASI --}}
+
+                {{-- BLOK PROFIL PENGGUNA --}}
+                @php
+                    $user = Auth::user();
+                @endphp
+
+                <div
+                    class="relative"
+                    x-data="{ dropdownOpen: false }"
+                    @click.outside="dropdownOpen = false"
+                >
+                    <a
+                        class="flex items-center text-gray-700 dark:text-gray-400"
+                        href="#"
+                        @click.prevent="dropdownOpen = ! dropdownOpen"
+                    >
+                        <img
+                            src="{{ asset('storage/' . $user->foto) }}"
+                            alt="User"
+                            class="w-8 h-8 rounded-full mr-3 object-cover"
+                        >
+
+                        <span class="text-theme-sm mr-1 hidden font-medium lg:block"> {{ $user->nama_lengkap }} </span>
+
+                        <svg
+                            :class="dropdownOpen && 'rotate-180'"
+                            class="stroke-gray-500 transition-transform duration-300 dark:stroke-gray-400 hidden lg:block"
+                            width="18"
+                            height="20"
+                            viewBox="0 0 18 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
+                                stroke=""
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </a>
+
+                    <div
+                        x-show="dropdownOpen"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="absolute right-0 z-50 mt-2 w-60 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
+                    >
+                        <ul class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800">
+                            <li>
+                                <a
+                                    href="{{ route('profile.show') }}"
+                                    class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                >
+                                    Edit profile
+                                </a>
+                            </li>
+                        </ul>
+
+>>>>>>> Stashed changes
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button
@@ -1849,11 +2092,15 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         <!-- Dropdown End -->
       </div>
       <!-- User Area -->
     </div>
   </div>
+=======
+    </div>
+>>>>>>> Stashed changes
 =======
     </div>
 >>>>>>> Stashed changes

@@ -9,6 +9,7 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; margin: 40px; }
         .header-table, .main-table, .signature-table { width: 100%; border-collapse: collapse; }
         .header-table td { vertical-align: top; }
@@ -666,6 +667,131 @@
 </head>
 <body>
 >>>>>>> Stashed changes
+=======
+        /* Gaya dasar dokumen */
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        .container {
+            width: 85%; /* Dikecilkan agar ada margin lebih di kertas */
+            margin: 0 auto;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        /* HEADER */
+        .header-top-info {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .header-top-info .logo-container {
+            width: 50%;
+            float: left;
+        }
+        .header-top-info .date-location {
+            width: 50%;
+            float: left;
+            text-align: right;
+        }
+        .logo-container img {
+            max-width: 120px;
+            height: auto;
+        }
+
+        /* ISI SURAT */
+        .content {
+            margin-top: 15px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .details-table td {
+            vertical-align: top;
+            padding: 0px 0; /* Padding dihilangkan */
+        }
+        .details-table td:first-child {
+            width: 140px; /* Lebar kolom kiri */
+        }
+        .details-table td:nth-child(2) {
+            width: 10px; /* Lebar kolom titik dua */
+        }
+        .indent-list {
+            list-style-type: lower-alpha;
+            margin-left: -5px; /* Menggeser ke kiri */
+            padding-left: 20px;
+        }
+        .indent-list li {
+            padding-left: 5px;
+            margin-bottom: 5px;
+        }
+
+        /* FOOTER / TANDA TANGAN */
+        .signatures {
+            margin-top: 50px;
+            width: 100%;
+            border: 1px dashed transparent; /* Placeholder untuk batas utama */
+        }
+        .signatures-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+        .signatures-table td {
+            width: 33.33%;
+            padding: 0 5px;
+            vertical-align: top;
+            text-align: center;
+        }
+        .notes-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .notes-table td {
+            vertical-align: top;
+            padding: 0;
+            border: 1px solid black;
+        }
+        .notes-table td:first-child {
+            width: 45%;
+        }
+        .notes-table td:last-child {
+            width: 55%;
+        }
+        .notes-block {
+            padding: 5px 10px;
+            text-align: left;
+            font-size: 10pt; /* Dikecilkan */
+            line-height: 1.3;
+        }
+        .note-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        .signature-space {
+            height: 50px; /* Jarak untuk tanda tangan */
+        }
+        .qr-code {
+            height: 60px; /* Ruang untuk QR code */
+            padding-top: 10px;
+            padding-bottom: 5px;
+        }
+        .qr-code img {
+            width: 60px;
+            height: 60px;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+>>>>>>> Stashed changes
     {{-- Variabel Placeholder (Gantilah ini dengan data dari Controller/PHP Anda) --}}
     @php
         $no_urutan = $cuti->no_urutan_surat ?? '000'; // Angka 000, 001, 002, dst.
@@ -712,6 +838,9 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -744,6 +873,7 @@
                 PT. Perhutani Alam Wisata Risorsis<br>
                 <br>
                 Di<br>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -791,6 +921,8 @@
         </ol>
         <p>Demikian surat permintaan ini saya buat untuk dapat dipertimbangkan dan mendapat persetujuan.</p>
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======

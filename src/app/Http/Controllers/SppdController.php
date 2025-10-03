@@ -15,6 +15,11 @@ use Carbon\Carbon;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+use App\Models\User;
+use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
+>>>>>>> Stashed changes
 =======
 use App\Models\User;
 use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
@@ -190,6 +195,9 @@ class SppdController extends Controller
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -213,6 +221,7 @@ class SppdController extends Controller
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             $sppd->status          = 'Ditolak';
             $sppd->tgl_persetujuan = now();
             $sppd->nip_penyetuju   = $user->nip;
@@ -227,6 +236,8 @@ class SppdController extends Controller
             $sppd->save();
 
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -270,6 +281,11 @@ class SppdController extends Controller
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+    // ... (Fungsi-fungsi lainnya tidak berubah) ...
+
+>>>>>>> Stashed changes
 =======
     // ... (Fungsi-fungsi lainnya tidak berubah) ...
 
