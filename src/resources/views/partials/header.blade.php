@@ -29,6 +29,10 @@
             fill=""
           />
         </svg>
+    x-data="{
+        // PROPERTI HEADER ORIGINAL
+        sidebarToggle: false,
+        menuToggle: false,
 
         <svg
           :class="sidebarToggle ? 'hidden' : 'block lg:hidden'"
@@ -46,6 +50,12 @@
             fill=""
           />
         </svg>
+        // PROPERTI NOTIFIKASI
+        nDrop: false,
+        nData: [],
+        notifying: false,
+        markSingleUrl: '{{ route('notifikasi.mark-single-read', ['notification' => 'PLACEHOLDER_ID']) }}'.replace('PLACEHOLDER_ID', ''),
+        csrfToken: '',
 
         <!-- cross icon -->
         <svg
@@ -66,6 +76,26 @@
         </svg>
       </button>
       <!-- Hamburger Toggle BTN -->
+        // METHOD 1: Mark Single (Sintaks ES6)
+        markAsRead(id) {
+            const url = this.markSingleUrl + id;
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': this.csrfToken
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    this.nData = this.nData.map(n =>
+                        n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+                    );
+                    this.notifying = this.nData.some(n => n.read_at === null);
+                }
+            })
+            .catch(error => console.error('Gagal menandai notifikasi tunggal:', error));
+        },
 
       <a href="index.html" class="lg:hidden">
         <img class="dark:hidden" src="./images/logo/logo.svg" alt="Logo" />
@@ -75,6 +105,11 @@
           alt="Logo"
         />
       </a>
+        // METHOD 2: Mark All (Sintaks ES6)
+        markAllAsRead() {
+            console.log('markAllAsRead called. Notifying state:', this.notifying);
+            if (this.notifying) {
+                this.notifying = false;
 
       <!-- Application nav menu button -->
       <button
@@ -99,6 +134,30 @@
         </svg>
       </button>
       <!-- Application nav menu button -->
+                fetch('{{ route('notifikasi.mark-all-read') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        this.notifying = true;
+                        throw new Error('Mark-read failed: ' + response.statusText);
+                    }
+                    this.nData = this.nData.map(n => ({
+                        ...n,
+                        read_at: n.read_at === null ? new Date().toISOString() : n.read_at
+                    }));
+                })
+                .catch(error => {
+                    console.error('Gagal menandai semua notifikasi:', error);
+                    this.notifying = true;
+                });
+            }
+        },
 
       <div class="hidden lg:block">
         <form>
@@ -126,6 +185,11 @@
               id="search-input"
               class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pr-14 pl-12 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden xl:w-[430px] dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30"
             />
+        // METHOD KRITIS: Untuk inisialisasi CSRF dan Fetch data
+        initCsrf() {
+            const meta = document.querySelector('meta[name=\'csrf-token\']');
+            this.csrfToken = meta ? meta.content : '';
+        },
 
             <button
               id="search-button"
@@ -138,6 +202,8 @@
         </form>
       </div>
     </div>
+        init() {
+            this.initCsrf();
 
     <div
       :class="menuToggle ? 'flex' : 'hidden'"
@@ -145,7 +211,7 @@
     >
       <div class="2xsm:gap-3 flex items-center gap-2">
         <!-- Dark Mode Toggler -->
-        <button
+        {{-- <button
           class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
           @click.prevent="darkMode = !darkMode"
         >
@@ -178,430 +244,179 @@
             />
           </svg>
         </button>
-        <!-- Dark Mode Toggler -->
+        <!-- Dark Mode Toggler --> --}}
+            fetch('{{ route('notifikasi.index') }}')
+                .then(response => response.ok ? response.json() : Promise.reject('Fetch failed: ' + response.statusText))
+                .then(data => {
+                    this.nData = data.notifications || [];
+                    this.notifying = data.nData.some(n => n.read_at === null);
 
-        <!-- Notification Menu Area -->
+        <!-- Notification -->
         <div
-          class="relative"
-          x-data="{ dropdownOpen: false, notifying: true }"
-          @click.outside="dropdownOpen = false"
+    class="relative"
+    x-data="{
+        dropdownOpen: false,
+        notifications: [],
+        notifying: false,
+                    console.log('Notif Loaded:', this.nData.length, 'Unread Check:', this.notifying);
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }
+    }"
+    x-init="
+        fetch('/notifications') // Ganti dengan endpoint API Anda
+            .then(response => response.json())
+            .then(data => {
+                notifications = data.notifications;
+                notifying = notifications.length > 0;
+            })
+            .catch(error => console.error('Error loading notifications:', error));
+    "
+    @click.outside="dropdownOpen = false"
+    class="sticky top-0 z-50 flex w-full border-gray-200 bg-white lg:border-b dark:border-gray-800 dark:bg-gray-900"
+>
+    <button
+        class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+        @click.prevent="
+            dropdownOpen = ! dropdownOpen;
+            notifying = false; // Menghilangkan badge sementara
+
+            // Panggil API untuk menandai semua notifikasi sebagai sudah dibaca
+            fetch('/notifications/tandaiSudahDibaca', { method: 'POST' })
+                .then(response => console.log('Notifikasi ditandai sudah dibaca'))
+                .catch(error => console.error('Gagal menandai notifikasi:', error));
+        "
+    >
+        <span
+            :class="!notifying ? 'hidden' : 'flex'"
+            class="absolute top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-orange-400"
         >
-          <button
-            class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-            @click.prevent="dropdownOpen = ! dropdownOpen; notifying = false"
-          >
             <span
-              :class="!notifying ? 'hidden' : 'flex'"
-              class="absolute top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-orange-400"
-            >
-              <span
                 class="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"
-              ></span>
-            </span>
-            <svg
-              class="fill-current"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
+            ></span>
+        </span>
+
+        <svg
+            class="fill-current"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path
                 fill-rule="evenodd"
                 clip-rule="evenodd"
                 d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z"
                 fill=""
-              />
-            </svg>
-          </button>
-
-          <!-- Dropdown Start -->
-          <div
-            x-show="dropdownOpen"
-            class="shadow-theme-lg dark:bg-gray-dark absolute -right-[240px] mt-[17px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:w-[361px] lg:right-0 dark:border-gray-800"
-          >
-            <div
-              class="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800"
-            >
-              <h5
+            />
+        </svg>
+    </button>
+    <div
+        x-show="dropdownOpen"
+        class="shadow-theme-lg dark:bg-gray-dark absolute -right-[240px] mt-[17px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:w-[361px] lg:right-0 dark:border-gray-800"
+    >
+    <div class="flex grow flex-col items-center justify-between gap-4 px-4 py-2 sm:flex-row sm:px-6">
+        <div
+            class="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800"
+            :class="menuToggle ? 'flex' : 'hidden'"
+            class="w-full flex flex-wrap items-center justify-between gap-4 sm:flex sm:justify-end"
+        >
+            <h5
                 class="text-lg font-semibold text-gray-800 dark:text-white/90"
-              >
+            >
                 Notification
-              </h5>
+            </h5>
+            <div class="flex flex-wrap items-center gap-3 sm:gap-5">
 
-              <button
+            <button
                 @click="dropdownOpen = false"
                 class="text-gray-500 dark:text-gray-400"
-              >
-                <svg
-                  class="fill-current"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
-                    fill=""
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <ul class="custom-scrollbar flex h-auto flex-col overflow-y-auto">
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-02.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Terry Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>5 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-03.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Alena Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>8 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-04.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Jocelyn Kenter</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>15 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-05.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-error-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Brandon Philips</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>1 hr ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-02.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Terry Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>5 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-03.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Alena Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>8 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-04.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Jocelyn Kenter</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>15 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="./images/user/user-05.jpg"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-error-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Brandon Philips</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>1 hr ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-            </ul>
-
-            <a
-              href="#"
-              class="text-theme-sm shadow-theme-xs mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
             >
-              View All Notification
-            </a>
-          </div>
-          <!-- Dropdown End -->
+                <svg
+                    class="fill-current"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
+                        fill=""
+                    />
+                </svg>
+            </button>
         </div>
-        <!-- Notification Menu Area -->
-      </div>
+                {{-- BLOK NOTIFIKASI --}}
+                <div class="relative" x-data="{ nDrop: false }">
+                    <button
+                        class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                        @click.prevent="
+                            nDrop = !nDrop;
 
-      <!-- User Area -->
+        <ul class="custom-scrollbar flex h-auto flex-col overflow-y-auto">
+            <template x-for="item in notifications" :key="item.id">
+                <li>
+                    <a
+                        class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                        href="#"
+                            if (nDrop) {
+                                fetch('{{ route('notifikasi.mark-all-read') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                }).then(() => {
+                                    document.querySelectorAll('#notif-badge').forEach(el => el.remove());
+                                });
+                            }
+                        "
+                    >
+                        <span class="relative z-1 block h-10 w-full max-w-10 rounded-full">
+                            <img
+                                :src="item.user_image"
+                                alt="User"
+                                class="overflow-hidden rounded-full"
+                            />
+                            <span
+                                :class="{
+                                    'bg-success-500': item.status === 'Disetujui',
+                                    'bg-error-500': item.status === 'Ditolak',
+                                    'bg-warning-500': item.status === 'Menunggu Persetujuan',
+                                    // Anda bisa tambahkan status lain di sini
+                                }"
+                                class="absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                            ></span>
+                        </span>
+
+                        <span class="block">
+                            <span class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400">
+                                <span class="font-medium text-gray-800 dark:text-white/90" x-text="item.sender"></span>
+                                <span x-text="item.message"></span>
+                        {{-- badge orange --}}
+                        @if($unread->count() > 0)
+                            <span id="notif-badge" class="absolute top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-orange-400">
+                                <span class="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
+                            </span>
+                        @endif
+
+                            <span class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                <span x-text="item.type"></span>
+                                <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                                <span x-text="item.time"></span>
+                            </span>
+                        </span>
+                    </a>
+                </li>
+            </template>
+        </ul>
+    </div>
+</div>
+  <!-- User Area -->
       <div
         class="relative"
         x-data="{ dropdownOpen: false }"
@@ -615,8 +430,53 @@
           <span class="mr-3 h-11 w-11 overflow-hidden rounded-full">
             <img src="{{ asset('storage/' . Auth::user()->foto) }}" alt="User" class="w-10 h-10 rounded-full object-cover"/>
           </span>
+                        <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z"/>
+                        </svg>
+                    </button>
+
+                    {{-- dropdown --}}
+                    <div
+                        x-show="nDrop"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="absolute right-0 mt-3 w-80 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
+                    >
+                        <div class="p-1 text-xs text-center border-b border-gray-200 dark:border-gray-700">
+                            <p class="text-gray-900 dark:text-white">Notifikasi ({{ $unread->count() }})</p>
+                        </div>
 
           <span class="text-theme-sm mr-1 block font-medium"> {{ Auth::user()->nama_lengkap }} </span>
+                        <div class="py-1 divide-y divide-gray-100 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                            <template x-for="n in (nData || [])" :key="n.id">
+                                <a
+                                    href="javascript:void(0)"
+                                    @click.prevent="markAsRead(n.id)"
+                                    :class="{'bg-gray-50 dark:bg-gray-700': n.read_at === null}"
+                                    class="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                                >
+                                    <div class="flex items-start">
+                                        <img
+                                            :src="n.data.user_image || '{{ asset('images/default.jpg') }}'"
+                                            class="w-8 h-8 rounded-full mr-3 object-cover"
+                                        >
+                                        <div class="flex-1 overflow-hidden">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white"
+                                               x-text="n.data.sender || 'System'"></p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                                               x-html="n.data.message"></p>
+                                            <span class="text-[10px] text-gray-400"
+                                               x-text="n.created_at"></span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </template>
 
           <svg
             :class="dropdownOpen && 'rotate-180'"
@@ -636,6 +496,15 @@
             />
           </svg>
         </a>
+                            <template x-if="(nData || []).length === 0">
+                                <p class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    Tidak ada notifikasi baru.
+                                </p>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                {{-- END BLOK NOTIFIKASI --}}
 
         <!-- Dropdown Start -->
         <div
@@ -654,6 +523,10 @@
               {{ Auth::user()->email }}
             </span>
           </div>
+                {{-- BLOK PROFIL PENGGUNA --}}
+                @php
+                    $user = Auth::user();
+                @endphp
 
           <ul
             class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800"
@@ -741,6 +614,10 @@
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
+                <div
+                    class="relative"
+                    x-data="{ dropdownOpen: false }"
+                    @click.outside="dropdownOpen = false"
                 >
                     <path
                         fill-rule="evenodd"
@@ -752,10 +629,75 @@
                 Sign out
             </button>
         </form>
+                    <a
+                        class="flex items-center text-gray-700 dark:text-gray-400"
+                        href="#"
+                        @click.prevent="dropdownOpen = ! dropdownOpen"
+                    >
+                        <img
+                            src="{{ asset('storage/' . $user->foto) }}"
+                            alt="User"
+                            class="w-8 h-8 rounded-full mr-3 object-cover"
+                        >
+
+                        <span class="text-theme-sm mr-1 hidden font-medium lg:block"> {{ $user->nama_lengkap }} </span>
+
+                        <svg
+                            :class="dropdownOpen && 'rotate-180'"
+                            class="stroke-gray-500 transition-transform duration-300 dark:stroke-gray-400 hidden lg:block"
+                            width="18"
+                            height="20"
+                            viewBox="0 0 18 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
+                                stroke=""
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </a>
+
+                    <div
+                        x-show="dropdownOpen"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="absolute right-0 z-50 mt-2 w-60 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
+                    >
+                        <ul class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800">
+                            <li>
+                                <a
+                                    href="{{ route('profile.show') }}"
+                                    class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                >
+                                    Edit profile
+                                </a>
+                            </li>
+                        </ul>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button
+                                type="submit"
+                                class="group text-theme-sm mt-3 flex w-full items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                            >
+                                Sign out
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {{-- END BLOK PROFIL --}}
+            </div>
         </div>
         <!-- Dropdown End -->
       </div>
       <!-- User Area -->
     </div>
-  </div>
 </header>

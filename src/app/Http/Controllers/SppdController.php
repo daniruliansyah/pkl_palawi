@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\User; // Ditambahkan
+use App\Notifications\StatusSuratDiperbarui; // Ditambahkan
 
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
@@ -17,12 +19,16 @@ use chillerlan\QRCode\Output\QROutputInterface;
 
 class SppdController extends Controller
 {
+    /**
+     * Menampilkan daftar SPPD yang diajukan oleh user atau yang perlu diverifikasi oleh user.
+     */
     public function index()
     {
         $user = Auth::user();
         $userNip = $user->nip;
         $userJabatanId = $user->jabatanTerbaru->id_jabatan ?? null;
 
+        // Memuat SPPD di mana user adalah pemohon ATAU user adalah pemberi tugas (verifier)
         $sppds = Sppd::with('user')
             ->where('nip_user', $userNip)
             ->orWhere('pemberi_tugas_id', $userJabatanId)
@@ -32,6 +38,9 @@ class SppdController extends Controller
         return view('pages.surat_sppd.index', compact('sppds'));
     }
 
+    /**
+     * Menampilkan form untuk membuat SPPD baru.
+     */
     public function create()
     {
         $jabatan = Jabatan::whereIn('nama_jabatan', [
@@ -42,6 +51,9 @@ class SppdController extends Controller
         return view('pages.surat_sppd.create', compact('jabatan'));
     }
 
+    /**
+     * Menyimpan SPPD yang baru diajukan.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -59,6 +71,7 @@ class SppdController extends Controller
 
         $tgl_mulai   = Carbon::parse($request->tgl_mulai);
         $tgl_selesai = Carbon::parse($request->tgl_selesai);
+        // Hitung jumlah hari, termasuk hari mulai dan selesai (+1)
         $jumlah_hari = $tgl_mulai->diffInDays($tgl_selesai) + 1;
 
         $jabatan = Jabatan::find($request->pemberi_tugas_id);
@@ -66,7 +79,8 @@ class SppdController extends Controller
             return back()->withInput()->withErrors(['pemberi_tugas_id' => 'Pemberi tugas tidak ditemukan.']);
         }
 
-        Sppd::create([
+        // Simpan SPPD
+        $sppd = Sppd::create([
             'nip_user'        => auth()->user()->nip,
             'pemberi_tugas'   => $jabatan->nama_jabatan,
             'pemberi_tugas_id'=> $jabatan->id,
@@ -80,39 +94,77 @@ class SppdController extends Controller
             'no_rekening'     => $request->no_rekening,
             'nama_rekening'   => $request->nama_rekening,
             'keterangan_lain' => $request->keterangan_lain,
-            'status'          => 'menunggu',
+            'status'          => 'Menunggu Persetujuan', // Ubah 'menunggu' menjadi 'Menunggu Persetujuan'
         ]);
+
+        // LOGIKA NOTIFIKASI BARU - SPPD BARU DIAJUKAN
+        try {
+            // Cari user yang memiliki jabatan sebagai pemberi tugas/atasan
+            $atasan = User::whereHas('jabatanTerbaru.jabatan', function ($query) use ($jabatan) {
+                $query->where('id', $jabatan->id);
+            })->first();
+
+            if ($atasan) {
+                $atasan->notify(new StatusSuratDiperbarui(
+                    aktor: auth()->user(),
+                    jenisSurat: 'SPPD',
+                    statusBaru: 'Menunggu Persetujuan',
+                    keterangan: 'Telah mengajukan SPPD baru dan membutuhkan persetujuan Anda.',
+                    url: route('sppd.verifikasi', $sppd->id) // Rute ke halaman verifikasi
+                ));
+            }
+        } catch (\Exception $e) {
+            Log::error("Notifikasi Gagal Dibuat (Store SPPD): " . $e->getMessage());
+        }
 
         return redirect()->route('sppd.index')->with('success', 'SPPD berhasil diajukan!');
     }
 
+    /**
+     * Mengubah status SPPD (Disetujui/Ditolak).
+     */
     public function updateStatus(Request $request, Sppd $sppd)
     {
+        // Cari user yang mengajukan SPPD untuk notifikasi
+        $pembuatSppd = $sppd->user;
+        $user = Auth::user();
+
         try {
             $request->validate([
                 'status'           => 'required|in:Disetujui,Ditolak',
                 'alasan_penolakan' => 'nullable|string|required_if:status,Ditolak',
             ]);
 
-            $user = Auth::user();
             $userJabatanId = $user->jabatanTerbaru->jabatan->id ?? null;
 
+            // Validasi kewenangan
             if ($userJabatanId !== $sppd->pemberi_tugas_id) {
                 return back()->with('error', 'Anda tidak memiliki wewenang untuk melakukan aksi ini.');
             }
 
             if ($request->status === 'Disetujui') {
-                $sppd->status          = 'Disetujui';
-                $sppd->tgl_persetujuan = now();
-                $sppd->nip_penyetuju   = $user->nip;
-                $sppd->no_surat        = $this->generateNoSurat();
-                $sppd->alasan_penolakan = null;
+                $sppd->status              = 'Disetujui';
+                $sppd->tgl_persetujuan     = now();
+                $sppd->nip_penyetuju       = $user->nip;
+                $sppd->no_surat            = $this->generateNoSurat();
+                $sppd->alasan_penolakan    = null;
                 $sppd->save();
 
                 $filePath = $this->generateSuratPdf($sppd);
                 if ($filePath) {
                     $sppd->file_sppd = $filePath;
                     $sppd->save();
+
+                    // LOGIKA NOTIFIKASI BARU - SPPD DISETUJUI
+                    if ($pembuatSppd) {
+                        $pembuatSppd->notify(new StatusSuratDiperbarui(
+                            aktor: $user,
+                            jenisSurat: 'SPPD',
+                            statusBaru: 'Disetujui',
+                            keterangan: 'Surat SPPD Anda telah Disetujui dan siap diunduh.',
+                            url: route('sppd.download', $sppd->id)
+                        ));
+                    }
                 } else {
                     return redirect()->route('sppd.index')
                         ->with('warning', 'Disetujui, tapi gagal membuat file surat. Cek logs.');
@@ -120,21 +172,51 @@ class SppdController extends Controller
 
                 return redirect()->route('sppd.index')
                     ->with('success', 'Pengajuan SPPD berhasil disetujui dan surat telah dibuat.');
+
+            } else {
+                // Jika status Ditolak
+                $sppd->status              = 'Ditolak';
+                $sppd->tgl_persetujuan     = now();
+                $sppd->nip_penyetuju       = $user->nip;
+                $sppd->alasan_penolakan    = $request->alasan_penolakan;
+                $sppd->save();
+
+                // LOGIKA NOTIFIKASI BARU - SPPD DITOLAK
+                if ($pembuatSppd) {
+                    $alasan = $request->alasan_penolakan;
+                    $pembuatSppd->notify(new StatusSuratDiperbarui(
+                        aktor: $user,
+                        jenisSurat: 'SPPD',
+                        statusBaru: 'Ditolak',
+                        keterangan: "Surat SPPD Anda Ditolak dengan alasan: {$alasan}",
+                        url: route('sppd.detail', $sppd->id) // Rute detail untuk melihat alasan
+                    ));
+                }
+
+                return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil ditolak.');
             }
 
-            $sppd->status          = 'Ditolak';
-            $sppd->tgl_persetujuan = now();
-            $sppd->nip_penyetuju   = $user->nip;
-            $sppd->alasan_penolakan= $request->alasan_penolakan;
-            $sppd->save();
-
-            return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil ditolak.');
         } catch (\Exception $e) {
             Log::error("Error in updateStatus: " . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Menampilkan detail SPPD (untuk rute notifikasi Ditolak/Lainnya).
+     */
+    public function detail($id)
+    {
+        $sppd = Sppd::with('user')->findOrFail($id);
+
+        // Asumsi ada view 'pages.surat_sppd.detail'
+        return view('pages.surat_sppd.detail', compact('sppd'));
+    }
+
+    /**
+     * Mengubah angka menjadi format Romawi.
+     * Digunakan untuk pembuatan nomor surat.
+     */
     protected function numberToRoman($number)
     {
         $map = [
@@ -157,6 +239,9 @@ class SppdController extends Controller
         return $roman;
     }
 
+    /**
+     * Menghasilkan nomor surat SPPD otomatis.
+     */
     protected function generateNoSurat()
     {
         $year  = date('Y');
@@ -170,6 +255,7 @@ class SppdController extends Controller
         $lastNumber = 0;
         if ($lastSppd) {
             $parts = explode('/', $lastSppd->no_surat);
+            // Ambil bagian nomor urut (bagian pertama)
             $lastNumber = isset($parts[0]) ? (int) $parts[0] : 0;
         }
 
@@ -177,11 +263,17 @@ class SppdController extends Controller
         return "{$newNumber}/WIL TIMUR/{$month}/{$year}";
     }
 
+    /**
+     * Menghasilkan URL verifikasi untuk QR Code.
+     */
     protected function generateQrCodeUrl(Sppd $sppd)
     {
         return route('sppd.verifikasi', ['id' => $sppd->id]);
     }
 
+    /**
+     * Menghasilkan file PDF SPPD dan menyimpannya.
+     */
     protected function generateSuratPdf(Sppd $sppd)
     {
         try {
@@ -192,8 +284,9 @@ class SppdController extends Controller
                 mkdir(dirname($path), 0755, true);
             }
 
-            $qrCodeUrl   = $this->generateQrCodeUrl($sppd);
-            $options     = new QROptions([
+            // 1. Generate QR Code
+            $qrCodeUrl     = $this->generateQrCodeUrl($sppd);
+            $options       = new QROptions([
                 'outputType'  => QRCode::OUTPUT_IMAGE_PNG,
                 'imageBase64' => true,
                 'scale'       => 5,
@@ -201,13 +294,15 @@ class SppdController extends Controller
             ]);
             $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl);
 
+            // 2. Load View dan Generate PDF
             $pdf = Pdf::loadView('pages.surat_sppd.test', compact('sppd', 'qrCodeBase64'))
                 ->setOptions([
-                    'isRemoteEnabled'    => true,
-                    'isHtml5ParserEnabled'=> true,
+                    'isRemoteEnabled'      => true,
+                    'isHtml5ParserEnabled' => true,
                 ])
                 ->setPaper('A4', 'portrait');
 
+            // 3. Simpan PDF ke storage
             $pdf->save($path);
             return "sppd/{$fileName}";
         } catch (\Exception $e) {
@@ -216,6 +311,9 @@ class SppdController extends Controller
         }
     }
 
+    /**
+     * Mengunduh file SPPD.
+     */
     public function download($id)
     {
         $sppd = Sppd::findOrFail($id);
@@ -229,12 +327,15 @@ class SppdController extends Controller
         return back()->with('error', 'File surat tidak ditemukan.');
     }
 
+    /**
+     * Menampilkan informasi verifikasi SPPD dari QR Code.
+     */
     public function verifikasi($id)
     {
         $sppd = Sppd::with('user')->find($id);
 
         if (!$sppd) {
-            return view('pages.surat_spp.notnot');
+            return view('pages.surat_spp.notnot'); // Asumsi view ini ada
         }
 
         return view('pages.surat_sppd.info', compact('sppd'));
