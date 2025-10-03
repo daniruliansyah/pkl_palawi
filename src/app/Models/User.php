@@ -6,12 +6,51 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable; // <-- PASTIKAN Notifiable ADA DI SINI
 
     protected $fillable = [
         'nama_lengkap',
@@ -45,6 +84,7 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // Relasi untuk Jabatan (Bawaan)
     public function jabatans()
     {
         return $this->belongsToMany(Jabatan::class, 'riwayat_jabatan', 'nip_user', 'id_jabatan')
@@ -52,22 +92,128 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function riwayatJabatans(): HasMany
+=======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+    // Relasi ke RiwayatJabatan
+    public function riwayatJabatans()
+>>>>>>> Stashed changes
     {
         return $this->hasMany(RiwayatJabatan::class, 'nip_user', 'nip');
     }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function jabatanTerbaru(): HasOne
+=======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+    // Relasi Jabatan yang Paling Baru
+    public function jabatanTerbaru()
+>>>>>>> Stashed changes
     {
         return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
                     ->latestOfMany('tgl_mulai');
     }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function riwayatSP(): HasMany
+=======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+    // Relasi ke Surat Peringatan (SP)
+    public function riwayatSP()
+>>>>>>> Stashed changes
     {
         return $this->hasMany(SP::class, 'nip_user', 'nip');
     }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     // --- LOGIKA PENGECEKAN PERAN ---
 
     private function getNamaJabatan(): ?string
@@ -121,5 +267,25 @@ class User extends Authenticatable
     {
         return $this->isGm() || $this->isSdm();
     }
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 }
 

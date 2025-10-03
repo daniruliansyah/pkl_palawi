@@ -27,6 +27,7 @@ Route::get('/dashboard', function () {
 
 // Rute verifikasi publik
 Route::get('/sppd/verifikasi/{id}', [SppdController::class, 'verifikasi'])->name('sppd.verifikasi');
+Route::get('/sp/verifikasi/{id}', [SPController::class, 'verifikasi'])->name('sp.verifikasi');
 
 Route::middleware('auth')->group(function () {
     // Rute Profil
@@ -50,6 +51,7 @@ Route::middleware('auth')->group(function () {
     // --- RUTE CUTI (UNTUK PRIBADI) ---
     Route::resource('cuti', CutiController::class)->only(['index', 'create', 'store', 'show']);
     Route::delete('/cuti/{cuti}/cancel', [CutiController::class, 'cancel'])->name('cuti.cancel');
+    Route::get('/cuti/{cuti}/download', [CutiController::class, 'download'])->name('cuti.download');
 
     // --- RUTE PERSETUJUAN CUTI ---
     Route::get('/approval', [ApprovalController::class, 'index'])->name('approvals.index');
@@ -69,6 +71,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/cek-php', function () {
         phpinfo();
     });
+    Route::resource('sp', SPController::class);
+    Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download');
+    Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti');
+    Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
+
+
+    // Rute Notifikasi
+    Route::get('/notifications', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+    Route::post('/notifications/mark-all-read', [NotifikasiController::class, 'markAllAsRead'])->name('notifikasi.mark-all-read');
+    Route::post('/notifications/{notification}/mark-read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.mark-single-read');
 
     // ... rute kalender lainnya ...
 });
