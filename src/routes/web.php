@@ -84,6 +84,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/{notification}/mark-read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.mark-single-read');
 
     // ... rute kalender lainnya ...
+    Route::get('/calendar/calendar', [KalenderController::class, 'showCalendar'])->name('calendar.index');
+    Route::get('/calendar/notes', [KalenderController::class, 'index'])->name('calendar.api.index');
+    Route::post('/calendar/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
+    Route::delete('/calendar/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
 });
 
 require __DIR__.'/auth.php';
