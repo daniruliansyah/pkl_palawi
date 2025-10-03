@@ -79,6 +79,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications', [NotifikasiController::class, 'index'])->name('notifikasi.index');
     Route::post('/notifications/mark-all-read', [NotifikasiController::class, 'markAllAsRead'])->name('notifikasi.mark-all-read');
     Route::post('/notifications/{notification}/mark-read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.mark-single-read');
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 });
 

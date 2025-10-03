@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
 =======
 use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
 >>>>>>> Stashed changes
@@ -57,8 +61,11 @@ class User extends Authenticatable
     }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function riwayatJabatans(): HasMany
 =======
+=======
+>>>>>>> Stashed changes
     // Relasi ke RiwayatJabatan
     public function riwayatJabatans()
 >>>>>>> Stashed changes
@@ -67,8 +74,11 @@ class User extends Authenticatable
     }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function jabatanTerbaru(): HasOne
 =======
+=======
+>>>>>>> Stashed changes
     // Relasi Jabatan yang Paling Baru
     public function jabatanTerbaru()
 >>>>>>> Stashed changes
@@ -78,8 +88,11 @@ class User extends Authenticatable
     }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function riwayatSP(): HasMany
 =======
+=======
+>>>>>>> Stashed changes
     // Relasi ke Surat Peringatan (SP)
     public function riwayatSP()
 >>>>>>> Stashed changes
@@ -87,6 +100,7 @@ class User extends Authenticatable
         return $this->hasMany(SP::class, 'nip_user', 'nip');
     }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     // --- LOGIKA PENGECEKAN PERAN ---
 
@@ -141,6 +155,8 @@ class User extends Authenticatable
     {
         return $this->isGm() || $this->isSdm();
     }
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 }

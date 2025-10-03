@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 use Carbon\Carbon;
 
 class CutiController extends Controller
@@ -18,6 +19,16 @@ class CutiController extends Controller
     /**
      * Selalu menampilkan riwayat cuti PRIBADI milik user yang login.
      */
+=======
+use App\Notifications\StatusSuratDiperbarui;
+
+// Import chillerlan/php-qrcode
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+
+class CutiController extends Controller
+{
+>>>>>>> Stashed changes
 =======
 use App\Notifications\StatusSuratDiperbarui;
 
@@ -36,6 +47,7 @@ class CutiController extends Controller
                     ->with('user', 'ssdm', 'sdm', 'gm')
                     ->latest()->get();
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         return view('pages.cuti.index-karyawan', compact('cutis', 'sisaCuti'));
     }
@@ -56,6 +68,8 @@ class CutiController extends Controller
      * Menyimpan pengajuan cuti baru dengan alur bertingkat.
      */
 =======
+=======
+>>>>>>> Stashed changes
         if (!$jabatanInfo || !$jabatanInfo->jabatan) {
             $cutis = Cuti::where('nip_user', $user->nip)->with('user', 'ssdm')->latest()->get();
             return view('pages.cuti.index-karyawan', compact('cutis'));
@@ -102,6 +116,9 @@ class CutiController extends Controller
         return view('pages.cuti.create', compact('seniors'));
     }
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     public function store(Request $request)
     {
@@ -119,6 +136,7 @@ class CutiController extends Controller
             $rules['nip_user_ssdm'] = 'required|string|exists:users,nip';
         }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         $validatedData = $request->validate($rules, [
             'file_izin.required_if' => 'File izin wajib diunggah untuk Cuti Sakit.',
@@ -159,6 +177,8 @@ class CutiController extends Controller
             'nip_user_sdm'    => $nipUserSdm,
             'nip_user_gm'     => $nipUserGm,
 =======
+=======
+>>>>>>> Stashed changes
         $tahun = date('Y'); $bulan = date('m');
         $lastCuti = Cuti::whereYear('created_at',$tahun)->whereMonth('created_at',$bulan)->latest('id')->first();
         $nomorUrut = $lastCuti ? (int)substr($lastCuti->no_surat, -3) + 1 : 1;
@@ -172,6 +192,9 @@ class CutiController extends Controller
             'status_ssdm'  => 'Menunggu Persetujuan',
             'status_sdm'   => 'Menunggu',
             'status_gm'    => 'Menunggu',
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         ]));
 
@@ -190,6 +213,7 @@ class CutiController extends Controller
         } catch (\Exception $e) {
             Log::error("Notif gagal (Store Cuti): ".$e->getMessage());
         }
+<<<<<<< Updated upstream
 
         return redirect()->route('cuti.index')->with('success','Pengajuan cuti berhasil dibuat.');
     }
@@ -206,6 +230,12 @@ class CutiController extends Controller
             $karyawan->decrement('jatah_cuti', $cuti->jumlah_hari);
 =======
 
+=======
+
+        return redirect()->route('cuti.index')->with('success','Pengajuan cuti berhasil dibuat.');
+    }
+
+>>>>>>> Stashed changes
     public function updateStatus(Request $request, Cuti $cuti)
     {
         $request->validate([
@@ -329,10 +359,14 @@ class CutiController extends Controller
             DB::rollBack();
             Log::error("Update Cuti Error: ".$e->getMessage());
             return back()->with('error',$e->getMessage());
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         }
         $this->generatePdfAndSave($cuti);
     }
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     
     public function cancel(Cuti $cuti)
@@ -386,9 +420,13 @@ class CutiController extends Controller
         Storage::disk('public')->put($filePath, $pdf->output());
         $cuti->file_surat = $filePath;
         $cuti->save();
-    }
-    
 =======
+
+    protected function generateQrCodeUrl(Cuti $cuti)
+    {
+        return route('cuti.verifikasi', ['id' => $cuti->id]);
+    }
+
     protected function generateSuratPdf(Cuti $cuti)
     {
         try {
@@ -451,8 +489,77 @@ class CutiController extends Controller
         }
         // Ganti 'pages.cuti.verifikasi_info' dengan view info verifikasi Anda
         return view('pages.cuti.verifikasi_info', compact('cuti'));
+>>>>>>> Stashed changes
+    }
+    
+=======
+    protected function generateSuratPdf(Cuti $cuti)
+    {
+        try {
+            // Gunakan nama file yang unik dan aman
+            $fileName = \Illuminate\Support\Str::slug($cuti->no_surat) . "_{$cuti->id}.pdf";
+            $pathFileCuti = 'file_cuti/' . $fileName; // Path di dalam storage/app/public
+
+<<<<<<< Updated upstream
+            $qrCodeUrl = $this->generateQrCodeUrl($cuti);
+
+            // Logic QR Code menggunakan chillerlan
+            $options = new QROptions([
+                'outputType'  => QRCode::OUTPUT_IMAGE_PNG,
+                'imageBase64' => true,
+                'scale'       => 5,
+                'eccLevel'    => QRCode::ECC_H,
+            ]);
+            $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl); // Data URI Base64
+
+            // Ambil data user yang dibutuhkan untuk view surat
+            $karyawan = $cuti->user;
+            $gm = $cuti->gm;
+
+            $pdf = Pdf::loadView('pages.cuti.surat', compact('cuti', 'qrCodeBase64', 'karyawan', 'gm'))
+                ->setOptions([
+                    'isRemoteEnabled'      => true,
+                    'isHtml5ParserEnabled' => true,
+                ])
+                ->setPaper('A4', 'portrait');
+
+            // Simpan file ke storage/app/public/file_cuti/
+            \Illuminate\Support\Facades\Storage::disk('public')->put($pathFileCuti, $pdf->output());
+
+            return $pathFileCuti; // Return path relatif untuk disimpan di DB
+        } catch (\Exception $e) {
+            Log::error("PDF Generation Error [Cuti ID {$cuti->id}]: " . $e->getMessage());
+            return null;
+        }
     }
 
+    public function download($id)
+    {
+        $cuti = Cuti::findOrFail($id);
+
+        if ($cuti->file_cuti && Storage::disk('public')->exists($cuti->file_cuti)) {
+            $filePath = storage_path('app/public/' . $cuti->file_cuti);
+            $safeName = str_replace('/', '-', $cuti->no_surat);
+            return response()->download($filePath, "Surat-Cuti-{$safeName}.pdf");
+        }
+
+        return back()->with('error', 'File surat tidak ditemukan.');
+    }
+
+    public function verifikasi($id)
+    {
+        $cuti = Cuti::with('user','ssdm','sdm','gm')->find($id);
+
+        if (!$cuti) {
+            // Ganti 'pages.cuti.notfound' dengan view not found Anda
+            return view('pages.cuti.notfound', ['message' => 'Surat Cuti tidak ditemukan.']);
+        }
+        // Ganti 'pages.cuti.verifikasi_info' dengan view info verifikasi Anda
+        return view('pages.cuti.verifikasi_info', compact('cuti'));
+    }
+
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     public function show($id)
     {

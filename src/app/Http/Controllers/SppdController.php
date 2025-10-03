@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+use App\Models\User;
+use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
+>>>>>>> Stashed changes
 =======
 use App\Models\User;
 use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
@@ -166,6 +171,9 @@ class SppdController extends Controller
                     // =========================================================
                     // END: LOGIKA NOTIFIKASI
                     // =========================================================
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                 } else {
                     return redirect()->route('sppd.index')
@@ -177,10 +185,18 @@ class SppdController extends Controller
             }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             $sppd->status          = 'Ditolak';
             $sppd->tgl_persetujuan = now();
             $sppd->nip_penyetuju   = $user->nip;
             $sppd->alasan_penolakan= $request->alasan_penolakan;
+=======
+            // Jika status Ditolak
+            $sppd->status              = 'Ditolak';
+            $sppd->tgl_persetujuan     = now();
+            $sppd->nip_penyetuju       = $user->nip;
+            $sppd->alasan_penolakan    = $request->alasan_penolakan;
+>>>>>>> Stashed changes
             $sppd->save();
 
 =======
@@ -217,6 +233,11 @@ class SppdController extends Controller
     }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+    // ... (Fungsi-fungsi lainnya tidak berubah) ...
+
+>>>>>>> Stashed changes
 =======
     // ... (Fungsi-fungsi lainnya tidak berubah) ...
 
