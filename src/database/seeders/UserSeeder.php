@@ -86,7 +86,7 @@ class UserSeeder extends Seeder
                 'nama_lengkap' => 'User GM',
                 'nip' => '44556677',
                 'nik' => '3333444455556666',
-                'email' => 'gm@example.com',
+                'email' => 'nadeayiyian@gmail.com',
                 'password' => bcrypt('password'),
                 'no_telp' => '083333333333',
                 'jenis_kelamin' => '1',

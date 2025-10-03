@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+<<<<<<< Updated upstream
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable; // <-- PASTIKAN Notifiable ADA DI SINI
 
     protected $fillable = [
         'nama_lengkap',
@@ -45,6 +48,7 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // Relasi untuk Jabatan (Bawaan)
     public function jabatans()
     {
         return $this->belongsToMany(Jabatan::class, 'riwayat_jabatan', 'nip_user', 'id_jabatan')
@@ -52,22 +56,38 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+<<<<<<< Updated upstream
     public function riwayatJabatans(): HasMany
+=======
+    // Relasi ke RiwayatJabatan
+    public function riwayatJabatans()
+>>>>>>> Stashed changes
     {
         return $this->hasMany(RiwayatJabatan::class, 'nip_user', 'nip');
     }
 
+<<<<<<< Updated upstream
     public function jabatanTerbaru(): HasOne
+=======
+    // Relasi Jabatan yang Paling Baru
+    public function jabatanTerbaru()
+>>>>>>> Stashed changes
     {
         return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
                     ->latestOfMany('tgl_mulai');
     }
 
+<<<<<<< Updated upstream
     public function riwayatSP(): HasMany
+=======
+    // Relasi ke Surat Peringatan (SP)
+    public function riwayatSP()
+>>>>>>> Stashed changes
     {
         return $this->hasMany(SP::class, 'nip_user', 'nip');
     }
 
+<<<<<<< Updated upstream
     // --- LOGIKA PENGECEKAN PERAN ---
 
     private function getNamaJabatan(): ?string
@@ -121,5 +141,7 @@ class User extends Authenticatable
     {
         return $this->isGm() || $this->isSdm();
     }
+=======
+>>>>>>> Stashed changes
 }
 

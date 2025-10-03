@@ -2,142 +2,189 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Surat Peringatan - {{ $sp->no_surat ?? '-' }}</title>
+    <title>Surat Peringatan {{ $sp->jenis_sp ?? '...' }}</title>
     <style>
-        @page { margin: 18mm 12mm; }
-        body { font-family: Arial, sans-serif; font-size: 11px; line-height: 1.25; color:#333; }
+        @page { margin: 25mm 25mm; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color:#000; }
         .container { width:100%; }
         table { width:100%; border-collapse: collapse; }
-        .no-border td { border:none; padding:2px 0; vertical-align: top; }
-        hr { border-top: 1px solid #000; margin: 8px 0; }
-        .signature-image { max-height:80px; margin-top:8px; }
-        .text-center { text-align:center; }
-        .text-justify { text-align: justify; }
-        .header-content { text-align: center; }
-        .header-content .title { font-weight: bold; text-transform: uppercase; font-size: 14px; margin-bottom: 2px; }
-        .header-content .subtitle { font-weight: bold; text-transform: uppercase; font-size: 12px; margin-top: 0; }
-        .header-content .address { font-size: 10px; }
-        .bordered-box { border: 1px solid #000; padding: 8px; margin-top: 10px; }
-        .page-break { page-break-before: always; }
+
+        /* HEADER & WATERMARK */
+        .header-section { margin-bottom: 25px; }
+        .logo-container { width: 100%; text-align: left; }
+        .logo-image { max-height: 50px; }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.1;
+            width: 80%;
+            height: auto;
+            z-index: -1000;
+        }
+
+        /* DETAIL SURAT */
+        .detail-surat-table td { padding: 2px 0; vertical-align: top; }
+        .detail-surat-table .label { width: 100px; }
+        .detail-surat-table .separator { width: 10px; }
+
+        /* ISI SURAT */
+        .isi-surat { margin: 20px 0; text-align: justify; }
+        .pernyataan-rekomendasi { margin: 30px 0; }
+        .pernyataan-rekomendasi p { margin: 5px 0; }
+        .nama-karyawan { font-weight: bold; text-decoration: underline; }
+        .salam { margin-top: 20px; }
+
+        /* TANDA TANGAN */
+        .ttd-section { margin-top: 50px; }
+        .ttd-section table { table-layout: fixed; }
+        .ttd-section td { width: 50%; text-align: center; vertical-align: top; }
+        .ttd-spacer { height: 70px; }
+        .qr-code-image { width: 80px; height: 80px; display: block; margin: 5px auto; }
+
+        /* FOOTER */
+        .footer {
+            position: fixed;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            padding: 5px 25mm;
+            font-size: 8pt;
+            text-align: justify;
+            border-top: 1px solid #ccc;
+        }
+        .tembusan { font-size: 10pt; margin-top: 30px; }
     </style>
 </head>
 <body>
-    @php
-        $embed = function($relativePath) {
-            $fullPath = Str::startsWith($relativePath, 'storage/')
-                ? storage_path('app/public/' . Str::after($relativePath, 'storage/'))
-                : public_path($relativePath);
-            if (!file_exists($fullPath)) return '';
-            $mime = @mime_content_type($fullPath) ?: 'image/png';
-            $data = base64_encode(file_get_contents($fullPath));
-            return "data:{$mime};base64,{$data}";
-        };
-    @endphp
 
-    <div class="container">
-        <!-- Header -->
+@php
+    $embed = fn($relativePath) => file_exists(public_path($relativePath))
+        ? 'data:' . (@mime_content_type(public_path($relativePath)) ?: 'image/png') . ';base64,' . base64_encode(file_get_contents(public_path($relativePath)))
+        : '';
+
+    $karyawan_sp = $sp->user ?? null;
+    $logo_path = 'images/econique.jpg';
+    $gm_name = 'GM Area Bisnis Wisata Wil.Timur';
+    $gm_fullname = $gm->nama_lengkap ?? 'Nama Lengkap GM';
+    $tembusan_list = $sp->tembusan ? json_decode($sp->tembusan) : [];
+    $company_name = 'PT. Perhutani Alam Wisata Risorsis';
+    $footer_surat_no = 'xxxxxx';
+@endphp
+
+<img src="{{ $embed($logo_path) }}" alt="Watermark" class="watermark">
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header-section">
         <table>
             <tr>
-                <td style="width:20%; vertical-align:middle;">
-                    <img src="{{ $embed('images/econique.jpg') }}" alt="Logo" style="max-height:80px;">
+                <td class="logo-container">
+                    <img src="{{ $embed($logo_path) }}" alt="Logo" class="logo-image">
                 </td>
-                <td style="width:60%;" class="header-content">
-                    <div class="title">PT. PERHUTANI ALAM WISATA RISORSIS</div>
-                    <div class="subtitle">Area Bisnis Wisata Wilayah Timur</div>
-                    <div class="subtitle">GRAHA PERHUTANI SURABAYA</div>
-                    <div class="address">JL. GENTENGKALI NO. 49 SURABAYA</div>
-                    <div class="subtitle" style="margin-top:6px;">SURAT PERINGATAN</div>
+                <td style="text-align: right; font-size: 11pt;">
+                    Surabaya, {{ \Carbon\Carbon::parse($sp->tgl_sp_terbit ?? now())->isoFormat('D MMMM Y') }}
                 </td>
-                <td style="width:20%;"></td>
             </tr>
         </table>
-        <hr>
-
-        <!-- Nomor Surat -->
-        <div class="text-center" style="margin-bottom:8px;">
-            <strong>NOMOR : {{ $sp->no_surat ?? '-' }}</strong>
-        </div>
-
-        <!-- Isi Surat -->
-        <p class="text-justify" style="margin-top:20px;">
-            Berdasarkan hasil evaluasi kinerja terhadap sdr. / sdri. <strong>{{ $sp->user->nama_lengkap ?? '-' }}</strong>
-            dengan NIP <strong>{{ $sp->user->nip ?? '-' }}</strong>, terhitung mulai tanggal
-            <strong>{{ \Carbon\Carbon::parse($sp->tgl_mulai)->format('d F Y') }}</strong>
-            sampai dengan <strong>{{ \Carbon\Carbon::parse($sp->tgl_selesai)->format('d F Y') }}</strong>,
-            maka dengan ini perusahaan memberikan surat peringatan dengan ketentuan sebagai berikut:
-        </p>
-
-        <p class="text-justify">1. Perilaku yang melanggar: <strong>{{ $sp->ket_peringatan }}</strong></p>
-        <p class="text-justify">2. Dengan dikeluarkannya surat peringatan ini, perusahaan mengharapkan yang bersangkutan dapat memperbaiki perilaku dan kinerja agar tidak terjadi pelanggaran yang sama di kemudian hari.</p>
-        <p class="text-justify">3. Jika yang bersangkutan tidak menunjukkan perbaikan dalam jangka waktu yang telah ditentukan, perusahaan akan mengambil tindakan lebih lanjut sesuai dengan peraturan perusahaan yang berlaku.</p>
-
-        <p class="text-justify" style="margin-top:20px;">
-            Demikian surat peringatan ini dibuat untuk dipergunakan sebagaimana mestinya.
-        </p>
-
-        <!-- Tanda Tangan -->
-        <div style="margin-top:40px;">
-            <table style="width:100%;">
-                <tr>
-                    <!-- Karyawan -->
-                    <td style="text-align:left; width:50%;">
-                        <p>Diterima dan dibaca oleh,</p>
-                        <br><br><br>
-                        <p style="font-weight:bold; border-bottom: 1px solid #000; display:inline-block; padding-bottom:2px;">
-                            {{ $sp->user->nama_lengkap ?? '-' }}
-                        </p>
-                        <p>NIP. {{ $sp->user->nip ?? '-' }}</p>
-                    </td>
-
-                    <!-- GM & SDM -->
-                    <td style="text-align:right; width:50%;">
-                        <p>Surabaya, {{ \Carbon\Carbon::parse($sp->tgl_sp_terbit)->format('d F Y') }}</p>
-                        <table style="width:100%; text-align:right;">
-                            <tr>
-                                <td style="text-align:center; width:50%; padding-right:10px;">
-                                    <p>{{ $ttd_gm->jabatan }}</p>
-                                    <img src="{{ $embed($ttd_gm->ttd_path) }}" alt="Tanda Tangan GM" class="signature-image">
-                                    <p style="font-weight:bold; border-bottom: 1px solid #000; display:inline-block; padding-bottom:2px;">
-                                        {{ $ttd_gm->nama_lengkap }}
-                                    </p>
-                                    <p>NIP. {{ $ttd_gm->nip }}</p>
-                                </td>
-                                <td style="text-align:center; width:50%; padding-left:10px;">
-                                    <p>{{ $ttd_sdm->jabatan }}</p>
-                                    <img src="{{ $embed($ttd_sdm->ttd_path) }}" alt="Tanda Tangan SDM" class="signature-image">
-                                    <p style="font-weight:bold; border-bottom: 1px solid #000; display:inline-block; padding-bottom:2px;">
-                                        {{ $ttd_sdm->nama_lengkap }}
-                                    </p>
-                                    <p>NIP. {{ $ttd_sdm->nip }}</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </div>
-
-        <!-- Lampiran Bukti -->
-        @if($sp->file_bukti)
-        <div class="page-break">
-            <div class="text-center" style="margin-top:20px;">
-                <h2 style="font-size:16px; margin:0;">LAMPIRAN BUKTI PELANGGARAN</h2>
-            </div>
-            @php
-                $fileExtension = pathinfo($sp->file_bukti, PATHINFO_EXTENSION);
-            @endphp
-            <div style="margin-top:20px; text-align:center;">
-                @if(in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif']))
-                    <img src="{{ $embed('storage/' . $sp->file_bukti) }}" alt="Bukti Pelanggaran" style="max-width:100%; height:auto;">
-                @else
-                    <p style="color:#666;">
-                        *File bukti yang diunggah tidak dapat ditampilkan secara langsung karena bukan format gambar.
-                        <br>Silakan lihat file asli ({{ strtoupper($fileExtension) }}) untuk bukti lengkap.
-                    </p>
-                @endif
-            </div>
-        </div>
-        @endif
     </div>
+
+    <!-- DETAIL SURAT -->
+    <table class="detail-surat-table">
+        <tr>
+            <td class="label">Nomor</td>
+            <td class="separator">:</td>
+            <td>{{ $sp->no_surat }}</td>
+        </tr>
+        <tr>
+            <td class="label">Lampiran</td>
+            <td class="separator">:</td>
+            <td>{{ $sp->file_bukti ? '1 (satu) Berkas Bukti Pelanggaran' : '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Hal</td>
+            <td class="separator">:</td>
+            <td style="font-weight: bold;">{{ $sp->hal_surat ?? 'Surat Peringatan Pertama' }} {{ $karyawan_sp->nama_lengkap ?? '-' }}</td>
+        </tr>
+    </table>
+
+    <!-- ALAMAT KEPADA -->
+    <div style="margin-top: 25px;">
+        Kepada Yth.<br>
+        Sdr/Sdri. <span style="font-weight: bold;">{{ $karyawan_sp->nama_lengkap ?? '-' }}</span><br>
+        Jabatan: {{ $karyawan_sp->jabatanTerbaru->jabatan->nama_jabatan ?? '-' }}<br>
+        NIP: {{ $karyawan_sp->nip ?? '-' }}<br>
+        Di - <br>
+        Tempat
+    </div>
+
+    <div class="salam">
+        Salam Sinergi,
+    </div>
+
+    <!-- ISI SURAT -->
+    <div class="isi-surat">
+        {!! nl2br(e($sp->isi_surat ?? 'Paragraf isi surat ini diisi oleh user.')) !!}
+    </div>
+
+    <!-- PERNYATAAN / REKOMENDASI -->
+    <div class="pernyataan-rekomendasi">
+        <p>
+            Berdasarkan klasifikasi di atas, Tim Pertimbangan Kepegawaian dan {{ $gm_name }} {{ $company_name }} merekomendasikan
+            <strong>Surat Peringatan {{ $sp->jenis_sp ?? 'Pertama' }}</strong> kepada Sdr./Sdri.
+            <span class="nama-karyawan">{{ $karyawan_sp->nama_lengkap ?? '-' }}</span>
+            dengan jabatan <em>{{ $karyawan_sp->jabatanTerbaru->jabatan->nama_jabatan ?? '-' }}</em>.
+        </p>
+    </div>
+
+    <div class="isi-surat" style="margin-top: 30px;">
+        Demikian surat ini disampaikan untuk menjadi perhatian dan lebih disiplin dalam melaksanakan tugas.
+    </div>
+
+    <!-- TANDA TANGAN -->
+    <div class="ttd-section">
+        <table>
+            <tr>
+                <td></td>
+                <td style="text-align: center;">
+                    <p>{{ $gm_name }}</p>
+                    <p>{{ $company_name }}</p>
+                    <div class="qr-code">
+                        @if(isset($qrCodeBase64) && $qrCodeBase64)
+                            {{-- <img src="data:image/png;base64,{{ $qrCodeBase64 }}" alt="QR Code Verifikasi" class="qr-code-image"> --}}
+                            <img src="{!! $qrCodeBase64 !!}" alt="QR Code Verifikasi" class="qr-code-image">
+
+                        @else
+                            <div style="width: 80px; height: 80px; margin: 5px auto; border: 1px solid #000; text-align: center; font-size: 8px; line-height: 80px;">
+                                TTD Digital
+                            </div>
+                        @endif
+                    </div>
+                    <p style="font-weight: bold; margin-top: 5px; text-decoration: underline;">{{ $gm_fullname }}</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- TEMBUSAN -->
+    <div class="tembusan">
+        <p style="font-weight: bold;">Tembusan Kepada Yth:</p>
+        <ol style="margin: 0; padding-left: 15px;">
+            @foreach($tembusan_list as $jabatan)
+                <li>{{ $jabatan }}</li>
+            @endforeach
+            <li>Arsip</li>
+        </ol>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    Dokumen ini telah ditandatangani secara elektronik sesuai surat Direktur Utama PT.Xxx No.{{ $footer_surat_no }} perihal implementasi QR Code pada hasil keluaran surat menyurat Elektronik Lingkup PT.Xxx (Group).
+</div>
+
 </body>
 </html>

@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\Jabatan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Notifications\Notifiable;
+
 
 class UserController extends Controller
 {
@@ -236,4 +238,5 @@ class UserController extends Controller
     return view('pages.karyawan.detail', compact('karyawan'))
                      ->with('success', 'Data Kepegawaian karyawan berhasil diperbarui.');
     }
+
 }

@@ -4,30 +4,39 @@
     <meta charset="UTF-8">
     <title>Surat SPPD - {{ $sppd->no_surat ?? '-' }}</title>
     <style>
+        /* Gaya umum */
         @page { margin: 18mm 12mm; }
         body { font-family: Arial, sans-serif; font-size: 11px; line-height: 1.25; color:#333; }
         .container { width:100%; }
         table { width:100%; border-collapse: collapse; }
-        .no-border td { border:none; padding:2px 0; vertical-align: top; }
         hr { border-top: 1px solid #000; margin: 8px 0; }
-        .signature-image { max-height:80px; margin-top:8px; }
         .text-center { text-align:center; }
 
-        /* CSS untuk tabel tambahan */
+        /* Gaya Tabel Utama (Bordered Table) */
         .bordered-table { margin-top: 20px; table-layout: fixed; }
+        /* Menggunakan padding lebih kecil agar mirip Excel */
         .bordered-table th, .bordered-table td {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 3px 5px; /* Disesuaikan */
             vertical-align: top;
         }
         .bordered-table th { background-color: #f2f2f2; }
-        .bordered-table td { height: 35px; }
+        .bordered-table td { height: auto; } /* Hapus tinggi tetap */
+        .sub-item-cell { padding-left: 25px; } /* Untuk indentasi a, b, c */
 
-        /* Gaya TTD yang dikoreksi untuk DomPDF */
+        /* Gaya TTD */
         .ttd-box { width: 45%; text-align: center; }
         .ttd-spacer { width: 10%; }
         .qr-code-container { margin: 5px 0 10px 0; }
-        .qr-code-image { width: 100px; height: 100px; display: block; margin: 0 auto; }
+        .qr-code-image { width: 80px; height: 80px; display: block; margin: 0 auto; } /* Disesuaikan agar tidak terlalu besar */
+
+        /* Mengatur posisi dan ukuran logo agar lebih mirip Excel */
+        .logo-cell { width: 20%; vertical-align:middle; text-align: left; }
+        .logo-image { max-height: 50px; }
+
+        /* Mengatur font header */
+        .header-text { line-height: 1.1; }
+
     </style>
 </head>
 <body>
@@ -36,9 +45,8 @@
     $embed = function($relativePath) {
         $full = public_path($relativePath);
         if (!file_exists($full)) {
-            // Jika file tidak ada, ini akan menyebabkan error pada DomPDF.
             // Pastikan images/econique.jpg ADA di public folder.
-            return ''; // Mengembalikan string kosong jika file tidak ditemukan
+            return '';
         }
         $mime = @mime_content_type($full) ?: 'image/png';
         $data = base64_encode(file_get_contents($full));
@@ -47,13 +55,13 @@
     @endphp
 
     <div class="container">
-        <table style="margin-bottom:10px;">
+        <table>
             <tr>
-                <td style="width:20%; vertical-align:middle;">
+                <td class="logo-cell">
                     {{-- Logo perusahaan --}}
-                    <img src="{{ $embed('images/econique.jpg') }}" alt="Logo" style="max-height:80px;">
+                    <img src="{{ $embed('images/econique.jpg') }}" alt="Logo" class="logo-image">
                 </td>
-                <td style="width:60%;" class="text-center">
+                <td style="width:60%;" class="text-center header-text">
                     <div style="font-weight:bold; text-transform:uppercase; font-size:12px;">PT. PERHUTANI ALAM WISATA RISORSIS</div>
                     <div style="font-weight:bold; text-transform:uppercase; font-size:12px;">Area Bisnis Wisata Wilayah Timur</div>
                     <div style="font-weight:bold; text-transform:uppercase; font-size:12px;">GRAHA PERHUTANI SURABAYA</div>
@@ -67,92 +75,161 @@
         <hr>
 
         <div class="text-center" style="margin-bottom:8px;">
-            <strong>NOMOR : {{ $sppd->no_surat ?? '-' }}</strong>
+            <strong style="font-size: 11px;">NOMOR : {{ $sppd->no_surat ?? '000/ABW/WIL.TIMUR/VIII/2025' }}</strong>
         </div>
 
-        <p>Yang bertanda tangan di bawah ini:</p>
-        <table class="no-border">
-            <tr><td>Nama</td><td>: {{ $sppd->pemberi_tugas }}</td></tr>
-            <tr><td>Jabatan</td><td>: {{ $sppd->pemberi_tugas }}</td></tr>
-        </table>
-
-        <p style="margin-top:12px;">Memberikan perintah perjalanan dinas kepada:</p>
-        <table class="no-border">
-            <tr><td>Nama</td><td>: {{ $sppd->user->nama_lengkap ?? '-' }}</td></tr>
-            <tr><td>Jabatan</td><td>: {{ $sppd->user->jabatanTerbaru->jabatan->nama_jabatan ?? '-' }}</td></tr>
-        </table>
-
-        <p style="margin-top:12px;">Untuk melaksanakan perjalanan dinas dengan tujuan:</p>
-        <table class="no-border">
-            <tr><td>Lokasi Berangkat</td><td>: {{ $sppd->lokasi_berangkat }}</td></tr>
-            <tr><td>Lokasi Tujuan</td><td>: {{ $sppd->lokasi_tujuan }}</td></tr>
-            <tr><td>Lama</td><td>: {{ $sppd->jumlah_hari }} hari</td></tr>
-            <tr><td>Tanggal Berangkat</td><td>: {{ \Carbon\Carbon::parse($sppd->tgl_mulai)->format('d F Y') }}</td></tr>
-            <tr><td>Tanggal Kembali</td><td>: {{ \Carbon\Carbon::parse($sppd->tgl_selesai)->format('d F Y') }}</td></tr>
-            <tr><td>Maksud</td><td>: {{ $sppd->keterangan_sppd }}</td></tr>
-            <tr><td>Alat Angkut</td><td>: {{ $sppd->alat_angkat }}</td></tr>
-        </table>
-
-        <p style="margin-top:12px;">Demikian surat ini dibuat untuk dilaksanakan dengan sebaik-baiknya.</p>
+        <table class="bordered-table">
+    {{-- BARIS 1 - Pemberi Perintah --}}
+    <tr>
+        <td style="width:5%;">1.</td>
+        <td style="width:35%;">Pemberi Perintah</td>
+        <td style="width:60%;">{{ $sppd->pemberi_tugas ?? 'General Manager' }}</td>
+    </tr>
+    {{-- BARIS 2 - Pejabat yang diperintah --}}
+    <tr>
+        <td>2.</td>
+        <td>Pejabat yang diperintah</td>
+        <td>{{ $sppd->user->nama_lengkap ?? 'Indra Aqurtiana' }}</td>
+    </tr>
+    {{-- BARIS 3 - Jabatan Golongan Kategori SPPD --}}
+    <tr>
+        <td>3.</td>
+        <td>Jabatan Golongan Kategori SPPD</td>
+        <td>{{ $sppd->user->jabatanTerbaru->jabatan->nama_jabatan ?? 'Manager Rentstand' }}</td>
+    </tr>
+    {{-- BARIS 4 - Maksud Perjalanan Dinas --}}
+    <tr>
+        <td>4.</td>
+        <td>Maksud Perjalanan Dinas</td>
+        <td>{{ $sppd->keterangan_sppd ?? 'Mendampingi Kunjungan Kejaksaan Tinggi Jawa Timur di Site Papuma' }}</td>
+    </tr>
+    {{-- BARIS 5 - Alat Angkutan --}}
+    <tr>
+        <td>5.</td>
+        <td>Alat Angkutan yang dipergunakan</td>
+        <td>{{ $sppd->alat_angkat ?? 'Dinas' }}</td>
+    </tr>
+    {{-- BARIS 6 - Tempat Berangkat --}}
+    <tr>
+        <td>6.</td>
+        <td>Tempat Berangkat</td>
+        <td>{{ $sppd->lokasi_berangkat ?? 'Kantor ABWWT Surabaya' }}</td>
+    </tr>
+    {{-- BARIS 7 - Tempat Tujuan --}}
+    <tr>
+        <td>7.</td>
+        <td>Tempat Tujuan</td>
+        <td>{{ $sppd->lokasi_tujuan ?? 'Papuma' }}</td>
+    </tr>
+    {{-- BARIS 8 - Lama Perjalanan Dinas dan Sub-Poin --}}
+    <tr>
+        {{-- Item 8 di Excel adalah "Lama Perjalanan Dinas" dengan sub-poin --}}
+        <td>8.</td>
+        <td>Lama Perjalanan Dinas</td>
+        <td>{{ $sppd->jumlah_hari ?? '1' }} Hari</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item-cell">a. Tanggal Berangkat</td>
+        <td>{{ \Carbon\Carbon::parse($sppd->tgl_mulai ?? '2025-07-04')->format('d F Y') }}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item-cell">b. Tanggal Kembali</td>
+        <td>{{ \Carbon\Carbon::parse($sppd->tgl_selesai ?? '2025-07-04')->format('d F Y') }}</td>
+    </tr>
+    {{-- BARIS 9 - Pembebanan Anggaran (Dibuat dua kolom agar mirip Excel) --}}
+    <tr>
+        <td>9.</td>
+        <td>
+            Pembebanan Anggaran
+        </td>
+        <td style="border: none; padding: 0;">
+            {{-- Menggunakan tabel kecil di dalam cell agar sejajar --}}
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="width: 30%; border: 1px solid #000; border-right: none; padding: 3px 5px;"><strong>REKENING</strong></td>
+                    <td style="width: 70%; border: 1px solid #000; padding: 3px 5px;">{{ $sppd->rekening ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td style="width: 30%; border: 1px solid #000; border-top: none; border-right: none; padding: 3px 5px;"><strong>NAMA REKENING</strong></td>
+                    <td style="width: 70%; border: 1px solid #000; border-top: none; padding: 3px 5px;">{{ $sppd->nama_rekening ?? '-' }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {{-- BARIS 10 - Keterangan Lain (Ini adalah item terakhir, tanpa nomor di Excel, tapi dibuat terpisah) --}}
+    <tr>
+        <td></td>
+        <td>Keterangan Lain</td>
+        <td>{{ $sppd->keterangan_lain ?? '-' }}</td>
+    </tr>
+</table>
 
         <div style="margin-top:30px;">
             <table style="width:100%;">
                 <tr>
-                    {{-- Blok Tanda Tangan Pemberi Perintah (dengan QR Code) --}}
+                    {{-- BLOK KIRI: Yang diberi Perintah (Sesuai Gambar Excel) --}}
                     <td class="ttd-box">
-                        <p>Dikeluarkan di Surabaya,</p>
-                        <p> Pada Tanggal, {{ \Carbon\Carbon::parse($sppd->tgl_persetujuan ?? $sppd->created_at)->format('d F Y') }}</p>
+                        <p>Yang diberi Perintah</p>
+                        <br><br><br>
+                        {{-- Jarak untuk tanda tangan manual --}}
+                        <p style="font-weight:bold; margin-top: 50px;">{{ $sppd->user->nama_lengkap ?? 'Indra Aqurtiana' }}</p>
+                    </td>
+
+                    <td class="ttd-spacer"></td>
+
+                    {{-- BLOK KANAN: Pemberi Perintah/Pejabat yang Menyetujui (Sesuai Gambar Excel) --}}
+                    <td class="ttd-box">
+                        <p>Dikeluarkan di Surabaya</p>
+                        <p>Pada Tanggal {{ \Carbon\Carbon::parse($sppd->tgl_persetujuan ?? '2025-07-04')->format('d F Y') }}</p>
                         <p>Yang memberi perintah,</p>
-                        <p style="font-weight:bold; margin-bottom: 5px;">{{ $sppd->pemberi_tugas }}</p>
+                        <p style="font-weight:bold; margin-bottom: 5px;">General Manager</p>
 
                         <div class="qr-code-container">
                             @if(isset($qrCodeBase64) && $qrCodeBase64)
                                 <img src="{{ $qrCodeBase64 }}" alt="QR Code Verifikasi" class="qr-code-image">
                             @else
-                                <p style="font-size: 8px; color: red;">[QR Code Gagal Dimuat. Cek log dan ekstensi GD/Imagick.]</p>
+                                {{-- Placeholder jika QR code gagal dimuat --}}
+                                <div style="width: 80px; height: 80px; margin: 0 auto; border: 1px solid #000; text-align: center; font-size: 8px; line-height: 80px;">TTD Digital</div>
                             @endif
                         </div>
 
                         <p style="font-weight:bold; margin-top: 5px;">
-                            {{ $sppd->penyetuju->nama_lengkap ?? '(Nama Lengkap Penyetuju)' }}
+                            {{ $sppd->penyetuju->nama_lengkap ?? 'Andy Irvindarta' }}
                         </p>
-                        <p style="margin-top: -5px;">(Tanda Tangan Elektronik)</p>
+                        <p style="margin-top: -5px; font-size: 10px;">(Tanda Tangan Elektronik)</p>
 
-                    </td>
-
-                    <td class="ttd-spacer"></td>
-
-                    {{-- Blok Tanda Tangan Yang Diberi Perintah --}}
-                    <td class="ttd-box">
-                        <p>Yang diberi Perintah</p>
-                        <br><br><br>
-                        {{-- Jarak untuk tanda tangan manual --}}
-                        <p style="font-weight:bold; margin-top: 50px;">{{ $sppd->user->nama_lengkap ?? '-' }}</p>
                     </td>
                 </tr>
             </table>
         </div>
 
-        {{-- Tabel Pelaporan Perjalanan Dinas (Halaman Baru) --}}
+        {{-- Tabel Pelaporan Perjalanan Dinas --}}
         <div class="container bordered-table" style="page-break-before: always;">
-            <table>
+            <table style="width: 100%;">
+                <tr style="height: 25px;">
+                    <td colspan="5" style="border: none; padding: 0;">
+                        <div style="font-weight:bold; font-size:12px; margin-bottom: 5px;">LAPORAN PERJALANAN DINAS</div>
+                    </td>
+                </tr>
                 <thead>
                     <tr>
-                        <th class="col-no">No.</th>
-                        <th class="col-datang-pulang">Datang</th>
-                        <th class="col-datang-pulang">Pulang</th>
-                        <th class="col-tujuan">Tempat Tujuan</th>
-                        <th class="col-pejabat">Pejabat (TTD) & Stempel</th>
+                        <th style="width:5%;">No.</th>
+                        <th style="width:15%;">Datang</th>
+                        <th style="width:15%;">Pulang</th>
+                        <th style="width:30%;">Tempat Tujuan</th>
+                        <th style="width:35%;">Pejabat (TTD) & Stempel</th>
                     </tr>
                 </thead>
                 <tbody>
                     @for ($i = 1; $i <= 5; $i++)
                     <tr>
                         <td>{{ $i }}.</td>
+                        <td style="height: 35px;"></td>
                         <td></td>
                         <td></td>
-                        <td></td>
-                        <td style="height: 60px;"></td>
+                        <td style="height: 35px;"></td>
                     </tr>
                     @endfor
                 </tbody>
