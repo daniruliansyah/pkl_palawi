@@ -16,6 +16,10 @@ use Laravel\Sanctum\HasApiTokens;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
+>>>>>>> Stashed changes
 =======
 use Illuminate\Notifications\Notifiable; // <-- INI YANG UTAMA
 >>>>>>> Stashed changes
@@ -97,8 +101,11 @@ class User extends Authenticatable
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function riwayatJabatans(): HasMany
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -131,8 +138,11 @@ class User extends Authenticatable
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function jabatanTerbaru(): HasOne
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -166,8 +176,11 @@ class User extends Authenticatable
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     public function riwayatSP(): HasMany
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -191,6 +204,7 @@ class User extends Authenticatable
         return $this->hasMany(SP::class, 'nip_user', 'nip');
     }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -253,6 +267,8 @@ class User extends Authenticatable
     {
         return $this->isGm() || $this->isSdm();
     }
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
