@@ -236,4 +236,21 @@ class UserController extends Controller
     return view('pages.karyawan.detail', compact('karyawan'))
                      ->with('success', 'Data Kepegawaian karyawan berhasil diperbarui.');
     }
+
+    public function cariKaryawan(Request $request)
+    {
+        $query = $request->get('q');
+        $karyawan = User::where('nama_lengkap', 'LIKE', "%{$query}%")
+            ->take(5)
+            ->get(['id', 'nama_lengkap', 'nip']);
+
+        return response()->json([
+            'results' => $karyawan->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'text' => "{$item->nama_lengkap} ({$item->nip})"
+                ];
+            }),
+        ]);
+    }
 }
