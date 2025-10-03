@@ -30,17 +30,18 @@ class CutiController extends Controller
         $jabatanInfo = $user->jabatanTerbaru()->with('jabatan')->first();
 
         // Default: Karyawan Biasa
-        if (!$jabatanInfo || !$jabatanInfo->jabatan || (!$user->isSenior() && !$user->isSdm() && !$user->isGm())) {
+        // Menggunakan method dari model User yang sudah dibersihkan
+        if (!$jabatanInfo || !$jabatanInfo->jabatan || $user->isKaryawanBiasa()) {
             $cutis = Cuti::where('nip_user', $user->nip)
-                         ->with('user', 'ssdm', 'sdm', 'gm')
-                         ->latest()->get();
+                          ->with('user', 'ssdm', 'sdm', 'gm')
+                          ->latest()->get();
             return view('pages.cuti.index-karyawan', compact('cutis', 'sisaCuti'));
         }
 
         $namaJabatan = $jabatanInfo->jabatan->nama_jabatan;
 
         // General Manager (GM)
-        if (Str::contains($namaJabatan, 'General Manager')) {
+        if ($user->isGm()) {
             $cutisForApproval = Cuti::with('user.jabatanTerbaru.jabatan')
                 ->where('status_sdm', 'Disetujui')
                 ->where('status_gm', 'Menunggu Persetujuan')
@@ -50,7 +51,7 @@ class CutiController extends Controller
         }
 
         // Senior Analis Keuangan, SDM & Umum (SDM)
-        if (Str::contains($namaJabatan, 'Senior Analis Keuangan, SDM & Umum')) {
+        if ($user->isSdm()) {
             $cutisForApproval = Cuti::where('status_ssdm', 'Disetujui')
                 ->where('status_sdm', 'Menunggu Persetujuan')
                 ->latest()->get();
@@ -59,7 +60,7 @@ class CutiController extends Controller
         }
 
         // Senior / Manager (SSDM/Atasan Langsung)
-        if (Str::contains($namaJabatan, 'Senior') || Str::contains($namaJabatan, 'Manager')) {
+        if ($user->isSenior()) {
             $cutisForApproval = Cuti::where('status_ssdm', 'Menunggu Persetujuan')
                 ->where('nip_user_ssdm', $user->nip)
                 ->latest()->get();
@@ -96,11 +97,12 @@ class CutiController extends Controller
             'tgl_selesai'   => 'required|date|after_or_equal:tgl_mulai',
             'jumlah_hari'   => 'required|integer|min:1',
             'keterangan'    => 'required|string',
+            // File hanya wajib diunggah untuk Cuti Sakit, opsional untuk yang lain
             'file_izin'     => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048|required_if:jenis_izin,Cuti Sakit',
         ];
 
         // Hanya user non-senior ke bawah yang perlu memilih atasan SSDM
-        if (!$user->isSenior() && !$user->isSdm() && !$user->isGm()) {
+        if ($user->isKaryawanBiasa()) {
             $rules['nip_user_ssdm'] = 'required|string|exists:users,nip';
         }
 
@@ -215,7 +217,8 @@ class CutiController extends Controller
 
         DB::beginTransaction();
         try {
-            if (Str::contains($namaJabatan, 'General Manager')) {
+            // General Manager (GM)
+            if ($user->isGm()) {
                 if ($cuti->status_gm !== 'Menunggu Persetujuan')
                     return back()->with('error','Bukan antrian Anda.');
 
@@ -247,7 +250,8 @@ class CutiController extends Controller
                     }
                 }
             }
-            elseif (Str::contains($namaJabatan, 'Senior Analis Keuangan, SDM & Umum')) {
+            // Senior Analis Keuangan, SDM & Umum (SDM)
+            elseif ($user->isSdm()) {
                 if ($cuti->status_sdm !== 'Menunggu Persetujuan')
                     return back()->with('error','Bukan antrian Anda.');
 
@@ -267,7 +271,8 @@ class CutiController extends Controller
                     $keteranganNotif = "Cuti Anda ditolak SDM. Alasan: " . $cuti->alasan_penolakan;
                 }
             }
-            elseif (Str::contains($namaJabatan, 'Senior') || Str::contains($namaJabatan, 'Manager')) {
+            // Senior / Manager (SSDM/Atasan Langsung)
+            elseif ($user->isSenior()) {
                 if ($cuti->status_ssdm !== 'Menunggu Persetujuan')
                     return back()->with('error','Bukan antrian Anda.');
 
@@ -318,6 +323,7 @@ class CutiController extends Controller
         } catch(\Exception $e) {
             DB::rollBack();
             Log::error("Update Cuti Error: ".$e->getMessage());
+            // Menggabungkan penanganan error dari kedua versi
             return back()->with('error','Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -347,6 +353,7 @@ class CutiController extends Controller
         if (Auth::user()->nip !== $cuti->nip_user) {
             return redirect()->route('cuti.index')->with('error', 'Anda tidak berhak membatalkan pengajuan ini.');
         }
+        // Hanya bisa dibatalkan jika belum disetujui SSDM/Atasan Langsung
         if ($cuti->status_ssdm !== 'Menunggu Persetujuan' || $cuti->status_sdm !== 'Menunggu' || $cuti->status_gm !== 'Menunggu') {
             return redirect()->route('cuti.index')->with('error', 'Pengajuan ini sudah diproses dan tidak bisa dibatalkan.');
         }
@@ -468,10 +475,10 @@ class CutiController extends Controller
             // 1. Generate QR Code
             $qrCodeUrl = $this->generateQrCodeUrl($cuti);
             $options = new QROptions([
-                'outputType'  => QRCode::OUTPUT_IMAGE_PNG,
-                'imageBase64' => true,
-                'scale'       => 5,
-                'eccLevel'    => QRCode::ECC_H,
+                'outputType'    => QRCode::OUTPUT_IMAGE_PNG,
+                'imageBase64'   => true,
+                'scale'         => 5,
+                'eccLevel'      => QRCode::ECC_H,
             ]);
             $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl);
 
