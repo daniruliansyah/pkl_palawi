@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use App\Models\User; // Ditambahkan
-use App\Notifications\StatusSuratDiperbarui; // Ditambahkan
 
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
