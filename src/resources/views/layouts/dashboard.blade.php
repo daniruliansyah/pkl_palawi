@@ -11,7 +11,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
     <title>{{ config('app.name', 'Laravel') }} - @yield('title')</title>
-
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- Vite untuk Tailwind & JS --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
