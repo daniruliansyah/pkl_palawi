@@ -75,3 +75,4 @@ class StatusSuratDiperbarui extends Notification implements ShouldQueue
                     ->line('Terima kasih.');
     }
 }
+

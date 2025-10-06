@@ -23,7 +23,6 @@ class SP extends Model
         'tembusan',     // <<-- Baru
         'tgl_mulai',
         'tgl_selesai',
-        'ket_peringatan',
         'tgl_sp_terbit',
         'file_sp',
         'file_bukti',

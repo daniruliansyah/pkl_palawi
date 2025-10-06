@@ -40,25 +40,16 @@ class SPController extends Controller
             'tgl_sp_terbit' => 'required|date',
             'tgl_mulai'     => 'required|date',
             'tgl_selesai'   => 'required|date|after_or_equal:tgl_mulai',
-            'ket_peringatan'=> 'required|string|max:500',
             'file_bukti'    => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
+
+        $sp = null; // ✅ deklarasi awal agar tidak undefined
 
         $karyawan = User::where('nip', $validatedData['nip_user'])
                         ->with('jabatanTerbaru.jabatan')
                         ->firstOrFail();
 
-        $tahun = date('Y');
-        $bulan = date('m');
-
-        $lastSP = SP::whereYear('created_at', $tahun)->latest('id')->first();
-        $nomorUrut = 1;
-        if ($lastSP) {
-            $parts = explode('/', $lastSP->no_surat);
-            $lastNumber = end($parts);
-            if (is_numeric($lastNumber)) $nomorUrut = (int)$lastNumber + 1;
-        }
-        $noSurat = sprintf("SP/%s/%s/%03d", $tahun, $bulan, $nomorUrut);
+        $noSurat = $this->generateNoSurat();
 
         $pathFileBukti = $request->hasFile('file_bukti')
             ? $request->file('file_bukti')->store('file_bukti', 'public')
@@ -77,14 +68,15 @@ class SPController extends Controller
                 'tgl_sp_terbit' => $validatedData['tgl_sp_terbit'],
                 'tgl_mulai'     => $validatedData['tgl_mulai'],
                 'tgl_selesai'   => $validatedData['tgl_selesai'],
-                'ket_peringatan'=> $validatedData['ket_peringatan'],
+                'ket_peringatan'=> $validatedData['ket_peringatan'] ?? null,
                 'file_bukti'    => $pathFileBukti,
             ]);
 
             $gm = User::whereHas('jabatanTerbaru.jabatan', fn($q) =>
-                    $q->where('nama_jabatan', 'LIKE', '%General Manager%')
-                )->first();
+                $q->where('nama_jabatan', 'LIKE', '%General Manager%')
+            )->first();
 
+            // ✅ QR Code untuk verifikasi surat
             $qrCodeUrl = route('sp.verifikasi', $sp->id);
             $options = new QROptions([
                 'outputType'  => QRCode::OUTPUT_IMAGE_PNG,
@@ -94,62 +86,83 @@ class SPController extends Controller
             ]);
             $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl);
 
+            // ✅ Generate PDF
             $pdf = Pdf::loadView('pages.sp.template-surat', compact('sp', 'karyawan', 'gm', 'qrCodeBase64'))
-                      ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])
-                      ->setPaper('A4', 'portrait');
+                ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])
+                ->setPaper('A4', 'portrait');
 
             $pathFileSP = 'file_sp/' . Str::slug($sp->no_surat) . '.pdf';
             Storage::disk('public')->put($pathFileSP, $pdf->output());
 
-            $sp->file_sp = $pathFileSP;
-            $sp->save();
+            $sp->update(['file_sp' => $pathFileSP]);
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Gagal membuat SP ID {$sp->id} atau PDF: " . $e->getMessage());
+            Log::error("Gagal membuat SP" . ($sp ? " ID {$sp->id}" : "") . " atau PDF: " . $e->getMessage());
+
             if ($pathFileBukti && Storage::disk('public')->exists($pathFileBukti)) {
                 Storage::disk('public')->delete($pathFileBukti);
             }
+
             return back()->with('error', 'Gagal membuat Surat Peringatan. ' . $e->getMessage())->withInput();
         }
 
         return redirect()->route('sp.index')->with('success', 'Surat Peringatan berhasil dibuat.');
     }
 
+    protected function numberToRoman($number)
+    {
+        $map = [
+            'M'  => 1000, 'CM' => 900, 'D'  => 500, 'CD' => 400,
+            'C'  => 100,  'XC' => 90,  'L'  => 50,  'XL' => 40,
+            'X'  => 10,   'IX' => 9,   'V'  => 5,   'IV' => 4,
+            'I'  => 1,
+        ];
 
-      protected function generateNoSurat()
+        $roman = '';
+        while ($number > 0) {
+            foreach ($map as $rom => $val) {
+                if ($number >= $val) {
+                    $number -= $val;
+                    $roman  .= $rom;
+                    break;
+                }
+            }
+        }
+        return $roman;
+    }
+
+    protected function generateNoSurat()
     {
         $year  = date('Y');
         $month = $this->numberToRoman(date('n'));
 
-        $lastSppd = SP::whereYear('created_at', $year)
+        $lastSP = SP::whereYear('created_at', $year)
             ->whereNotNull('no_surat')
             ->orderBy('created_at', 'desc')
             ->first();
 
         $lastNumber = 0;
-        if ($lastSppd) {
-            $parts = explode('/', $lastSppd->no_surat);
-            $lastNumber = isset($parts[0]) ? (int) $parts[0] : 0;
+        if ($lastSP) {
+            $parts = explode('/', $lastSP->no_surat);
+            $lastNumber = isset($parts[0]) ? (int)$parts[0] : 0;
         }
 
         $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        return "{$newNumber}/D.1./PAL-ABWWT/{$year}";
+        return "{$newNumber}/SP/D.1./PAWWT/{$year}"; // ✅ ubah dari SPPD ke SP
     }
 
+    public function verifikasi($id)
+    {
+        $sp = SP::with('user')->find($id);
 
-public function verifikasi($id)
-{
-    // Pastikan Anda menggunakan Model yang benar (SP)
-    $sp = SP::with('user')->find($id);
+        if (!$sp) {
+            return view('pages.sp.notfound', ['message' => 'Surat Peringatan tidak ditemukan.']);
+        }
 
-    if (!$sp) {
-        return view('pages.sp.notfound', ['message' => 'Surat Peringatan tidak ditemukan.']);
+        return view('pages.sp.info', compact('sp'));
     }
-    return view('pages.sp.info', compact('sp'));
-}
-
 
     public function cariKaryawan(Request $request)
     {
@@ -190,11 +203,14 @@ public function verifikasi($id)
         return redirect()->back()->with('error', 'File bukti tidak ditemukan.');
     }
 
-// Di file: App\Http\Controllers\SPController.php
-protected function generateQrCodeUrl(SP $sp) // Menggunakan Model SP
-{
-    return route('sp.verifikasi', ['id' => $sp->id]);
-}
+    protected function generateQrCodeUrl(SP $sp)
+    {
+        return route('sp.verifikasi', ['id' => $sp->id]);
+    }
 
-
+    public function detail($id)
+    {
+        $sp = SP::with('user')->findOrFail($id);
+        return view('pages.sp.index', compact('sp'));
+    }
 }
