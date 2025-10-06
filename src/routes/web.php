@@ -64,7 +64,8 @@ Route::middleware('auth')->group(function () {
 
     // --- RUTE PERSETUJUAN CUTI ---
     Route::get('/approval', [ApprovalController::class, 'index'])->name('approvals.index');
-    Route::put('/approval/{cuti}', [ApprovalController::class, 'update'])->name('approvals.update');
+    Route::put('/cuti/{cuti}/update-status', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
+    Route::get('/cuti/verifikasi/{id}', [CutiController::class, 'verifikasi'])->name('cuti.verifikasi');
 
     // === BAGIAN YANG DIPERBAIKI ===
     // Nama 'downloadLaporan' diubah menjadi 'downloadReport'
