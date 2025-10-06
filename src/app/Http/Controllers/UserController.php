@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\Jabatan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Notifications\Notifiable;
+
 
 class UserController extends Controller
 {
@@ -235,5 +237,22 @@ class UserController extends Controller
     // 4. Redirect kembali ke halaman detail dengan pesan sukses
     return view('pages.karyawan.detail', compact('karyawan'))
                      ->with('success', 'Data Kepegawaian karyawan berhasil diperbarui.');
+    }
+
+    public function cariKaryawan(Request $request)
+    {
+        $query = $request->get('q');
+        $karyawan = User::where('nama_lengkap', 'LIKE', "%{$query}%")
+            ->take(5)
+            ->get(['id', 'nama_lengkap', 'nip']);
+
+        return response()->json([
+            'results' => $karyawan->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'text' => "{$item->nama_lengkap} ({$item->nip})"
+                ];
+            }),
+        ]);
     }
 }

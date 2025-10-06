@@ -93,7 +93,7 @@
               <a href={{ route('cuti.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan Izin</a>
             </li>
             <li>
-              <a href="form-elements.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat Surat Cuti</a>
+              <a href={{ route('approvals.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat Surat Cuti</a>
             </li>
           </ul>
         </li>
@@ -142,7 +142,7 @@
 
           <ul :class="selected === 'Pages' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
             <li><a href={{ route('sppd.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan SPPD</a></li>
-            <li><a href="404.html" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat SPPD</a></li>
+            <li><a href={{ route('sppd.approvals.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat SPPD</a></li>
           </ul>
         </li>
       </ul>

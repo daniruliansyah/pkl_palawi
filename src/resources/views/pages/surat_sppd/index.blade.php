@@ -1,29 +1,36 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Daftar SPPD Karyawan')
+@section('title', 'Riwayat SPPD Saya')
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
-    {{-- Alert sukses --}}
+    {{-- Notifikasi --}}
     @if(session('success'))
-        <div class="mb-4 rounded-lg bg-green-100 px-4 py-3 text-green-800">
-            {{ session('success') }}
-        </div>
+        <div class="mb-4 rounded-lg bg-green-100 px-4 py-3 text-green-800">{{ session('success') }}</div>
     @endif
-
     @if(session('error'))
-        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show" class="fixed top-4 right-4 z-50 rounded-lg bg-red-500 text-white p-4 shadow-lg">
-            {{ session('error') }}
-        </div>
+        <div class="mb-4 rounded-lg bg-red-100 px-4 py-3 text-red-800">{{ session('error') }}</div>
     @endif
 
-    @if(session('warning'))
-        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show" class="fixed top-4 right-4 z-50 rounded-lg bg-orange-500 text-white p-4 shadow-lg">
-            {{ session('warning') }}
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800">
+                    Riwayat Pengajuan SPPD Anda
+                </h3>
+                <p class="text-sm text-gray-500">
+                    Daftar semua surat perjalanan dinas yang pernah Anda ajukan.
+                </p>
+            </div>
+            <div>
+                <a href="{{ route('sppd.create') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700">
+                    Ajukan SPPD Baru
+                </a>
+            </div>
         </div>
-    @endif
 
-    {{-- Include partial table --}}
-    @include('partials.table.table-sppd-acceptance', ['sppds' => $sppds])
+        {{-- Memanggil partial tabel yang sudah bersih --}}
+        @include('partials.table.table-sppd-acceptance', ['sppds' => $sppds, 'isApprovalPage' => false])
+    </div>
 </div>
 @endsection
