@@ -59,7 +59,7 @@
             <tr>
                 <td class="logo-cell">
                     {{-- Logo perusahaan --}}
-                    <img src="{{ $embed('images/econique.jpg') }}" alt="Logo" class="logo-image">
+                    <img src="{{ $embed('images/logo2.jpg') }}" alt="Logo" class="logo-image">
                 </td>
                 <td style="width:60%;" class="text-center header-text">
                     <div style="font-weight:bold; text-transform:uppercase; font-size:12px;">PT. PERHUTANI ALAM WISATA RISORSIS</div>
