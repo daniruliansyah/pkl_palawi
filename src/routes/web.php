@@ -39,7 +39,14 @@ Route::middleware('auth')->group(function () {
 
     // Rute Karyawan dan Riwayat Jabatan
     Route::resource('karyawan', UserController::class)->middleware('check.karyawan.access');
-    // ... rute karyawan lainnya ...
+    Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan');
+    Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
+    Route::get('/editpi/{id}', [UserController::class, 'editpi'])->name('karyawan.editpi');
+    Route::put('/updatepi/{id}', [UserController::class, 'updatepi'])->name('karyawan.updatepi');
+    Route::get('/editkep/{id}', [UserController::class, 'editkep'])->name('karyawan.editkep');
+    Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
+    Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit');
+    Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update');
 
     // --- RUTE SPPD (UNTUK PRIBADI) ---
     Route::resource('sppd', SppdController::class)->only(['index', 'create', 'store']);
