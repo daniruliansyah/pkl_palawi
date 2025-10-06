@@ -11,6 +11,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
     <title>{{ config('app.name', 'Laravel') }} - @yield('title')</title>
+    
     {{-- Vite untuk Tailwind & JS --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
