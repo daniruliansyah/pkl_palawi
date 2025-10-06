@@ -25,7 +25,6 @@ return new class extends Migration
             $table->string('nip_user', 20); // Tambahkan kolom relasi ke User
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
-            $table->text('ket_peringatan'); // Ubah string ke text agar bisa lebih panjang
             $table->date('tgl_sp_terbit');
             $table->string('no_surat', 100)->unique(); // Jadikan unique
             $table->string('file_sp', 100)->nullable(); // Jadikan nullable

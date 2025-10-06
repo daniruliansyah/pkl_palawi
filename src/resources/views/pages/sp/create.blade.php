@@ -110,16 +110,6 @@
                 @enderror
             </div>
 
-            {{-- Keterangan / Bukti Pelanggaran (Milik Anda Sebelumnya) --}}
-            <div>
-                <label for="ket_peringatan" class="mb-1 block text-sm font-medium text-gray-700">Keterangan / Detail Pelanggaran</label>
-                <textarea name="ket_peringatan" id="ket_peringatan" rows="3"
-                    class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('ket_peringatan') ? 'border-red-500' : 'border-gray-300' }}" required>{{ old('ket_peringatan') }}</textarea>
-                <p class="mt-1 text-xs text-gray-500">Keterangan yang akan muncul di dokumen internal/lampiran.</p>
-                @error('ket_peringatan')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
 
             {{-- Upload Bukti Pelanggaran --}}
             <div>
