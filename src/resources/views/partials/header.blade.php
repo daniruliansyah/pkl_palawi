@@ -195,9 +195,9 @@
                 @endphp
 
                 <div
-                    x-show="open"
-                    x-transition
-                    class="absolute right-0 mt-2 w-56 max-w-[90vw] rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
+                    class="relative"
+                    x-data="{ dropdownOpen: false }"
+                    @click.outside="dropdownOpen = false"
                 >
                     <a
                         class="flex items-center text-gray-700 dark:text-gray-400"
@@ -230,13 +230,38 @@
                             />
                         </svg>
                     </a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                                class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                            Sign out
-                        </button>
-                    </form>
+
+                    <div
+                        x-show="dropdownOpen"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95"
+                        class="absolute right-0 z-50 mt-2 w-60 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
+                    >
+                        <ul class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800">
+                            <li>
+                                <a
+                                    href="{{ route('profile.show') }}"
+                                    class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                                >
+                                    Edit profile
+                                </a>
+                            </li>
+                        </ul>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button
+                                type="submit"
+                                class="group text-theme-sm mt-3 flex w-full items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                            >
+                                Sign out
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
