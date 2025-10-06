@@ -43,10 +43,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
     Route::get('/editpi/{id}', [UserController::class, 'editpi'])->name('karyawan.editpi');
     Route::put('/updatepi/{id}', [UserController::class, 'updatepi'])->name('karyawan.updatepi');
-    Route::get('/editkep/{id}', [UserController::class, 'editkep'])->name('karyawan.editkep');
+    Route::get('/editkep/{id}', [UserController::class, 'editkep'])->name('karyawan.editkep')->middleware('check.karyawan.access');
     Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
-    Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit');
-    Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update');
+    Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit')->middleware('check.karyawan.access');
+    Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update')->middleware('check.karyawan.access');
 
     // --- RUTE SPPD (UNTUK PRIBADI) ---
     Route::resource('sppd', SppdController::class)->only(['index', 'create', 'store']);
@@ -68,9 +68,6 @@ Route::middleware('auth')->group(function () {
     // === BAGIAN YANG DIPERBAIKI ===
     // Nama 'downloadLaporan' diubah menjadi 'downloadReport'
     Route::get('/approval/laporan/download', [ApprovalController::class, 'downloadReport'])->name('approvals.downloadReport');
-
-    // Rute Kalender
-    Route::resource('kalender', KalenderController::class);
 
     // Rute SP
     Route::resource('sp', SPController::class)->middleware('check.peringatan.access');
