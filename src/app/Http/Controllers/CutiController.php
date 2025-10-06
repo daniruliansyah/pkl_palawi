@@ -193,137 +193,132 @@ class CutiController extends Controller
 
         return redirect()->route('cuti.index')->with('success','Pengajuan cuti berhasil dibuat.');
     }
+  /**
+ * Mengubah status cuti berdasarkan jabatan (SSDM -> SDM -> GM).
+ */
+public function updateStatus(Request $request, Cuti $cuti)
+{
+    $request->validate([
+        'status' => 'required|in:Disetujui,Ditolak',
+        'alasan_penolakan' => 'nullable|string|required_if:status,Ditolak',
+    ]);
 
-    /**
-     * Mengubah status cuti berdasarkan jabatan (SSDM -> SDM -> GM).
-     */
-    public function updateStatus(Request $request, Cuti $cuti)
-    {
-        $request->validate([
-            'status' => 'required|in:Disetujui,Ditolak',
-            'alasan_penolakan' => 'nullable|string|required_if:status,Ditolak',
-        ]);
+    $user = auth()->user();
+    $pembuatCuti = $cuti->user;
 
-        $user = auth()->user();
-        $pembuatCuti = $cuti->user;
+    $penerimaNotifikasiBerikutnya = null;
+    $currentStatus = '';
+    $keteranganNotif = '';
+    $urlDetail = route('cuti.show', $cuti->id);
+    $status = $request->status;
 
-        $penerimaNotifikasiBerikutnya = null;
-        $currentStatus = '';
-        $keteranganNotif = '';
-        $urlDetail = route('cuti.show', $cuti->id);
-        $status = $request->status;
-
-        DB::beginTransaction();
-        try {
-            // Cek otorisasi dan antrian
-            if ($user->isGm() && $cuti->status_gm !== 'Menunggu Persetujuan') {
-                return back()->with('error','Bukan antrian/wewenang Anda untuk GM.');
-            } elseif ($user->isSdm() && $cuti->status_sdm !== 'Menunggu Persetujuan') {
-                return back()->with('error','Bukan antrian/wewenang Anda untuk SDM.');
-            } elseif ($user->isSenior() && $cuti->status_ssdm !== 'Menunggu Persetujuan') {
-                return back()->with('error','Bukan antrian/wewenang Anda untuk Atasan Langsung.');
-            } elseif (!$user->isGm() && !$user->isSdm() && !$user->isSenior()) {
-                 return back()->with('error','Anda tidak berwenang memproses pengajuan cuti ini.');
-            }
-
-            // General Manager (GM)
-            if ($user->isGm()) {
-                $cuti->status_gm = $status;
-                $cuti->nip_user_gm = $user->nip;
-                $cuti->tgl_persetujuan_gm = now();
-
-                if ($status == 'Ditolak') {
-                    $cuti->alasan_penolakan = $request->alasan_penolakan;
-                    $currentStatus = 'Ditolak';
-                    $keteranganNotif = "Cuti Anda ditolak GM. Alasan: " . $cuti->alasan_penolakan;
-                } else {
-                    $currentStatus = 'Disetujui Penuh';
-                    $keteranganNotif = "Cuti Anda sudah disetujui penuh. Silakan unduh surat cuti Anda.";
-                    $urlDetail = route('cuti.download', $cuti->id);
-
-                    // Logika Pengurangan Jatah Cuti dan Generate PDF
-                    $path = $this->generateSuratPdf($cuti);
-                    if ($path) {
-                        $cuti->file_cuti = $path;
-                        if ($this->isCutiMengurangiJatah($cuti->jenis_izin, !is_null($cuti->file_izin))) {
-                            // DECREMENT JATAH CUTI
-                            $pembuatCuti->decrement('jatah_cuti', $cuti->jumlah_hari);
-                            Log::info("Jatah Cuti {$pembuatCuti->nip} dikurangi {$cuti->jumlah_hari} hari.");
-                        }
-                    } else {
-                        DB::rollBack();
-                        return back()->with('error', 'Cuti disetujui, tapi gagal membuat file surat. Cek logs.');
-                    }
-                }
-            }
-            // Senior Analis Keuangan, SDM & Umum (SDM)
-            elseif ($user->isSdm()) {
-                $cuti->status_sdm = $status;
-                $cuti->nip_user_sdm = $user->nip;
-                $cuti->tgl_persetujuan_sdm = now();
-
-                if ($status == 'Disetujui') {
-                    $cuti->status_gm = 'Menunggu Persetujuan';
-                    $penerimaNotifikasiBerikutnya = User::where('nip', $cuti->nip_user_gm)->first();
-                    $currentStatus = 'Menunggu Persetujuan GM';
-                    $keteranganNotif = "Disetujui SDM, diteruskan ke GM.";
-                } else {
-                    $cuti->alasan_penolakan = $request->alasan_penolakan;
-                    $cuti->status_gm = 'Ditolak';
-                    $currentStatus = 'Ditolak';
-                    $keteranganNotif = "Cuti Anda ditolak SDM. Alasan: " . $cuti->alasan_penolakan;
-                }
-            }
-            // Senior / Manager (SSDM/Atasan Langsung)
-            elseif ($user->isSenior()) {
-                $cuti->status_ssdm = $status;
-                $cuti->tgl_persetujuan_ssdm = now();
-
-                if ($status == 'Disetujui') {
-                    $cuti->status_sdm = 'Menunggu Persetujuan';
-                    $penerimaNotifikasiBerikutnya = User::where('nip', $cuti->nip_user_sdm)->first();
-                    $currentStatus = 'Menunggu Persetujuan SDM';
-                    $keteranganNotif = "Disetujui Atasan Langsung, diteruskan ke SDM.";
-                } else {
-                    $cuti->alasan_penolakan = $request->alasan_penolakan;
-                    $cuti->status_sdm = 'Ditolak'; $cuti->status_gm = 'Ditolak';
-                    $currentStatus = 'Ditolak';
-                    $keteranganNotif = "Cuti Anda ditolak Atasan Langsung. Alasan: " . $cuti->alasan_penolakan;
-                }
-            }
-
-            $cuti->save();
-
-            // Notifikasi ke Pembuat Cuti
-            if ($pembuatCuti) {
-                $pembuatCuti->notify(new StatusSuratDiperbarui(
-                    aktor: $user,
-                    jenisSurat:'Cuti',
-                    statusBaru:$currentStatus,
-                    keterangan:$keteranganNotif,
-                    url:$urlDetail
-                ));
-            }
-
-            // Notifikasi ke Atasan Berikutnya (Jika Disetujui dan belum final)
-            if ($penerimaNotifikasiBerikutnya && $status == 'Disetujui' && $currentStatus !== 'Disetujui Penuh') {
-                $penerimaNotifikasiBerikutnya->notify(new StatusSuratDiperbarui(
-                    aktor: $user,
-                    jenisSurat:'Cuti',
-                    statusBaru:'Menunggu Persetujuan',
-                    keterangan:'Ada cuti yang menunggu persetujuan Anda.',
-                    url:route('cuti.show',$cuti->id)
-                ));
-            }
-
-            DB::commit();
-            return redirect()->route('cuti.index')->with('success','Status pengajuan cuti berhasil diperbarui.');
-        } catch(\Exception $e) {
-            DB::rollBack();
-            Log::error("Update Cuti Error: ".$e->getMessage());
-            return back()->with('error','Terjadi kesalahan: ' . $e->getMessage());
+    DB::beginTransaction();
+    try {
+        // Cek otorisasi dan antrian (Logika ini tetap dipertahankan karena sudah benar)
+        if ($user->isGm() && $cuti->status_gm !== 'Menunggu Persetujuan') {
+            return back()->with('error','Bukan antrian/wewenang Anda untuk GM.');
+        } elseif ($user->isSdm() && $cuti->status_sdm !== 'Menunggu Persetujuan') {
+            return back()->with('error','Bukan antrian/wewenang Anda untuk SDM.');
+        } elseif ($user->isSenior() && $cuti->status_ssdm !== 'Menunggu Persetujuan') {
+            return back()->with('error','Bukan antrian/wewenang Anda untuk Atasan Langsung.');
+        } elseif (!$user->isGm() && !$user->isSdm() && !$user->isSenior()) {
+            return back()->with('error','Anda tidak berwenang memproses pengajuan cuti ini.');
         }
+
+        // General Manager (GM)
+        if ($user->isGm()) {
+            $cuti->status_gm = $status;
+            $cuti->nip_user_gm = $user->nip;
+            $cuti->tgl_persetujuan_gm = now();
+
+            if ($status == 'Ditolak') {
+                $cuti->alasan_penolakan = $request->alasan_penolakan;
+                $currentStatus = 'Ditolak';
+                $keteranganNotif = "Cuti Anda ditolak GM. Alasan: " . $cuti->alasan_penolakan;
+            } else {
+                $currentStatus = 'Disetujui Penuh';
+                $keteranganNotif = "Cuti Anda sudah disetujui penuh. Silakan unduh surat cuti Anda.";
+                $urlDetail = route('cuti.download', $cuti->id);
+
+                // Logika Pengurangan Jatah Cuti dan Generate PDF
+                $path = $this->generateSuratPdf($cuti);
+                if ($path) {
+                    // ==========================================================
+                    // PERBAIKAN: Menggunakan kolom 'file_surat' sesuai permintaan Anda
+                    $cuti->file_surat = $path;
+                    // ==========================================================
+
+                    if ($this->isCutiMengurangiJatah($cuti->jenis_izin, !is_null($cuti->file_izin))) {
+                        $pembuatCuti->decrement('jatah_cuti', $cuti->jumlah_hari);
+                        Log::info("Jatah Cuti {$pembuatCuti->nip} dikurangi {$cuti->jumlah_hari} hari.");
+                    }
+                } else {
+                    DB::rollBack();
+                    return back()->with('error', 'Cuti disetujui, tapi gagal membuat file surat. Cek logs.');
+                }
+            }
+        }
+        // Senior Analis Keuangan, SDM & Umum (SDM)
+        elseif ($user->isSdm()) {
+            $cuti->status_sdm = $status;
+            $cuti->nip_user_sdm = $user->nip;
+            $cuti->tgl_persetujuan_sdm = now();
+
+            if ($status == 'Disetujui') {
+                $cuti->status_gm = 'Menunggu Persetujuan';
+                $penerimaNotifikasiBerikutnya = User::where('nip', $cuti->nip_user_gm)->first();
+                $currentStatus = 'Menunggu Persetujuan GM';
+                $keteranganNotif = "Disetujui SDM, diteruskan ke GM.";
+            } else {
+                $cuti->alasan_penolakan = $request->alasan_penolakan;
+                $cuti->status_gm = 'Ditolak';
+                $currentStatus = 'Ditolak';
+                $keteranganNotif = "Cuti Anda ditolak SDM. Alasan: " . $cuti->alasan_penolakan;
+            }
+        }
+        // Senior / Manager (SSDM/Atasan Langsung)
+        elseif ($user->isSenior()) {
+            $cuti->status_ssdm = $status;
+            $cuti->tgl_persetujuan_ssdm = now();
+
+            if ($status == 'Disetujui') {
+                $cuti->status_sdm = 'Menunggu Persetujuan';
+                $penerimaNotifikasiBerikutnya = User::where('nip', $cuti->nip_user_sdm)->first();
+                $currentStatus = 'Menunggu Persetujuan SDM';
+                $keteranganNotif = "Disetujui Atasan Langsung, diteruskan ke SDM.";
+            } else {
+                $cuti->alasan_penolakan = $request->alasan_penolakan;
+                $cuti->status_sdm = 'Ditolak'; $cuti->status_gm = 'Ditolak';
+                $currentStatus = 'Ditolak';
+                $keteranganNotif = "Cuti Anda ditolak Atasan Langsung. Alasan: " . $cuti->alasan_penolakan;
+            }
+        }
+
+        $cuti->save();
+
+        // Notifikasi ke Pembuat Cuti
+        if ($pembuatCuti) {
+            $pembuatCuti->notify(new StatusSuratDiperbarui(
+                $user, 'Cuti', $currentStatus, $keteranganNotif, $urlDetail
+            ));
+        }
+
+        // Notifikasi ke Atasan Berikutnya (Jika Disetujui dan belum final)
+        if ($penerimaNotifikasiBerikutnya && $status == 'Disetujui' && $currentStatus !== 'Disetujui Penuh') {
+            $penerimaNotifikasiBerikutnya->notify(new StatusSuratDiperbarui(
+                $user, 'Cuti', 'Menunggu Persetujuan', 'Ada cuti yang menunggu persetujuan Anda.', route('cuti.show',$cuti->id)
+            ));
+        }
+
+        DB::commit();
+        return redirect()->route('cuti.index')->with('success','Status pengajuan cuti berhasil diperbarui.');
+
+    } catch(\Exception $e) {
+        DB::rollBack();
+        Log::error("Update Cuti Error: ".$e->getMessage());
+        return back()->with('error','Terjadi kesalahan: ' . $e->getMessage());
     }
+}
 
     /**
      * Menampilkan detail cuti (untuk rute notifikasi dan verifikasi).
@@ -468,50 +463,62 @@ class CutiController extends Controller
     }
 
     /**
-     * Menghasilkan file PDF Surat Cuti dan menyimpannya.
-     */
-    protected function generateSuratPdf(Cuti $cuti)
-    {
-        try {
-            $fileName = Str::slug(Str::replace('/', '-', $cuti->no_surat)) . "_{$cuti->id}.pdf";
-            $pathFileCuti = 'file_cuti/' . $fileName; // Path di dalam storage/app/public
-            $storagePath = storage_path('app/public/' . dirname($pathFileCuti));
+ * Menghasilkan file PDF Surat Cuti dan menyimpannya.
+ */
+protected function generateSuratPdf(Cuti $cuti)
+{
+    try {
+        $fileName = Str::slug(Str::replace('/', '-', $cuti->no_surat)) . "_{$cuti->id}.pdf";
+        $pathFileCuti = 'file_cuti/' . $fileName; // Path di dalam storage/app/public
+        $storagePath = storage_path('app/public/' . dirname($pathFileCuti));
 
-            if (!file_exists($storagePath)) {
-                mkdir($storagePath, 0755, true);
-            }
-
-            // 1. Generate QR Code
-            $qrCodeUrl = $this->generateQrCodeUrl($cuti);
-            $options = new QROptions([
-                'outputType'    => QRCode::OUTPUT_IMAGE_PNG,
-                'imageBase64'   => true,
-                'scale'         => 5,
-                'eccLevel'      => QRCode::ECC_H,
-            ]);
-            $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl);
-
-            // 2. Siapkan Data View
-            $karyawan = $cuti->user;
-            $gm = $cuti->gm;
-
-            // 3. Load View dan Generate PDF
-            $pdf = Pdf::loadView('pages.cuti.surat', compact('cuti', 'qrCodeBase64', 'karyawan', 'gm'))
-                ->setOptions([
-                    'isRemoteEnabled'      => true,
-                    'isHtml5ParserEnabled' => true,
-                ])
-                ->setPaper('A4', 'portrait');
-
-            // 4. Simpan PDF ke storage/app/public/file_cuti/
-            Storage::disk('public')->put($pathFileCuti, $pdf->output());
-
-            return $pathFileCuti; // Return path relatif untuk disimpan di DB
-        } catch (\Exception $e) {
-            Log::error("PDF Generation Error [Cuti ID {$cuti->id}]: " . $e->getMessage());
-            return null;
+        if (!file_exists($storagePath)) {
+            mkdir($storagePath, 0755, true);
         }
+
+        // 1. Generate QR Code
+        $qrCodeUrl = $this->generateQrCodeUrl($cuti);
+        $options = new QROptions([
+            'outputType'    => QRCode::OUTPUT_IMAGE_PNG,
+            'imageBase64'   => true,
+            'scale'         => 5,
+            'eccLevel'      => QRCode::ECC_H,
+        ]);
+        $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl);
+
+        // 2. Siapkan Data View
+        $karyawan = $cuti->user;
+        $gm = $cuti->gm;
+
+        // Siapkan variabel logo untuk di-embed
+        // Ganti 'images/logo/a.png' dengan path logo Anda di folder public
+        $pathToLogo = public_path('images/logo/a.png'); 
+        $type = pathinfo($pathToLogo, PATHINFO_EXTENSION);
+        $data = file_get_contents($pathToLogo);
+        $embed = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+        // 3. Load View dan Generate PDF
+        $pdf = Pdf::loadView(
+            'pages.cuti.surat_cuti_pdf',
+            // ===== PERBAIKAN DI SINI =====
+            compact('cuti', 'qrCodeBase64', 'karyawan', 'gm', 'embed') 
+        )
+        ->setOptions([
+            'isRemoteEnabled'      => true,
+            'isHtml5ParserEnabled' => true,
+        ])
+        ->setPaper('A4', 'portrait');
+
+        // 4. Simpan PDF ke storage/app/public/file_cuti/
+        Storage::disk('public')->put($pathFileCuti, $pdf->output());
+
+        return $pathFileCuti; // Return path relatif untuk disimpan di DB
+        
+    } catch (\Exception $e) {
+        Log::error("PDF Generation Error [Cuti ID {$cuti->id}]: " . $e->getMessage());
+        return null;
     }
+}
 
        public function detail($id)
     {
