@@ -116,31 +116,9 @@
             >
                 <div class="2xsm:gap-3 flex items-center gap-2">
 
-<<<<<<< Updated upstream
-                {{-- 2. BLOK PROFIL PENGGUNA (TIDAK DIUBAH) --}}
-                @php
-                    // Ambil data user dari Auth
-                    $user = Auth::user();
-                    // Fallback untuk foto jika null
-                    $userFoto = $user->foto ? asset('storage/' . $user->foto) : asset('images/default.jpg');
-                @endphp
-
-                <div
-                    x-show="open"
-                    x-transition
-                    class="absolute right-0 mt-2 w-56 max-w-[90vw] rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
-                >
-                    <a
-                        class="flex items-center text-gray-700 dark:text-gray-400"
-                        href="#"
-                        @click.prevent="dropdownOpen = ! dropdownOpen"
-                    >
-                        <img
-                            src="{{ $userFoto }}"
-                            alt="User"
-                            class="w-8 h-8 rounded-full mr-3 object-cover"
-=======
-                    {{-- BLOK NOTIFIKASI (Dibiarkan) --}}
+                    {{-- BLOK NOTIFIKASI --}}
+                    {{-- Perlu diperhatikan: x-data="{ nDrop: false }" lokal untuk dropdown notif,
+                        tapi properti nData dan notifying diakses dari x-data utama. --}}
                     <div class="relative" x-data="{ nDrop: false }">
                         <button
                             class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
@@ -152,7 +130,6 @@
                                 }
                             "
                             @click.outside="nDrop = false"
->>>>>>> Stashed changes
                         >
                             {{-- badge orange - Menggunakan properti notifying Alpine.js --}}
                             <span
@@ -182,24 +159,6 @@
                             x-transition:leave-end="opacity-0 transform scale-95"
                             class="absolute right-0 mt-3 w-80 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
                         >
-<<<<<<< Updated upstream
-                            <path
-                                d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
-                                stroke=""
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                                class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                            Sign out
-                        </button>
-                    </form>
-=======
                             <div class="p-1 text-xs text-center border-b border-gray-200 dark:border-gray-700">
                                 {{-- Menghitung notifikasi belum dibaca dari nData Alpine.js --}}
                                 <p class="text-gray-900 dark:text-white">Notifikasi (<span x-text="nData.filter(n => n.read_at === null).length"></span>)</p>
@@ -301,7 +260,7 @@
                             x-transition:leave-end="opacity-0 transform scale-95"
                             class="absolute right-0 z-50 mt-2 w-60 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
                         >
-                            {{-- Edit Profile (Dibiarkan) --}}
+                            {{-- Edit Profile --}}
                             <ul class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800">
                                 <li>
                                     <a
@@ -317,7 +276,7 @@
                                 </li>
                             </ul>
 
-                            {{-- Sign Out (Dibiarkan) --}}
+                            {{-- Sign Out --}}
                             <ul class="flex flex-col gap-1 py-3">
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
@@ -337,7 +296,6 @@
                             </ul>
                         </div>
                     </div>
->>>>>>> Stashed changes
                 </div>
             </div>
         </div>
