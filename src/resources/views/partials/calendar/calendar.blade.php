@@ -484,50 +484,59 @@
             }
         };
 
-        // 7. Saving Notes
+        // 7. Saving Notes (Laravel + MySQL)
         noteForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            if (!db) {
-                 document.getElementById('status-message').textContent = "ERROR: Database tidak terhubung. Notes GAGAL disimpan.";
-                 console.error("Attempted to save note but Firestore (db) is not initialized.");
-                 return;
-            }
-
             const notes = document.getElementById('notes').value.trim();
             const urgency = document.getElementById('urgency').value;
 
-            if (!notes || !selectedDate || !currentUserId) {
-                document.getElementById('status-message').textContent = "Mohon isi semua kolom dan pastikan user sudah terautentikasi.";
+            // Pastikan tanggal sudah dipilih
+            if (!notes || !selectedDate) {
+                document.getElementById('status-message').textContent = "Mohon isi semua kolom dan pilih tanggal catatan.";
                 return;
             }
 
-            const docRef = doc(db, getCollectionPath(), selectedDate);
-            const noteData = {
-                notes: notes,
-                urgency: urgency,
-                updatedAt: new Date().toISOString(),
-                userId: currentUserId,
-            };
+            // Ambil CSRF Token dari meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             
-            if (!notesData[selectedDate] || !notesData[selectedDate].createdAt) {
-                 noteData.createdAt = new Date().toISOString();
-            }
+            // Ambil NIP user dari blade (auth)
+            const nip_user = "{{ Auth::user()->nip }}";
 
             try {
-                await setDoc(docRef, noteData, { merge: true }); 
-                document.getElementById('status-message').textContent = "Notes berhasil disimpan!";
-                console.log("Notes saved with ID:", selectedDate);
-                
-                displayNotesForSelectedDate(selectedDate);
-                
-                noteForm.reset();
+                // Kirim data ke backend Laravel
+                const response = await axios.post('{{ route('calendar.api.store') }}', {
+                    nip_user: nip_user,
+                    note_date: selectedDate,
+                    notes: notes,
+                    urgency: urgency
+                }, {
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
 
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                document.getElementById('status-message').textContent = `Gagal menyimpan notes: ${e.message}`; 
+                console.log("✅ Response:", response.data);
+
+                if (response.data.status === 'success') {
+                    document.getElementById('status-message').textContent = response.data.message;
+
+                    // Refresh daftar catatan
+                    await fetchNotes();
+
+                    // Reset form
+                    noteForm.reset();
+                } else {
+                    document.getElementById('status-message').textContent = response.data.message || 'Gagal menyimpan catatan.';
+                }
+
+            } catch (error) {
+                console.error("❌ Error:", error);
+                const msg = error.response?.data?.message || error.message;
+                document.getElementById('status-message').textContent = "Gagal menyimpan catatan: " + msg;
             }
         });
+
         
         // 8. Event Listener
         document.getElementById('prev-month').onclick = () => changeMonth(-1);
