@@ -9,6 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
     <title>{{ config('app.name', 'Laravel') }} - @yield('title')</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- CSS eksternal --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">

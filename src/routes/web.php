@@ -23,7 +23,8 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('layouts.dashboard');
+    // Memanggil view konten yang benar
+    return view('pages.dashboard.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Rute verifikasi publik
