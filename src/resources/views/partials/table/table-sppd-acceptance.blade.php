@@ -1,30 +1,8 @@
-<div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h3 class="text-lg font-semibold text-gray-800">
-            {{-- Judul dinamis berdasarkan halaman --}}
-            @if(isset($isApprovalPage) && $isApprovalPage && request()->routeIs('sppd.approvals.index'))
-                Menunggu Persetujuan Anda
-            @elseif(isset($isApprovalPage) && !$isApprovalPage && request()->routeIs('sppd.approvals.index'))
-                Riwayat Tindakan Anda (SPPD)
-            @else
-                Riwayat Pengajuan SPPD Anda
-            @endif
-        </h3>
-    </div>
-    {{-- Tombol "Ajukan Baru" hanya muncul di halaman riwayat pribadi --}}
-    @if(!isset($isApprovalPage) || (isset($isApprovalPage) && !$isApprovalPage && !request()->routeIs('sppd.approvals.index')))
-    <div>
-        <a href="{{ route('sppd.create') }}" class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
-            Ajukan SPPD Baru
-        </a>
-    </div>
-    @endif
-</div>
-
+{{-- File ini SEKARANG HANYA berisi tabel, tanpa judul atau tombol --}}
 <div class="w-full overflow-x-auto">
     <table class="min-w-full text-sm text-left">
         <thead>
-            <tr class="border-y border-gray-100 bg-gray-50 text-gray-600">
+            <tr class="border-y border-gray-100 bg-gray-50/50 text-xs text-gray-600">
                 <th class="py-3 px-4 font-medium">Nama Surat</th>
                 <th class="py-3 px-4 font-medium">Pemohon</th>
                 <th class="py-3 px-4 font-medium">Tanggal Dibuat</th>
@@ -33,7 +11,7 @@
                 <th class="py-3 px-4 font-medium text-center">Surat</th>
                 {{-- Kolom Aksi hanya muncul di halaman persetujuan --}}
                 @if(isset($isApprovalPage) && $isApprovalPage)
-                <th class="py-3 px-4 font-medium text-center">Aksi</th>
+                    <th class="py-3 px-4 font-medium text-center">Aksi</th>
                 @endif
             </tr>
         </thead>
@@ -124,4 +102,3 @@
         </tbody>
     </table>
 </div>
-

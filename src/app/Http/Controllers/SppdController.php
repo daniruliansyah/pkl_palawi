@@ -4,69 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\Sppd;
 use App\Models\Jabatan;
+use App\Models\User; // Dipertahankan karena dibutuhkan untuk notifikasi
+use App\Notifications\StatusSuratDiperbarui; // Dipertahankan untuk notifikasi
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
-=======
-use App\Models\User;
-use App\Notifications\StatusSuratDiperbarui; // <-- PASTIKAN INI ADA
->>>>>>> Stashed changes
 
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use chillerlan\QRCode\Output\QROutputInterface;
 
 class SppdController extends Controller
 {
+    /**
+     * Menampilkan daftar SPPD milik user atau yang memerlukan persetujuannya.
+     */
     public function index()
     {
         $user = Auth::user();
@@ -82,6 +36,9 @@ class SppdController extends Controller
         return view('pages.surat_sppd.index', compact('sppds'));
     }
 
+    /**
+     * Menampilkan form untuk membuat SPPD baru.
+     */
     public function create()
     {
         $jabatan = Jabatan::whereIn('nama_jabatan', [
@@ -92,6 +49,9 @@ class SppdController extends Controller
         return view('pages.surat_sppd.create', compact('jabatan'));
     }
 
+    /**
+     * Menyimpan SPPD baru ke database.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -118,54 +78,49 @@ class SppdController extends Controller
 
         // Simpan SPPD dan ambil objek yang baru dibuat
         $sppd = Sppd::create([
-            'nip_user'        => auth()->user()->nip,
-            'pemberi_tugas'   => $jabatan->nama_jabatan,
-            'pemberi_tugas_id'=> $jabatan->id,
-            'jumlah_hari'     => $jumlah_hari,
-            'tgl_mulai'       => $request->tgl_mulai,
-            'tgl_selesai'     => $request->tgl_selesai,
-            'keterangan_sppd' => $request->keterangan_sppd,
-            'lokasi_berangkat'=> $request->lokasi_berangkat,
-            'lokasi_tujuan'   => $request->lokasi_tujuan,
-            'alat_angkat'     => $request->alat_angkat,
-            'no_rekening'     => $request->no_rekening,
-            'nama_rekening'   => $request->nama_rekening,
-            'keterangan_lain' => $request->keterangan_lain,
-            'status'          => 'menunggu',
+            'nip_user'         => auth()->user()->nip,
+            'pemberi_tugas'    => $jabatan->nama_jabatan,
+            'pemberi_tugas_id' => $jabatan->id,
+            'jumlah_hari'      => $jumlah_hari,
+            'tgl_mulai'        => $request->tgl_mulai,
+            'tgl_selesai'      => $request->tgl_selesai,
+            'keterangan_sppd'  => $request->keterangan_sppd,
+            'lokasi_berangkat' => $request->lokasi_berangkat,
+            'lokasi_tujuan'    => $request->lokasi_tujuan,
+            'alat_angkat'      => $request->alat_angkat,
+            'no_rekening'      => $request->no_rekening,
+            'nama_rekening'    => $request->nama_rekening,
+            'keterangan_lain'  => $request->keterangan_lain,
+            'status'           => 'menunggu',
         ]);
 
-<<<<<<< Updated upstream
-=======
-        // =========================================================
-        // START: LOGIKA NOTIFIKASI BARU - SPPD BARU DIAJUKAN
-        // =========================================================
+        //--- Logika Notifikasi Saat SPPD Diajukan ---
         try {
-            // 1. Cari user yang memiliki jabatan sebagai pemberi tugas
+            // Cari user yang memiliki jabatan sebagai pemberi tugas
             $atasan = User::whereHas('jabatanTerbaru.jabatan', function ($query) use ($jabatan) {
                 $query->where('id', $jabatan->id);
             })->first();
 
             if ($atasan) {
-                // GANTI DENGAN NOTIFIKASI BARU
                 $atasan->notify(new StatusSuratDiperbarui(
                     aktor: auth()->user(),
                     jenisSurat: 'SPPD',
                     statusBaru: 'Menunggu Persetujuan',
                     keterangan: 'Telah mengajukan SPPD baru dan membutuhkan persetujuan Anda.',
-                    url: route('sppd.verifikasi', $sppd->id) // Ganti ke rute detail atau verifikasi yang sesuai
+                    url: route('sppd.verifikasi', $sppd->id) // Sesuaikan dengan route yang relevan
                 ));
             }
         } catch (\Exception $e) {
             Log::error("Notifikasi Gagal Dibuat (Store SPPD): " . $e->getMessage());
         }
-        // =========================================================
-        // END: LOGIKA NOTIFIKASI
-        // =========================================================
+        //--- Akhir Logika Notifikasi ---
 
->>>>>>> Stashed changes
         return redirect()->route('sppd.index')->with('success', 'SPPD berhasil diajukan!');
     }
 
+    /**
+     * Memperbarui status SPPD (Disetujui/Ditolak).
+     */
     public function updateStatus(Request $request, Sppd $sppd)
     {
         try {
@@ -176,29 +131,26 @@ class SppdController extends Controller
 
             $user = Auth::user();
             $userJabatanId = $user->jabatanTerbaru->jabatan->id ?? null;
+            $pembuatSppd = $sppd->user; // Ambil user pembuat SPPD untuk notifikasi
 
             if ($userJabatanId !== $sppd->pemberi_tugas_id) {
                 return back()->with('error', 'Anda tidak memiliki wewenang untuk melakukan aksi ini.');
             }
-
+            
             if ($request->status === 'Disetujui') {
-                $sppd->status              = 'Disetujui';
-                $sppd->tgl_persetujuan     = now();
-                $sppd->nip_penyetuju       = $user->nip;
-                $sppd->no_surat            = $this->generateNoSurat();
-                $sppd->alasan_penolakan    = null;
+                $sppd->status           = 'Disetujui';
+                $sppd->tgl_persetujuan  = now();
+                $sppd->nip_penyetuju    = $user->nip;
+                $sppd->no_surat         = $this->generateNoSurat();
+                $sppd->alasan_penolakan = null;
                 $sppd->save();
 
                 $filePath = $this->generateSuratPdf($sppd);
                 if ($filePath) {
                     $sppd->file_sppd = $filePath;
                     $sppd->save();
-<<<<<<< Updated upstream
-=======
 
-                    // =========================================================
-                    // START: LOGIKA NOTIFIKASI BARU - SPPD DISETUJUI
-                    // =========================================================
+                    //--- Logika Notifikasi Saat SPPD Disetujui ---
                     if ($pembuatSppd) {
                         $pembuatSppd->notify(new StatusSuratDiperbarui(
                             aktor: $user,
@@ -208,168 +160,45 @@ class SppdController extends Controller
                             url: route('sppd.download', $sppd->id)
                         ));
                     }
-                    // =========================================================
-                    // END: LOGIKA NOTIFIKASI
-                    // =========================================================
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+                    //--- Akhir Logika Notifikasi ---
+
                 } else {
-                    return redirect()->route('sppd.index')
-                        ->with('warning', 'Disetujui, tapi gagal membuat file surat. Cek logs.');
+                    return redirect()->route('sppd.index')->with('warning', 'Disetujui, tapi gagal membuat file surat. Cek logs.');
                 }
 
-                return redirect()->route('sppd.index')
-                    ->with('success', 'Pengajuan SPPD berhasil disetujui dan surat telah dibuat.');
+                return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil disetujui dan surat telah dibuat.');
+            
+            } else { // Jika Ditolak
+                $sppd->status           = 'Ditolak';
+                $sppd->tgl_persetujuan  = now();
+                $sppd->nip_penyetuju    = $user->nip;
+                $sppd->alasan_penolakan = $request->alasan_penolakan;
+                $sppd->save();
+
+                //--- Logika Notifikasi Saat SPPD Ditolak ---
+                if ($pembuatSppd) {
+                    $alasan = $request->alasan_penolakan;
+                    $pembuatSppd->notify(new StatusSuratDiperbarui(
+                        aktor: $user,
+                        jenisSurat: 'SPPD',
+                        statusBaru: 'Ditolak',
+                        keterangan: "Surat SPPD Anda Ditolak dengan alasan: {$alasan}",
+                        url: route('sppd.index') // Arahkan ke halaman riwayat
+                    ));
+                }
+                //--- Akhir Logika Notifikasi ---
+                
+                return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil ditolak.');
             }
-
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            $sppd->status          = 'Ditolak';
-            $sppd->tgl_persetujuan = now();
-            $sppd->nip_penyetuju   = $user->nip;
-            $sppd->alasan_penolakan= $request->alasan_penolakan;
-=======
-            // Jika status Ditolak
-            $sppd->status              = 'Ditolak';
-            $sppd->tgl_persetujuan     = now();
-            $sppd->nip_penyetuju       = $user->nip;
-            $sppd->alasan_penolakan    = $request->alasan_penolakan;
->>>>>>> Stashed changes
-            $sppd->save();
-
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-            // Jika status Ditolak
-            $sppd->status              = 'Ditolak';
-            $sppd->tgl_persetujuan     = now();
-            $sppd->nip_penyetuju       = $user->nip;
-            $sppd->alasan_penolakan    = $request->alasan_penolakan;
-            $sppd->save();
-
-            // =========================================================
-            // START: LOGIKA NOTIFIKASI BARU - SPPD DITOLAK
-            // =========================================================
-            if ($pembuatSppd) {
-                $alasan = $request->alasan_penolakan;
-                $pembuatSppd->notify(new StatusSuratDiperbarui(
-                    aktor: $user,
-                    jenisSurat: 'SPPD',
-                    statusBaru: 'Ditolak',
-                    keterangan: "Surat SPPD Anda Ditolak dengan alasan: {$alasan}",
-                    url: route('sppd.detail', $sppd->id) // Asumsi rute detail
-                ));
-            }
-            // =========================================================
-            // END: LOGIKA NOTIFIKASI
-            // =========================================================
-
->>>>>>> Stashed changes
-            return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil ditolak.');
         } catch (\Exception $e) {
             Log::error("Error in updateStatus: " . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
-=======
-    // ... (Fungsi-fungsi lainnya tidak berubah) ...
-
->>>>>>> Stashed changes
+    /**
+     * Konversi angka ke format Romawi.
+     */
     protected function numberToRoman($number)
     {
         $map = [
@@ -392,6 +221,9 @@ class SppdController extends Controller
         return $roman;
     }
 
+    /**
+     * Membuat nomor surat SPPD secara otomatis.
+     */
     protected function generateNoSurat()
     {
         $year  = date('Y');
@@ -412,11 +244,17 @@ class SppdController extends Controller
         return "{$newNumber}/WIL TIMUR/{$month}/{$year}";
     }
 
+    /**
+     * Membuat URL untuk verifikasi QR Code.
+     */
     protected function generateQrCodeUrl(Sppd $sppd)
     {
         return route('sppd.verifikasi', ['id' => $sppd->id]);
     }
 
+    /**
+     * Membuat file PDF dari surat SPPD.
+     */
     protected function generateSuratPdf(Sppd $sppd)
     {
         try {
@@ -427,8 +265,8 @@ class SppdController extends Controller
                 mkdir(dirname($path), 0755, true);
             }
 
-            $qrCodeUrl     = $this->generateQrCodeUrl($sppd);
-            $options       = new QROptions([
+            $qrCodeUrl    = $this->generateQrCodeUrl($sppd);
+            $options      = new QROptions([
                 'outputType'  => QRCode::OUTPUT_IMAGE_PNG,
                 'imageBase64' => true,
                 'scale'       => 5,
@@ -451,6 +289,9 @@ class SppdController extends Controller
         }
     }
 
+    /**
+     * Mengunduh file surat SPPD yang sudah jadi.
+     */
     public function download($id)
     {
         $sppd = Sppd::findOrFail($id);
@@ -464,12 +305,16 @@ class SppdController extends Controller
         return back()->with('error', 'File surat tidak ditemukan.');
     }
 
+    /**
+     * Menampilkan halaman verifikasi surat.
+     */
     public function verifikasi($id)
     {
         $sppd = Sppd::with('user')->find($id);
 
         if (!$sppd) {
-            return view('pages.surat_spp.notnot');
+            // Sebaiknya buat view khusus untuk surat tidak ditemukan
+            return response()->view('pages.surat_sppd.notfound', [], 404);
         }
 
         return view('pages.surat_sppd.info', compact('sppd'));
