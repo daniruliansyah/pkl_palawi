@@ -10,6 +10,7 @@ use App\Http\Controllers\RiwayatJabatanController;
 use App\Http\Controllers\SPController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\SppdApprovalController; // Tambahkan ini
+use App\Http\Controllers\NotifikasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +44,7 @@ Route::middleware('auth')->group(function () {
     // --- RUTE SPPD (UNTUK PRIBADI) ---
     Route::resource('sppd', SppdController::class)->only(['index', 'create', 'store']);
     Route::get('sppd/download/{sppd}', [SppdController::class, 'download'])->name('sppd.download');
-    
+
     // --- RUTE BARU UNTUK PERSETUJUAN SPPD ---
     Route::get('/sppd-approvals', [SppdApprovalController::class, 'index'])->name('sppd.approvals.index');
     Route::put('/sppd-approvals/{sppd}', [SppdApprovalController::class, 'update'])->name('sppd.approvals.update');
@@ -56,11 +57,11 @@ Route::middleware('auth')->group(function () {
     // --- RUTE PERSETUJUAN CUTI ---
     Route::get('/approval', [ApprovalController::class, 'index'])->name('approvals.index');
     Route::put('/approval/{cuti}', [ApprovalController::class, 'update'])->name('approvals.update');
-    
+
     // === BAGIAN YANG DIPERBAIKI ===
     // Nama 'downloadLaporan' diubah menjadi 'downloadReport'
     Route::get('/approval/laporan/download', [ApprovalController::class, 'downloadReport'])->name('approvals.downloadReport');
-    
+
     // Rute Kalender
     Route::resource('kalender', KalenderController::class);
 
@@ -83,6 +84,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/{notification}/mark-read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.mark-single-read');
 
     // ... rute kalender lainnya ...
+    Route::get('/calendar/calendar', [KalenderController::class, 'showCalendar'])->name('calendar.index');
+    Route::get('/calendar/notes', [KalenderController::class, 'index'])->name('calendar.api.index');
+    Route::post('/calendar/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
+    Route::delete('/calendar/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
+
+    Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
 });
 
 require __DIR__.'/auth.php';
