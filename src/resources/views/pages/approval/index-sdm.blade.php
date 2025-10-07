@@ -51,7 +51,7 @@
                             </td>
                             <td class="px-4 py-3 text-center" x-data="{ openModal: false }">
                                 <div class="flex items-center justify-center space-x-2">
-                                    <form action="{{ route('approvals.update', $cuti->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
+                                    <form action="{{ route('cuti.updateStatus', $cuti->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
                                         @csrf
                                         @method('PUT')
                                         <input type="hidden" name="status" value="Disetujui">

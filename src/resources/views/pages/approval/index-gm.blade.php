@@ -47,7 +47,7 @@
                             <td class="px-4 py-3 text-center" x-data="{ openModal: false }">
                                 <div class="flex items-center justify-center space-x-2">
                                     {{-- PERBAIKAN DI SINI --}}
-                                    <form action="{{ route('approvals.update', $cuti->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
+                                    <form action="{{ route('cuti.updateStatus', $cuti->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
                                         @csrf
                                         @method('PUT')
                                         <input type="hidden" name="status" value="Disetujui">
@@ -59,7 +59,7 @@
                                     <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
                                         <h3 class="text-lg font-semibold mb-4 text-gray-800 text-left">Alasan Penolakan</h3>
                                         {{-- PERBAIKAN DI SINI --}}
-                                        <form action="{{ route('approvals.update', $cuti->id) }}" method="POST">
+                                        <form action="{{ route('cuti.updateStatus', $cuti->id) }}" method="POST">
                                             @csrf
                                             @method('PUT')
                                             <input type="hidden" name="status" value="Ditolak">
