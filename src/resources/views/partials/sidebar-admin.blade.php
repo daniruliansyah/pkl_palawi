@@ -145,6 +145,19 @@
             <li><a href={{ route('sppd.approvals.index') }} class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat SPPD</a></li>
           </ul>
         </li>
+
+        <li>
+          <a
+            href="{{ route('calendar.index') }}"
+            class="menu-item flex items-center gap-3 p-2 rounded hover:bg-green-50 transition-colors bg-white text-gray-700"
+          >
+            <svg class="w-6 h-6 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+
+            <span class="menu-item-text" :class="sidebarToggle ? 'hidden' : 'block'">Calendar</span>
+          </a>
+        </li>
       </ul>
     </nav>
   </div>
