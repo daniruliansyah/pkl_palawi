@@ -1,5 +1,7 @@
 @extends('layouts.dashboard')
 
+@section('title', 'Kalender')
+
 @section('content')
 <div class="container mx-auto">
     <h1 class="text-2xl font-bold mb-4">Tambah Event Kalender</h1>

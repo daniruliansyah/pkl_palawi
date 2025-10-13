@@ -1,6 +1,6 @@
 <header
     x-data="{
-        // PROPERTI HEADER ORIGINAL (Dibiarkan)
+        // PROPERTI HEADER ORIGINAL
         sidebarToggle: false,
         menuToggle: false,
 
@@ -8,9 +8,11 @@
         nDrop: false,
         nData: [],
         notifying: false, // State Alpine.js untuk badge
+        // NOTE: Pastikan rute ini benar dan dapat diakses (status 200)
         markSingleUrl: '{{ route('notifikasi.mark-single-read', ['notification' => 'PLACEHOLDER_ID']) }}'.replace('PLACEHOLDER_ID', ''),
         markAllUrl: '{{ route('notifikasi.mark-all-read') }}', // URL untuk Mark All
         csrfToken: '',
+        dropdownOpen: false, // Tambahkan properti untuk dropdown profil
 
         // METHOD 1: Mark Single
         markAsRead(id) {
@@ -32,6 +34,7 @@
                 }
             })
             .catch(error => console.error('Gagal menandai notifikasi tunggal:', error));
+            // Lanjutkan jika ada link
         },
 
         // METHOD 2: Mark All
@@ -79,9 +82,10 @@
 
             // Panggil data notifikasi
             fetch('{{ route('notifikasi.index') }}')
+                // Pastikan struktur JSON dari controller sesuai
                 .then(response => response.ok ? response.json() : Promise.reject('Fetch failed: ' + response.statusText))
                 .then(data => {
-                    // Cek struktur data, jika `data.nData` ada, gunakan itu. Jika tidak, gunakan `data.notifications`
+                    // Cek struktur data: menggunakan `notifications`, `nData`, atau langsung array
                     const notifications = data.notifications || data.nData || [];
                     this.nData = notifications;
 
@@ -92,67 +96,39 @@
                 })
                 .catch(error => console.error('Error fetching notifications:', error));
         }
+        // <<< FIX: Tidak ada koma setelah method 'init' jika ini adalah yang terakhir!
     }"
     x-init="init()"
-    {{-- KOREKSI 1: Menghapus kelas BG-GREEN-900 di sini, kembali ke default (putih/abu-abu). --}}
     class="sticky top-0 z-50 flex w-full border-gray-200 lg:border-b dark:border-gray-800 bg-white dark:bg-gray-900"
 >
     <div class="flex grow items-center justify-between px-4 py-3 md:px-6 2xl:px-11">
 
-        {{-- BARU: TEKS INTEGRIDAS, SOLIDITAS, KUALITAS DENGAN FONT LATIN/KURSIF LEBIH BESAR --}}
+        {{-- TEKS SINEGRITAS, SOLIDITAS, KUALITAS --}}
         <div class="hidden lg:block">
-            {{-- KOREKSI 2: Menggunakan text-green-700 (hijau gelap) untuk teks, BUKAN bg-green-900. --}}
             <h1 class="text-2xl font-serif italic font-semibold text-green-700 dark:text-green-500">
-                Integritas, Soliditas, dan Kualitas
+                Sinegritas, Soliditas, dan Kualitas
             </h1>
         </div>
-        {{-- AKHIR TEKS BARU --}}
+        {{-- AKHIR TEKS HEADER --}}
 
-        {{-- PERUBAHAN: Menghapus 'grow' dari div ini agar teks header di atas menempati ruang yang lebih besar --}}
         <div class="flex flex-col items-center justify-between lg:flex-row lg:px-6">
             <div
                 :class="menuToggle ? 'flex' : 'hidden'"
                 class="shadow-theme-md w-full items-center justify-between gap-4 px-5 py-4 lg:flex lg:justify-end lg:px-0 lg:shadow-none"
             >
-                <div class="2xsm:gap-3 flex items-center gap-2">
+                {{-- PERUBAHAN UTAMA: gap-4 untuk jarak notif dan profil --}}
+                <div class="2xsm:gap-3 flex items-center gap-4">
 
-<<<<<<< Updated upstream
-                {{-- 2. BLOK PROFIL PENGGUNA (TIDAK DIUBAH) --}}
-                @php
-                    // Ambil data user dari Auth
-                    $user = Auth::user();
-                    // Fallback untuk foto jika null
-                    $userFoto = $user->foto ? asset('storage/' . $user->foto) : asset('images/default.jpg');
-                @endphp
-
-                <div
-                    x-show="open"
-                    x-transition
-                    class="absolute right-0 mt-2 w-56 max-w-[90vw] rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
-                >
-                    <a
-                        class="flex items-center text-gray-700 dark:text-gray-400"
-                        href="#"
-                        @click.prevent="dropdownOpen = ! dropdownOpen"
-                    >
-                        <img
-                            src="{{ $userFoto }}"
-                            alt="User"
-                            class="w-8 h-8 rounded-full mr-3 object-cover"
-=======
-                    {{-- BLOK NOTIFIKASI (Dibiarkan) --}}
-                    <div class="relative" x-data="{ nDrop: false }">
+                    {{-- 1. BLOK NOTIFIKASI --}}
+                    <div class="relative" @click.outside="nDrop = false">
                         <button
                             class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
                             @click.prevent="
                                 nDrop = !nDrop;
-                                // Panggil markAllAsRead saat dropdown terbuka
                                 if (nDrop) {
                                     markAllAsRead();
                                 }
                             "
-                            @click.outside="nDrop = false"
->>>>>>> Stashed changes
                         >
                             {{-- badge orange - Menggunakan properti notifying Alpine.js --}}
                             <span
@@ -170,7 +146,7 @@
                             </svg>
                         </button>
 
-                        {{-- dropdown --}}
+                        {{-- dropdown notifikasi --}}
                         <div
                             x-show="nDrop"
                             x-cloak
@@ -182,26 +158,7 @@
                             x-transition:leave-end="opacity-0 transform scale-95"
                             class="absolute right-0 mt-3 w-80 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
                         >
-<<<<<<< Updated upstream
-                            <path
-                                d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
-                                stroke=""
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                                class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                            Sign out
-                        </button>
-                    </form>
-=======
                             <div class="p-1 text-xs text-center border-b border-gray-200 dark:border-gray-700">
-                                {{-- Menghitung notifikasi belum dibaca dari nData Alpine.js --}}
                                 <p class="text-gray-900 dark:text-white">Notifikasi (<span x-text="nData.filter(n => n.read_at === null).length"></span>)</p>
                             </div>
 
@@ -241,7 +198,6 @@
                     </div>
                     {{-- END BLOK NOTIFIKASI --}}
 
-
                     {{-- 2. BLOK PROFIL PENGGUNA --}}
                     @php
                         // Ambil data user dari Auth
@@ -252,7 +208,6 @@
 
                     <div
                         class="relative"
-                        x-data="{ dropdownOpen: false }"
                         @click.outside="dropdownOpen = false"
                     >
                         <a
@@ -266,14 +221,12 @@
                                 class="w-8 h-8 rounded-full mr-3 object-cover"
                             >
 
-                            {{-- KOREKSI 3: Warna teks nama diatur ke abu-abu gelap/hitam agar terlihat pada latar belakang putih/terang --}}
                             <span class="text-theme-sm mr-1 hidden font-medium lg:block text-gray-700 dark:text-gray-200">
                                 {{ $user->nama_lengkap }}
                             </span>
 
                             <svg
                                 :class="dropdownOpen && 'rotate-180'"
-                                {{-- KOREKSI 3: Warna ikon diatur ke abu-abu gelap/hitam agar terlihat pada latar belakang putih/terang --}}
                                 class="stroke-gray-700 transition-transform duration-300 dark:stroke-gray-400 hidden lg:block"
                                 width="18"
                                 height="20"
@@ -293,6 +246,7 @@
 
                         <div
                             x-show="dropdownOpen"
+                            x-cloak
                             x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 transform scale-95"
                             x-transition:enter-end="opacity-100 transform scale-100"
@@ -301,14 +255,13 @@
                             x-transition:leave-end="opacity-0 transform scale-95"
                             class="absolute right-0 z-50 mt-2 w-60 rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 dark:bg-gray-800"
                         >
-                            {{-- Edit Profile (Dibiarkan) --}}
+                            {{-- Edit Profile --}}
                             <ul class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800">
                                 <li>
                                     <a
                                         href="{{ route('profile.show') }}"
                                         class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
                                     >
-                                        {{-- Ikon Edit Profile (User Circle Outline) ukuran w-6 h-6 --}}
                                         <svg class="w-6 h-6 flex-shrink-0 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.964 0a12.903 12.903 0 01-11.964 0M12 7.5a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z" />
                                         </svg>
@@ -317,7 +270,7 @@
                                 </li>
                             </ul>
 
-                            {{-- Sign Out (Dibiarkan) --}}
+                            {{-- Sign Out --}}
                             <ul class="flex flex-col gap-1 py-3">
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
@@ -326,7 +279,6 @@
                                             type="submit"
                                             class="group text-theme-sm flex w-full items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
                                         >
-                                            {{-- IKON SIGN OUT BARU: Arrow Left On Rectangle ukuran w-6 h-6 --}}
                                             <svg class="w-6 h-6 flex-shrink-0 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-2.25a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 0011.25 21h2.25a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h7.5" />
                                             </svg>
@@ -337,7 +289,7 @@
                             </ul>
                         </div>
                     </div>
->>>>>>> Stashed changes
+                    {{-- END BLOK PROFIL PENGGUNA --}}
                 </div>
             </div>
         </div>

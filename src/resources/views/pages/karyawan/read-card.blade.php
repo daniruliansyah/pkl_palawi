@@ -15,45 +15,22 @@
             </a>
         </div>
 
-<<<<<<< Updated upstream
         <div class="mb-4 relative">
             <form id="searchForm" action="{{ route('karyawan.index') }}" method="GET" class="flex items-center space-x-2" onsubmit="return false;">
                 <div class="relative w-full">
-                    <input 
-                        type="search" 
+                    <input
+                        type="search"
                         id="searchInput"
-                        name="search" 
-                        placeholder="Cari nama karyawan..." 
+                        name="search"
+                        placeholder="Cari nama karyawan..."
                         class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         autocomplete="off"
                     >
                     <!-- Dropdown suggestion -->
-                    <ul id="suggestionList" 
+                    <ul id="suggestionList"
                         class="absolute left-0 right-0 bg-white border border-gray-300 mt-1 rounded-lg shadow-lg hidden z-10 max-h-48 overflow-y-auto">
                     </ul>
                 </div>
-=======
-        <div class="mb-4">
-            <form action="{{ route('karyawan.index') }}" method="GET" class="flex items-center space-x-2">
-                <input
-                    type="search"
-                    name="search"
-                    placeholder="Cari nama karyawan..."
-                    class="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value="{{ request('search') }}"
-                >
-                <button type="submit"
-                        class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-5 w-5"
-                         viewBox="0 0 20 20"
-                         fill="currentColor">
-                        <path fill-rule="evenodd"
-                              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                              clip-rule="evenodd" />
-                    </svg>
-                </button>
->>>>>>> Stashed changes
             </form>
         </div>
 
@@ -64,7 +41,7 @@
         </div>
     </div>
 </div>
-<<<<<<< Updated upstream
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');

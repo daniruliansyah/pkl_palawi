@@ -17,9 +17,9 @@
         <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h3 class="text-lg font-semibold text-gray-800">
-                    Daftar Pengajuan Cuti (Menunggu Persetujuan SDM)
+                    Daftar Pengajuan SPPD (Menunggu Persetujuan SDM)
                 </h3>
-                <p class="text-sm text-gray-500">Berikut adalah daftar pengajuan cuti yang memerlukan tindakan dari Anda.</p>
+                <p class="text-sm text-gray-500">Berikut adalah daftar pengajuan SPPD yang memerlukan tindakan dari Anda.</p>
             </div>
         </div>
 

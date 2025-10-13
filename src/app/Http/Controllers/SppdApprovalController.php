@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Sppd; // Pastikan model SPPD di-import
+use App\Models\Sppd;
 use App\Models\User;
+use App\Notifications\StatusSuratDiperbarui; // <-- PENTING: Class Notifikasi Diimpor
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; // <-- PENTING: Diperlukan untuk error logging
 use Barryvdh\DomPDF\Facade\Pdf;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
+use chillerlan\QRCode\QRCode; // Diperlukan untuk generateSuratPdf
+use chillerlan\QRCode\QROptions; // Diperlukan untuk generateSuratPdf
 
 class SppdApprovalController extends Controller
 {
@@ -21,19 +24,19 @@ class SppdApprovalController extends Controller
         $user = Auth::user();
 
         // Otorisasi: hanya SDM dan GM yang bisa mengakses
+        // Asumsi method isSdm() dan isGm() ada di Model User
         if (!$user->isSdm() && !$user->isGm()) {
             return redirect()->route('dashboard')->with('error', 'Anda tidak memiliki akses ke halaman persetujuan SPPD.');
         }
 
         // Ambil data SPPD yang menunggu persetujuan dari user ini
-        // Asumsi pemberi tugas ditentukan oleh ID jabatan
         $jabatanId = $user->jabatanTerbaru->id_jabatan ?? null;
 
         $sppdsForApproval = Sppd::where('pemberi_tugas_id', $jabatanId)
-                                ->where('status', 'menunggu')
-                                ->with('user.jabatanTerbaru.jabatan', 'penyetuju')
-                                ->latest()
-                                ->get();
+                                 ->where('status', 'menunggu')
+                                 ->with('user.jabatanTerbaru.jabatan', 'penyetuju')
+                                 ->latest()
+                                 ->get();
 
         // Ambil riwayat SPPD yang pernah diproses oleh user ini
         $sppdsHistory = Sppd::where('nip_penyetuju', $user->nip)
@@ -55,39 +58,69 @@ class SppdApprovalController extends Controller
         ]);
 
         $user = Auth::user();
+        $pembuatSppd = $sppd->user; // Mendapatkan objek User yang mengajukan SPPD
 
         if ($sppd->pemberi_tugas_id !== ($user->jabatanTerbaru->id_jabatan ?? null)) {
             return redirect()->back()->with('error', 'Anda tidak berwenang untuk memproses pengajuan ini.');
         }
 
+        // Simpan status dan informasi penyetuju sementara
         $sppd->status = $request->status;
         $sppd->nip_penyetuju = $user->nip;
         $sppd->tgl_persetujuan = now();
 
-        if ($request->status === 'Disetujui') {
-            // --- TAMBAHAN PENTING ---
-            $sppd->alasan_penolakan = null;
-            $sppd->no_surat = $this->generateNoSurat();
-            // ------------------------
-            $sppd->save(); // Simpan dulu no_surat
-            
-            // --- PERBAIKAN PEMANGGILAN PDF ---
-            $pdfGenerated = $this->generateSuratPdf($sppd); // Panggil method yang sudah disalin
-            
-            if (!$pdfGenerated) {
-                return redirect()->route('sppd.approvals.index')->with('warning', 'SPPD disetujui, tapi file PDF gagal dibuat. Silakan cek logs.');
-            }
-            
-        } else { // Jika status Ditolak
-            $sppd->alasan_penolakan = $request->alasan_penolakan;
-            $sppd->save();
-        }
+        try {
+            if ($request->status === 'Disetujui') {
+                $sppd->alasan_penolakan = null;
+                $sppd->no_surat = $this->generateNoSurat();
+                $sppd->save(); // Simpan perubahan status dan nomor surat
 
-        return redirect()->route('sppd.approvals.index')->with('success', 'Status SPPD berhasil diperbarui.');
+                $pdfGenerated = $this->generateSuratPdf($sppd);
+
+                if (!$pdfGenerated) {
+                    return redirect()->route('sppd.approvals.index')->with('warning', 'SPPD disetujui, tapi file PDF gagal dibuat. Silakan cek logs.');
+                }
+
+                // --- LOGIKA NOTIFIKASI SAAT DISETUJUI ---
+                if ($pembuatSppd) {
+                    $pembuatSppd->notify(new StatusSuratDiperbarui(
+                        aktor: $user, // AKTOR: User yang menyetujui (Approver)
+                        jenisSurat: 'SPPD',
+                        statusBaru: 'Disetujui',
+                        keterangan: 'Surat SPPD Anda telah Disetujui dan siap diunduh.',
+                        url: route('sppd.download', $sppd->id) // Arahkan ke link download
+                    ));
+                }
+                // --- AKHIR LOGIKA NOTIFIKASI ---
+
+            } else { // Jika status Ditolak
+                $sppd->alasan_penolakan = $request->alasan_penolakan;
+                $sppd->save(); // Simpan perubahan status penolakan
+
+                // --- LOGIKA NOTIFIKASI SAAT DITOLAK ---
+                if ($pembuatSppd) {
+                    $alasan = $request->alasan_penolakan;
+                    $pembuatSppd->notify(new StatusSuratDiperbarui(
+                        aktor: $user, // AKTOR: User yang menolak (Approver)
+                        jenisSurat: 'SPPD',
+                        statusBaru: 'Ditolak',
+                        keterangan: "Surat SPPD Anda Ditolak dengan alasan: {$alasan}",
+                        url: route('sppd.index') // Arahkan ke halaman riwayat
+                    ));
+                }
+                // --- AKHIR LOGIKA NOTIFIKASI ---
+            }
+
+            return redirect()->route('sppd.approvals.index')->with('success', 'Status SPPD berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            Log::error("Error saat memperbarui status SPPD: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses permintaan.');
+        }
     }
 
     // =================================================================
-    //  METHOD HELPER YANG DISALIN DARI SppdController
+    //  METHOD HELPER YANG DISALIN DARI SppdController (Tetap diperlukan)
     // =================================================================
 
     /**
@@ -143,6 +176,7 @@ class SppdApprovalController extends Controller
      */
     protected function generateQrCodeUrl(Sppd $sppd)
     {
+        // Asumsi route 'sppd.verifikasi' ada
         return route('sppd.verifikasi', ['id' => $sppd->id]);
     }
 
@@ -159,33 +193,35 @@ class SppdApprovalController extends Controller
                 mkdir(dirname($path), 0755, true);
             }
 
-            $qrCodeUrl    = $this->generateQrCodeUrl($sppd);
-            $options      = new \chillerlan\QRCode\QROptions([ // Pastikan namespace-nya benar
-                'outputType'  => \chillerlan\QRCode\QRCode::OUTPUT_IMAGE_PNG,
+            // QR Code Generation (menggunakan full namespace karena tidak di-import di atas)
+            $qrCodeUrl     = $this->generateQrCodeUrl($sppd);
+            $options       = new QROptions([
+                'outputType'  => QRCode::OUTPUT_IMAGE_PNG,
                 'imageBase64' => true,
                 'scale'       => 5,
-                'eccLevel'    => \chillerlan\QRCode\QRCode::ECC_H,
+                'eccLevel'    => QRCode::ECC_H,
             ]);
-            $qrCodeBase64 = (new \chillerlan\QRCode\QRCode($options))->render($qrCodeUrl);
+            $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl);
 
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pages.surat_sppd.test', compact('sppd', 'qrCodeBase64'))
+            // Load View dan Generate PDF
+            $pdf = Pdf::loadView('pages.surat_sppd.test', compact('sppd', 'qrCodeBase64'))
                 ->setOptions([
                     'isRemoteEnabled'      => true,
                     'isHtml5ParserEnabled' => true,
                 ])
                 ->setPaper('A4', 'portrait');
 
+            // Simpan PDF ke storage
             $pdf->save($path);
-            
-            // Simpan path file ke database
+
+            // Simpan path file ke database (PENTING: Agar file_sppd terisi)
             $sppd->file_sppd = "sppd/{$fileName}";
             $sppd->save();
 
-            return true; // Mengembalikan status sukses
+            return true;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("PDF Generation Error [SPPD ID {$sppd->id}]: " . $e->getMessage());
-            return false; // Mengembalikan status gagal
+            Log::error("PDF Generation Error [SPPD ID {$sppd->id}]: " . $e->getMessage());
+            return false;
         }
     }
 }
-

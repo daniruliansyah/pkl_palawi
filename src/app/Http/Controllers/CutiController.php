@@ -22,57 +22,63 @@ class CutiController extends Controller
     /**
      * Menampilkan daftar cuti berdasarkan peran pengguna.
      */
-    public function index()
+    // CutiController.php
+
+public function index()
+    {
+    $user = Auth::user();
+    $sisaCuti = $user->jatah_cuti;
+
+    // PERBAIKAN: Ganti nama variabelnya menjadi $cutis agar sesuai dengan view
+    $cutis = Cuti::where('nip_user', $user->nip)
+                        ->with('user', 'ssdm', 'sdm', 'gm')
+                        ->latest()->get();
+
+    // Sekarang, yang dikirim ke view adalah variabel 'cutis' yang sudah benar
+    return view('pages.cuti.index-karyawan', compact('cutis', 'sisaCuti'));
+}
+
+    /**
+     * FUNGSI 2: Untuk menampilkan halaman PERSETUJUAN CUTI.
+     * Halaman ini HANYA diakses oleh atasan (GM, SDM, SSDM).
+     */
+    public function indexApproval()
     {
         $user = Auth::user();
-        $sisaCuti = $user->jatah_cuti;
-        $jabatanInfo = $user->jabatanTerbaru()->with('jabatan')->first();
 
-        // Default: Karyawan Biasa
-        if (!$jabatanInfo || !$jabatanInfo->jabatan || $user->isKaryawanBiasa()) {
-            $cutis = Cuti::where('nip_user', $user->nip)
-                          ->with('user', 'ssdm', 'sdm', 'gm')
-                          ->latest()->get();
-            return view('pages.cuti.index-karyawan', compact('cutis', 'sisaCuti'));
-        }
+        // Logika untuk mengambil data yang perlu disetujui, berdasarkan peran.
+        // Logika ini sama seperti yang kita diskusikan sebelumnya.
 
-        $namaJabatan = $jabatanInfo->jabatan->nama_jabatan;
-
-        // General Manager (GM)
         if ($user->isGm()) {
-            $cutisForApproval = Cuti::with('user.jabatanTerbaru.jabatan')
-                ->where('status_sdm', 'Disetujui')
-                ->where('status_gm', 'Menunggu Persetujuan')
-                ->latest()->get();
-            $cutisHistory = Cuti::where('nip_user_gm', $user->nip)->latest()->get();
-            return view('pages.cuti.index-gm', compact('cutisForApproval', 'cutisHistory', 'sisaCuti'));
+            $cutisForApproval = Cuti::where('status_sdm', 'Disetujui')
+                                  ->where('status_gm', 'Menunggu Persetujuan')
+                                  ->latest()->get();
+            // Mengembalikan view dari folder 'approval'
+            return view('pages.approval.index-gm', compact('cutisForApproval'));
         }
 
-        // Senior Analis Keuangan, SDM & Umum (SDM)
         if ($user->isSdm()) {
-            $cutisForApproval = Cuti::where('status_ssdm', 'Disetujui')
-                ->where('status_sdm', 'Menunggu Persetujuan')
-                ->latest()->get();
-            $cutisHistory = Cuti::where('nip_user_sdm', $user->nip)->latest()->get();
-            return view('pages.cuti.index-sdm', compact('cutisForApproval', 'cutisHistory', 'sisaCuti'));
+            $cutisForApproval = Cuti::where(function ($query) {
+                                    $query->where('status_ssdm', 'Disetujui')
+                                          ->where('status_sdm', 'Menunggu Persetujuan');
+                                })->orWhere(function($q) {
+                                    $q->whereHas('user', fn($sub) => $sub->whereHas('jabatanTerbaru.jabatan', fn($j) => $j->where('nama_jabatan', 'LIKE', '%General Manager%')))
+                                      ->where('status_sdm', 'Menunggu Persetujuan');
+                                })->latest()->get();
+            // Mengembalikan view dari folder 'approval'
+            return view('pages.approval.index-sdm', compact('cutisForApproval'));
         }
 
-        // Senior / Manager (SSDM/Atasan Langsung)
         if ($user->isSenior()) {
             $cutisForApproval = Cuti::where('status_ssdm', 'Menunggu Persetujuan')
-                ->where('nip_user_ssdm', $user->nip)
-                ->latest()->get();
-            $cutisHistory = Cuti::where('nip_user_ssdm', $user->nip)
-                ->where('status_ssdm', '!=', 'Menunggu Persetujuan')
-                ->latest()->get();
-            return view('pages.cuti.index-ssdm', compact('cutisForApproval', 'cutisHistory', 'sisaCuti'));
+                                  ->where('nip_user_ssdm', $user->nip)
+                                  ->latest()->get();
+            // Mengembalikan view dari folder 'approval'
+            return view('pages.approval.index-ssdm', compact('cutisForApproval'));
         }
 
-        // Fallback untuk Karyawan Biasa jika logika awal gagal (jarang terjadi)
-         $cutis = Cuti::where('nip_user', $user->nip)
-                      ->with('user', 'ssdm', 'sdm', 'gm')
-                      ->latest()->get();
-         return view('pages.cuti.index-karyawan', compact('cutis', 'sisaCuti'));
+        // Jika karyawan biasa mencoba akses, kembalikan ke home atau halaman lain.
+        return redirect('/dashboard')->with('error', 'Anda tidak memiliki hak akses ke halaman persetujuan.');
     }
 
     /**
@@ -419,23 +425,9 @@ public function updateStatus(Request $request, Cuti $cuti)
     private function generateNomorSurat(): string
     {
         $tahun = date('Y');
-        $bulanRomawi = $this->numberToRoman(date('n'));
-
-        $lastCuti = Cuti::whereYear('tgl_upload', $tahun)
-            ->whereNotNull('no_surat')
-            ->orderBy('tgl_upload', 'desc')
-            ->first();
-
-        // Cari nomor urut terakhir, ambil dari bagian pertama sebelum '/'
-        $lastNumber = 0;
-        if ($lastCuti && preg_match('/^(\d+)\//', $lastCuti->no_surat, $matches)) {
-            $lastNumber = (int) $matches[1];
-        }
-
-        $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-
-        // Format surat yang umum: 001/ABWWT/I/2025
-        return "{$newNumber}/ABWWT/{$bulanRomawi}/{$tahun}";
+        $lastCutiThisYear = Cuti::whereYear('created_at', $tahun)->orderBy('id', 'desc')->first();
+        $nomorUrut = $lastCutiThisYear ? ((int)explode('/', $lastCutiThisYear->no_surat)[0] + 1) : 1;
+        return sprintf("%03d/014.1/SDM/ABWWT/%s", $nomorUrut, $tahun);
     }
 
     /**
@@ -492,7 +484,7 @@ protected function generateSuratPdf(Cuti $cuti)
 
         // Siapkan variabel logo untuk di-embed
         // Ganti 'images/logo/a.png' dengan path logo Anda di folder public
-        $pathToLogo = public_path('images/logo/a.png'); 
+        $pathToLogo = public_path('images/logo/a.png');
         $type = pathinfo($pathToLogo, PATHINFO_EXTENSION);
         $data = file_get_contents($pathToLogo);
         $embed = 'data:image/' . $type . ';base64,' . base64_encode($data);
@@ -501,7 +493,7 @@ protected function generateSuratPdf(Cuti $cuti)
         $pdf = Pdf::loadView(
             'pages.cuti.surat_cuti_pdf',
             // ===== PERBAIKAN DI SINI =====
-            compact('cuti', 'qrCodeBase64', 'karyawan', 'gm', 'embed') 
+            compact('cuti', 'qrCodeBase64', 'karyawan', 'gm', 'embed')
         )
         ->setOptions([
             'isRemoteEnabled'      => true,
@@ -513,7 +505,7 @@ protected function generateSuratPdf(Cuti $cuti)
         Storage::disk('public')->put($pathFileCuti, $pdf->output());
 
         return $pathFileCuti; // Return path relatif untuk disimpan di DB
-        
+
     } catch (\Exception $e) {
         Log::error("PDF Generation Error [Cuti ID {$cuti->id}]: " . $e->getMessage());
         return null;
@@ -526,5 +518,42 @@ protected function generateSuratPdf(Cuti $cuti)
 
         // Asumsi ada view 'pages.surat_sp.detail'
         return view('pages.cuti.index-karyawan', compact('cuti'));
+    }
+
+    // app/Http/Controllers/CutiController.php
+
+// ... (kode fungsi index, create, store, dll. Anda)
+
+
+// --- TAMBAHKAN FUNGSI BARU DI BAWAH INI ---
+
+/**
+ * FUNGSI BARU: Untuk memproses Cuti yang sudah disetujui penuh.
+ * Fungsi ini akan dipanggil oleh ApprovalController.
+ * Pastikan fungsi ini berstatus PUBLIC.
+ */
+public function finalizeCuti(Cuti $cuti)
+{
+    try {
+        // 1. Generate PDF dan dapatkan path-nya
+        // Pastikan Anda sudah memiliki method generateSuratPdf di controller ini
+        $path = $this->generateSuratPdf($cuti);
+
+        if ($path) {
+            // 2. Simpan path file surat ke database
+            $cuti->file_surat = $path;
+            $cuti->save();
+
+            // 3. Kurangi jatah cuti jika perlu
+            // Pastikan Anda juga memiliki method isCutiMengurangiJatah
+            if ($this->isCutiMengurangiJatah($cuti->jenis_izin, !is_null($cuti->file_izin))) {
+                $cuti->user->decrement('jatah_cuti', $cuti->jumlah_hari);
+                Log::info("Jatah Cuti {$cuti->user->nip} dikurangi {$cuti->jumlah_hari} hari.");
+            }
+        }
+    } catch (\Exception $e) {
+        Log::error("Gagal memfinalisasi Cuti ID {$cuti->id}: " . $e->getMessage());
+        // Anda bisa menangani error di sini, misalnya dengan notifikasi ke admin
+    }
     }
 }

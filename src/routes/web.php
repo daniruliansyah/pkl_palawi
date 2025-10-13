@@ -8,8 +8,9 @@ use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\CutiController;
 use App\Http\Controllers\RiwayatJabatanController;
 use App\Http\Controllers\SPController;
-use App\Http\Controllers\ApprovalController;
-use App\Http\Controllers\SppdApprovalController; // Tambahkan ini
+use App\Http\Controllers\ApprovalController; // Controller Cuti
+use App\Http\Controllers\SPApprovalController; // Controller SP BARU
+use App\Http\Controllers\SppdApprovalController;
 use App\Http\Controllers\NotifikasiController;
 
 /*
@@ -21,6 +22,8 @@ use App\Http\Controllers\NotifikasiController;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+// ... (rute dashboard, verifikasi publik, profile, karyawan, SPPD, Cuti) ...
 
 Route::get('/dashboard', function () {
     // Memanggil view konten yang benar
@@ -53,36 +56,53 @@ Route::middleware('auth')->group(function () {
     Route::resource('sppd', SppdController::class)->only(['index', 'create', 'store']);
     Route::get('sppd/download/{sppd}', [SppdController::class, 'download'])->name('sppd.download');
 
-    // --- RUTE BARU UNTUK PERSETUJUAN SPPD ---
+    // --- RUTE PERSETUJUAN SPPD ---
     Route::get('/sppd-approvals', [SppdApprovalController::class, 'index'])->name('sppd.approvals.index');
     Route::put('/sppd-approvals/{sppd}', [SppdApprovalController::class, 'update'])->name('sppd.approvals.update');
 
     // --- RUTE CUTI (UNTUK PRIBADI) ---
     Route::resource('cuti', CutiController::class)->only(['index', 'create', 'store', 'show']);
+    Route::put('/cuti/{cuti}/updatestatus', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
     Route::delete('/cuti/{cuti}/cancel', [CutiController::class, 'cancel'])->name('cuti.cancel');
     Route::get('/cuti/{cuti}/download', [CutiController::class, 'download'])->name('cuti.download');
-
-    // --- RUTE PERSETUJUAN CUTI ---
-    Route::get('/approval', [ApprovalController::class, 'index'])->name('approvals.index');
-    Route::put('/cuti/{cuti}/update-status', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
     Route::get('/cuti/verifikasi/{id}', [CutiController::class, 'verifikasi'])->name('cuti.verifikasi');
 
-    // === BAGIAN YANG DIPERBAIKI ===
-    // Nama 'downloadLaporan' diubah menjadi 'downloadReport'
+    // --- RUTE PERSETUJUAN CUTI (MENGGUNAKAN ApprovalController) ---
+    // Dipertahankan karena ini adalah Controller khusus Cuti
+    Route::get('/approval', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::put('/approval/cuti/{cuti}', [ApprovalController::class, 'update'])->name('approvals.cuti.update');
+    // Cuti Report
     Route::get('/approval/laporan/download', [ApprovalController::class, 'downloadReport'])->name('approvals.downloadReport');
 
-    // Rute SP
-    Route::resource('sp', SPController::class)->middleware('check.peringatan.access');
-    // ... rute SP lainnya ...
+    // -----------------------------------------------------------------
+    // --- RUTE SURAT PERINGATAN (SP) ---
+    // -----------------------------------------------------------------
 
-    Route::get('/cek-php', function () {
-        phpinfo();
-    });
-    Route::resource('sp', SPController::class);
+    // Rute SP (Pribadi/Pembuatan)
+    // Hapus Route::resource('sp', SPController::class)->middleware('check.peringatan.access'); dan Route::resource('sp', SPController::class); yang duplikat
+    Route::resource('sp', SPController::class)->except(['edit', 'update']);
     Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download');
     Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti');
     Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
 
+    // --- RUTE PERSETUJUAN SP (MENGGUNAKAN SPApprovalController) ---
+    // Ganti route approvals.cuti.update menjadi SP specific.
+
+    Route::prefix('sp-approvals')->name('sp.')->group(function () {
+        // Menggunakan indexApproval di SPController untuk memisahkan view.
+        Route::get('/', [SPController::class, 'indexApproval'])->name('approvals.index');
+
+        // Route untuk persetujuan/penolakan SP oleh GM atau SDM (menggunakan SPApprovalController)
+        Route::put('/{sp}', [SPApprovalController::class, 'update'])->name('approvals.update');
+
+        // Report SP (Jika perlu)
+        Route::get('/laporan/download', [SPApprovalController::class, 'downloadReport'])->name('downloadReport');
+    });
+
+    // ... (rute notifikasi dan kalender) ...
+    Route::get('/cek-php', function () {
+        phpinfo();
+    });
 
     // Rute Notifikasi
     Route::get('/notifications', [NotifikasiController::class, 'index'])->name('notifikasi.index');
@@ -99,4 +119,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-
