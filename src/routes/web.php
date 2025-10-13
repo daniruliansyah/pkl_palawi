@@ -9,6 +9,7 @@ use App\Http\Controllers\CutiController;
 use App\Http\Controllers\RiwayatJabatanController;
 use App\Http\Controllers\SPController;
 use App\Http\Controllers\ApprovalController; // Controller Cuti
+use App\Http\Controllers\GajiController;
 use App\Http\Controllers\SPApprovalController; // Controller SP BARU
 use App\Http\Controllers\SppdApprovalController;
 use App\Http\Controllers\NotifikasiController;
@@ -114,6 +115,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/calendar/notes', [KalenderController::class, 'index'])->name('calendar.api.index');
     Route::post('/calendar/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
     Route::delete('/calendar/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
+
+    Route::resource('gaji', GajiController::class)->only(['create', 'store']);
 
     Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
 });
