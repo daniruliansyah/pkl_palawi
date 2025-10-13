@@ -60,6 +60,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/sppd-approvals', [SppdApprovalController::class, 'index'])->name('sppd.approvals.index');
     Route::put('/sppd-approvals/{sppd}', [SppdApprovalController::class, 'update'])->name('sppd.approvals.update');
 
+    // Rute untuk Fitur Pertanggungjawaban SPPD
+    Route::get('/pertanggungjawaban/{sppd}/create', [\App\Http\Controllers\PertanggungjawabanController::class, 'create'])->name('pertanggungjawaban.create');
+    Route::post('/pertanggungjawaban/{sppd}', [\App\Http\Controllers\PertanggungjawabanController::class, 'store'])->name('pertanggungjawaban.store');
+    Route::get('/pertanggungjawaban/{pertanggungjawaban}/download', [\App\Http\Controllers\PertanggungjawabanController::class, 'download'])->name('pertanggungjawaban.download');
+
     // --- RUTE CUTI (UNTUK PRIBADI) ---
     Route::resource('cuti', CutiController::class)->only(['index', 'create', 'store', 'show']);
     Route::put('/cuti/{cuti}/updatestatus', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');

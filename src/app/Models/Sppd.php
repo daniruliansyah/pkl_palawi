@@ -54,4 +54,10 @@ class Sppd extends Model
     {
         return $this->belongsTo(User::class, 'nip_penyetuju', 'nip');
     }
+
+    public function pertanggungjawaban()
+    {
+        // Asumsi nama modelnya adalah Pertanggungjawaban
+        return $this->hasOne(Pertanggungjawaban::class, 'sppd_id');
+    }
 }
