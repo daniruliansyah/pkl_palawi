@@ -1,4 +1,4 @@
-{{-- File ini SEKARANG HANYA berisi tabel, tanpa judul atau tombol --}}
+{{-- resources/views/components/table-sppd-acceptance.blade.php --}}
 <div class="w-full overflow-x-auto">
     <table class="min-w-full text-sm text-left">
         <thead>
@@ -9,7 +9,10 @@
                 <th class="py-3 px-4 font-medium">Persetujuan</th>
                 <th class="py-3 px-4 font-medium">Status Final</th>
                 <th class="py-3 px-4 font-medium text-center">Surat</th>
-                {{-- Kolom Aksi hanya muncul di halaman persetujuan --}}
+                {{-- KOLOM BARU --}}
+                <th class="py-3 px-4 font-medium text-center">Pertanggungjawaban</th>
+                
+                {{-- Kolom Aksi Persetujuan (tidak berubah) --}}
                 @if(isset($isApprovalPage) && $isApprovalPage)
                     <th class="py-3 px-4 font-medium text-center">Aksi</th>
                 @endif
@@ -18,6 +21,7 @@
         <tbody class="divide-y divide-gray-100">
             @forelse($sppds as $sppd)
             <tr class="hover:bg-gray-50">
+                {{-- Kolom-kolom yang sudah ada (tidak ada perubahan) --}}
                 <td class="px-4 py-3 text-gray-700 font-medium">SPPD - {{ $sppd->lokasi_tujuan }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ $sppd->user->nama_lengkap ?? 'N/A' }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ $sppd->created_at->format('d-m-Y') }}</td>
@@ -62,39 +66,78 @@
                         -
                     @endif
                 </td>
+
+                {{-- =============================================== --}}
+                {{-- LOGIKA BARU UNTUK KOLOM PERTANGGUNGJAWABAN --}}
+                {{-- =============================================== --}}
+                <td class="px-4 py-3 text-center">
+                    {{-- Tombol hanya muncul jika SPPD 'Disetujui' --}}
+                    @if ($sppd->status === 'Disetujui')
+                        
+                        {{-- Cek apakah user yang login adalah pembuat surat --}}
+                        @if (Auth::user()->nip == $sppd->nip_user)
+                            {{-- Jika laporan sudah ada, tampilkan tombol download --}}
+                            @if ($sppd->pertanggungjawaban)
+                                <a href="{{ route('pertanggungjawaban.download', $sppd->pertanggungjawaban->id) }}" class="text-green-600 hover:underline">Unduh Kuitansi</a>
+                            {{-- Jika belum ada, tampilkan tombol buat --}}
+                            @else
+                                <a href="{{ route('pertanggungjawaban.create', $sppd->id) }}" class="text-blue-600 hover:underline">Buat Laporan</a>
+                            @endif
+
+                        {{-- Jika user yg login BUKAN pembuat surat (misal: approver), tapi laporan sudah ada --}}
+                        @elseif ($sppd->pertanggungjawaban)
+                            <a href="{{ route('pertanggungjawaban.download', $sppd->pertanggungjawaban->id) }}" class="text-gray-500 hover:underline">Lihat Kuitansi</a>
+                        
+                        @else
+                            -
+                        @endif
+
+                    @else
+                        -
+                    @endif
+                </td>
+
+                {{-- Kolom Aksi Persetujuan (tidak berubah) --}}
                 @if(isset($isApprovalPage) && $isApprovalPage)
                 <td class="px-4 py-3 text-center" x-data="{ openModal: false }">
-                    <div class="flex items-center justify-center space-x-2">
-                        <form action="{{ route('sppd.approvals.update', $sppd->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
-                            @csrf
-                            @method('PUT')
-                            <input type="hidden" name="status" value="Disetujui">
-                            <button type="submit" class="text-green-600 hover:underline">Setujui</button>
-                        </form>
-                        <button @click="openModal = true" class="text-red-600 hover:underline">Tolak</button>
-                    </div>
-                    {{-- Modal untuk alasan penolakan --}}
-                    <div x-show="openModal" @click.away="openModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" style="display: none;">
-                        <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-                            <h3 class="text-lg font-semibold mb-4 text-gray-800 text-left">Alasan Penolakan</h3>
-                            <form action="{{ route('sppd.approvals.update', $sppd->id) }}" method="POST">
+                    {{-- Cek jika status masih menunggu untuk menampilkan tombol --}}
+                    @if($sppd->status === 'menunggu')
+                        <div class="flex items-center justify-center space-x-2">
+                            <form action="{{ route('sppd.approvals.update', $sppd->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
                                 @csrf
                                 @method('PUT')
-                                <input type="hidden" name="status" value="Ditolak">
-                                <textarea name="alasan_penolakan" rows="4" class="w-full rounded border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Tuliskan alasan penolakan di sini..." required></textarea>
-                                <div class="flex justify-end gap-2 mt-4">
-                                    <button type="button" @click="openModal = false" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
-                                    <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Kirim Penolakan</button>
-                                </div>
+                                <input type="hidden" name="status" value="Disetujui">
+                                <button type="submit" class="text-green-600 hover:underline">Setujui</button>
                             </form>
+                            <button @click="openModal = true" class="text-red-600 hover:underline">Tolak</button>
                         </div>
-                    </div>
+
+                        {{-- Modal untuk alasan penolakan (tidak berubah) --}}
+                        <div x-show="openModal" @click.away="openModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" style="display: none;">
+                            <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-800 text-left">Alasan Penolakan</h3>
+                                <form action="{{ route('sppd.approvals.update', $sppd->id) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="status" value="Ditolak">
+                                    <textarea name="alasan_penolakan" rows="4" class="w-full rounded border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Tuliskan alasan penolakan di sini..." required></textarea>
+                                    <div class="flex justify-end gap-2 mt-4">
+                                        <button type="button" @click="openModal = false" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                                        <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Kirim Penolakan</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        -
+                    @endif
                 </td>
                 @endif
             </tr>
             @empty
             <tr>
-                <td colspan="{{ (isset($isApprovalPage) && $isApprovalPage) ? 7 : 6 }}" class="py-8 text-center text-gray-500">
+                {{-- Penyesuaian colspan karena ada 1 kolom baru --}}
+                <td colspan="{{ (isset($isApprovalPage) && $isApprovalPage) ? 8 : 7 }}" class="py-8 text-center text-gray-500">
                     Tidak ada data pengajuan SPPD.
                 </td>
             </tr>
