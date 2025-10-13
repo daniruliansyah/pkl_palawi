@@ -107,9 +107,15 @@ class SppdController extends Controller
                 $atasan->notify(new StatusSuratDiperbarui(
                     aktor: auth()->user(),
                     jenisSurat: 'SPPD',
-                    statusBaru: 'Menunggu Persetujuan',
-                    keterangan: 'Telah mengajukan SPPD baru dan membutuhkan persetujuan Anda.',
-                    url: route('sppd.verifikasi', $sppd->id) // Sesuaikan dengan route yang relevan
+                    // 1. Ganti menjadi lowercase agar sesuai dengan logika di toDatabase
+                    statusBaru: 'menunggu',
+
+                    // 2. Gunakan null untuk keterangan.
+                    // toDatabase yang baru sudah tahu cara menyusun kalimat untuk status 'menunggu' ini.
+                    keterangan: null,
+
+                    // Perhatikan: Pastikan route ini mengarah ke halaman approval index, bukan verifikasi
+                    url: route('sppd.approvals.index')
                 ));
             }
         } catch (\Exception $e) {
@@ -142,7 +148,7 @@ class SppdController extends Controller
             if ($userJabatanId !== $sppd->pemberi_tugas_id) {
                 return back()->with('error', 'Anda tidak memiliki wewenang untuk melakukan aksi ini.');
             }
-            
+
             if ($request->status === 'Disetujui') {
                 $sppd->status           = 'Disetujui';
                 $sppd->tgl_persetujuan  = now();
@@ -173,7 +179,7 @@ class SppdController extends Controller
                 }
 
                 return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil disetujui dan surat telah dibuat.');
-            
+
             } else { // Jika Ditolak
                 $sppd->status           = 'Ditolak';
                 $sppd->tgl_persetujuan  = now();
@@ -193,7 +199,7 @@ class SppdController extends Controller
                     ));
                 }
                 //--- Akhir Logika Notifikasi ---
-                
+
                 return redirect()->route('sppd.index')->with('success', 'Pengajuan SPPD berhasil ditolak.');
             }
         } catch (\Exception $e) {

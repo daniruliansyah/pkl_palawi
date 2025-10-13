@@ -10,7 +10,7 @@
                 Selamat Datang
             </h1>
             <h2 class="text-3xl md:text-3xl font-bold drop-shadow-sm" style="font-family: 'Poppins', sans-serif;">
-                ECONIQUE-yey
+                ECONIQUE-HRIS
             </h2>
         </div>
 

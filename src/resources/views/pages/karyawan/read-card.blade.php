@@ -18,16 +18,16 @@
         <div class="mb-4 relative">
             <form id="searchForm" action="{{ route('karyawan.index') }}" method="GET" class="flex items-center space-x-2" onsubmit="return false;">
                 <div class="relative w-full">
-                    <input 
-                        type="search" 
+                    <input
+                        type="search"
                         id="searchInput"
-                        name="search" 
-                        placeholder="Cari nama karyawan..." 
+                        name="search"
+                        placeholder="Cari nama karyawan..."
                         class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         autocomplete="off"
                     >
                     <!-- Dropdown suggestion -->
-                    <ul id="suggestionList" 
+                    <ul id="suggestionList"
                         class="absolute left-0 right-0 bg-white border border-gray-300 mt-1 rounded-lg shadow-lg hidden z-10 max-h-48 overflow-y-auto">
                     </ul>
                 </div>
@@ -41,6 +41,7 @@
         </div>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');

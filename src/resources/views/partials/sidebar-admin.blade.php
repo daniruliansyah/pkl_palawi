@@ -22,14 +22,14 @@
 
   {{-- Header Sidebar --}}
   <div :class="sidebarToggle ? 'justify-center' : 'justify-between'" class="flex items-center gap-2 pt-8 pb-7">
-    <a href="index.html" class="flex items-center">
-      <span class="logo" :class="sidebarToggle ? 'hidden' : 'block'">
-        <img class="w-40 mx-auto translate-x-8 dark:hidden" src="./images/logo2.jpg" alt="Logo" />
-        <img class="w-40 hidden mx-auto translate-x-8 dark:block" src="./images/logo.jpg" alt="Logo" />
-      </span>
-      <img :class="sidebarToggle ? 'block' : 'hidden'" class="logo-icon w-8 h-8" src="./images/logo2.jpg" alt="Logo" />
-    </a>
-  </div>
+  <a href="{{ route('dashboard') }}" class="flex items-center">
+    <span class="logo" :class="sidebarToggle ? 'hidden' : 'block'">
+      <img class="w-40 mx-auto translate-x-8 dark:hidden" src="{{ asset('images/logo2.jpg') }}" alt="Logo" />
+      <img class="w-40 hidden mx-auto translate-x-8 dark:block" src="./images/logo.jpg" alt="Logo" />
+    </span>
+    <img :class="sidebarToggle ? 'block' : 'hidden'" class="logo-icon w-8 h-8" src="./images/logo2.jpg" alt="Logo" />
+  </a>
+</div>
 
   {{-- Menu Sidebar --}}
   <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
