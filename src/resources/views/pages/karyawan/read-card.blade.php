@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     searchInput.value = item.text;
                                     suggestionList.classList.add('hidden');
                                     // Auto submit form (kalau mau langsung cari)
-                                    form.submit();
+                                    window.location.href = `/karyawan/${item.id}`;
                                 });
                                 suggestionList.appendChild(li);
                             });
