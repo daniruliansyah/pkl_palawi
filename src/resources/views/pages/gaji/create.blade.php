@@ -1,127 +1,87 @@
 @extends('layouts.dashboard')
-
-@section('title', 'Input Gaji Karyawan')
+@section('title', 'Buat Gaji Karyawan')
 
 @section('content')
-<div class="p-6 mx-auto max-w-screen-lg">
-    <h1 class="text-2xl font-bold mb-6">Input Gaji Karyawan</h1>
 
-    {{-- Notifikasi Error Validasi --}}
-    @if ($errors->any())
-        <div class="p-4 mb-6 text-sm text-red-800 bg-red-100 rounded-lg" role="alert">
-            <span class="font-medium">Oops! Terjadi kesalahan:</span>
-            <ul class="mt-1.5 ml-4 list-disc list-inside">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('gaji.store') }}" method="POST" class="space-y-8">
-        @csrf
-
-        {{-- BAGIAN DATA UTAMA --}}
-        <div class="p-6 border border-gray-200 rounded-lg shadow-sm">
-            <h2 class="text-lg font-semibold mb-4 border-b pb-2">Informasi Utama</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                {{-- Pilih Karyawan --}}
-                <div>
-                    <label for="user_id" class="mb-2 block text-sm font-medium">Nama Karyawan</label>
-                    <select name="user_id" id="user_id"
-                            class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                            required>
-                        <option value="">-- Pilih Karyawan --</option>
-                        @foreach($karyawan as $user)
-                            <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
-                                {{ $user->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Bulan --}}
-                <div>
-                    <label for="bulan" class="mb-2 block text-sm font-medium">Bulan</label>
-                    <select name="bulan" id="bulan"
-                            class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                            required>
-                        @for ($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}" {{ old('bulan', date('n')) == $i ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-
-                {{-- Tahun --}}
-                <div>
-                    <label for="tahun" class="mb-2 block text-sm font-medium">Tahun</label>
-                    <input type="number" name="tahun" id="tahun"
-                           class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                           placeholder="Contoh: 2025" value="{{ old('tahun', date('Y')) }}" required>
-                </div>
-
-                {{-- Gaji Pokok --}}
-                <div class="md:col-span-3">
-                    <label for="gaji_pokok" class="mb-2 block text-sm font-medium">Gaji Pokok (Rp)</label>
-                    <input type="number" name="gaji_pokok" id="gaji_pokok" step="any"
-                           class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                           placeholder="Masukkan nominal gaji pokok" value="{{ old('gaji_pokok') }}" required>
-                </div>
-            </div>
-        </div>
-
-
-        {{-- BAGIAN POTONGAN --}}
-        <div class="p-6 border border-gray-200 rounded-lg shadow-sm">
-            <h2 class="text-lg font-semibold mb-4 border-b pb-2">Rincian Potongan</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                
-                @forelse ($masterPotongan as $potongan)
-                    <div>
-                        <label for="potongan_{{ $potongan->id }}" class="mb-2 block text-sm font-medium">{{ $potongan->nama_potongan }}</label>
-                        <input type="number" name="potongan[{{ $potongan->id }}]" id="potongan_{{ $potongan->id }}" step="any"
-                               class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                               placeholder="0" value="{{ old('potongan.' . $potongan->id, 0) }}">
-                    </div>
-                @empty
-                    <div class="md:col-span-2 p-4 text-sm text-gray-500 bg-gray-50 rounded-lg">
-                        Tidak ada data master potongan yang aktif. Silakan tambahkan terlebih dahulu di menu master data.
-                    </div>
-                @endforelse
-                
-            </div>
-        </div>
+<div class="flex items-center justify-center">
+    <div class="w-full max-w-2xl rounded-2xl bg-white p-8 shadow">
         
-        {{-- Keterangan Tambahan --}}
-        <div class="p-6 border border-gray-200 rounded-lg shadow-sm">
-             <h2 class="text-lg font-semibold mb-4 border-b pb-2">Lain-lain</h2>
-             <div>
-                <label for="keterangan" class="mb-2 block text-sm font-medium">Keterangan (Opsional)</label>
-                <textarea name="keterangan" id="keterangan" rows="3"
-                          class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                          placeholder="Masukkan keterangan atau catatan tambahan jika ada">{{ old('keterangan') }}</textarea>
+        {{-- Header Formulir --}}
+        <h2 class="mb-2 text-2xl font-bold text-gray-800">Formulir Gaji Karyawan</h2>
+        <p class="mb-6 text-sm text-gray-500">
+            Membuat slip gaji untuk karyawan: <span class="font-semibold">{{ $user->nama_lengkap }}</span>
+        </p>
+        
+        {{-- Menampilkan notifikasi error jika ada --}}
+        @if ($errors->any())
+            <div class="mb-4 rounded-lg bg-red-100 p-4 text-sm text-red-700" role="alert">
+                <span class="font-bold">Terjadi Kesalahan!</span>
+                <ul class="mt-2 list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
+        @endif
 
+        <form action="{{ route('gaji.store') }}" method="POST" class="space-y-5">
+            @csrf
 
-        {{-- Tombol Aksi BARU --}}
-        <div class="flex justify-end gap-4 mt-6">
-            <a href="#" class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm text-gray-700 hover:bg-gray-50">Batal</a>
+            {{-- Hidden input untuk user_id, ini PENTING! --}}
+            <input type="hidden" name="user_id" value="{{ $user->id }}">
+
+            {{-- Periode Gaji --}}
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                    <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan</label>
+                    <input type="number" name="bulan" id="bulan" value="{{ old('bulan', date('m')) }}" min="1" max="12" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 {{ $errors->has('bulan') ? 'border-red-500' : 'border-gray-300' }}" required>
+                </div>
+                <div>
+                    <label for="tahun" class="block text-sm font-medium text-gray-700">Tahun</label>
+                    <input type="number" name="tahun" id="tahun" value="{{ old('tahun', date('Y')) }}" min="2020" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 {{ $errors->has('tahun') ? 'border-red-500' : 'border-gray-300' }}" required>
+                </div>
+            </div>
+
+            {{-- Gaji Pokok --}}
+            <div>
+                <label for="gaji_pokok" class="block text-sm font-medium text-gray-700">Gaji Pokok</label>
+                <input type="number" name="gaji_pokok" id="gaji_pokok" value="{{ old('gaji_pokok', 0) }}" min="0" placeholder="Contoh: 5000000" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 {{ $errors->has('gaji_pokok') ? 'border-red-500' : 'border-gray-300' }}" required>
+            </div>
             
-            {{-- Tombol untuk Simpan Saja --}}
-            <button type="submit" name="action" value="save" class="rounded-lg bg-gray-500 px-6 py-2 text-sm font-medium text-white hover:bg-gray-600">
-                Simpan
-            </button>
+            <hr class="border-t border-gray-200">
 
-            {{-- Tombol untuk Simpan dan Lanjut Cetak --}}
-            <button type="submit" name="action" value="save_and_print" class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                Simpan & Cetak
-            </button>
-        </div>
-        {{-- Form End --}}
-    </form>
+            {{-- Detail Potongan (Dinamis) --}}
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Detail Potongan</h3>
+                <p class="mt-1 text-sm text-gray-500">Isi hanya kolom yang berlaku. Biarkan 0 jika tidak ada potongan.</p>
+                <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    @forelse($masterPotongan as $potongan)
+                        <div>
+                            <label for="potongan_{{ $potongan->id }}" class="block text-sm font-medium text-gray-700">{{ $potongan->nama_potongan }}</label>
+                            <input type="number" name="potongan[{{ $potongan->id }}]" id="potongan_{{ $potongan->id }}" value="{{ old('potongan.' . $potongan->id, 0) }}" min="0" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                        </div>
+                    @empty
+                        <div class="sm:col-span-2 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-700">
+                            Tidak ada data master potongan yang aktif. Silakan tambahkan terlebih dahulu di menu Master Data.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Keterangan --}}
+            <div>
+                <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan (Opsional)</label>
+                <textarea name="keterangan" id="keterangan" rows="3" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 {{ $errors->has('keterangan') ? 'border-red-500' : 'border-gray-300' }}" placeholder="Catatan tambahan untuk slip gaji ini...">{{ old('keterangan') }}</textarea>
+            </div>
+
+            {{-- Tombol Aksi --}}
+            <div class="flex justify-end pt-2">
+                <a href="{{ route('gaji.indexForKaryawan', $user->id) }}" class="mr-4 inline-flex items-center rounded-lg bg-gray-200 px-6 py-2 font-medium text-gray-700 shadow transition-colors duration-200 hover:bg-gray-300">Batal</a>
+                <button type="submit" name="simpan" class="inline-flex items-center rounded-lg bg-blue-500 px-6 py-2 font-medium text-white shadow transition-colors duration-200 hover:bg-blue-600">
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

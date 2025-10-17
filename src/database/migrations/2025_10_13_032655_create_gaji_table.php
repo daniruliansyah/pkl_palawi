@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('gaji', function (Blueprint $table) {
         $table->id();
-        $table->foreign('nip_user')->constrained('users')->onDelete('cascade');
+        $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
         $table->integer('bulan');
         $table->year('tahun');
         $table->decimal('gaji_pokok', 15, 2)->default(0);

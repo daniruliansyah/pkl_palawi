@@ -142,4 +142,9 @@ class User extends Authenticatable
     {
         return $this->isGm() || $this->isSdm();
     }
+
+    public function gaji(): HasMany
+    {
+        return $this->hasMany(Gaji::class);
+    }
 }

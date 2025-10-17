@@ -121,8 +121,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/calendar/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
     Route::delete('/calendar/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
 
-    Route::resource('gaji', GajiController::class)->only(['create', 'store']);
-
+    // Gunakan GET untuk menampilkan halaman form
+    Route::get('/gaji/create/{user}', [GajiController::class, 'create'])->name('gaji.create');
+    Route::post('/gaji', [GajiController::class, 'store'])->name('gaji.store');
+    // Route untuk halaman cetak (Anda perlu membuat metode 'cetak' di controller)
+    Route::get('/gaji/{gaji}/cetak', [GajiController::class, 'cetakSlip'])->name('gaji.cetak');
+    Route::get('/karyawan/{user}/gaji', [GajiController::class, 'indexForKaryawan'])->name('gaji.indexForKaryawan');
+    Route::delete('/gaji/{gaji}', [GajiController::class, 'destroy'])->name('gaji.destroy');
     Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
 });
 

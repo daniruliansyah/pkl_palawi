@@ -29,7 +29,7 @@ class Gaji extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**
@@ -37,6 +37,6 @@ class Gaji extends Model
      */
     public function detailPotongan(): HasMany
     {
-        return $this->hasMany(DetailPotongan::class);
+        return $this->hasMany(DetailPotongan::class, 'gaji_id', 'id');
     }
 }
