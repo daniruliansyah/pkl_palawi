@@ -5,19 +5,25 @@
   @php
       use Illuminate\Support\Facades\Auth;
 
-      $user = Auth::user();
-      $isSeniorSDM = false;
-      $isStaffSDM = false;
+        $user = Auth::user();
+        $isSeniorSDM = false;
+        $isStaffSDM = false;
+        $isGM = false; // <-- Deklarasi variabel baru
 
-      if ($user && $user->jabatanTerbaru && $user->jabatanTerbaru->jabatan) {
-          $jabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
-          $hasSDM = stripos($jabatan, 'sdm') !== false;
-          $hasSenior = stripos($jabatan, 'senior') !== false;
-          $hasStaff = stripos($jabatan, 'staff') !== false;
+        if ($user && $user->jabatanTerbaru && $user->jabatanTerbaru->jabatan) {
+            $jabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
 
-          if ($hasSenior && $hasSDM) $isSeniorSDM = true;
-          if ($hasStaff && $hasSDM) $isStaffSDM = true;
-      }
+            // --- Pengecekan SDM ---
+            $hasSDM = stripos($jabatan, 'sdm') !== false;
+            $hasSenior = stripos($jabatan, 'senior') !== false;
+            $hasStaff = stripos($jabatan, 'staff') !== false;
+            $hasGM = stripos($jabatan, 'general manager') !== false; // <-- Cek 'General Manager'
+            // ---------------------
+
+            if ($hasSenior && $hasSDM) $isSeniorSDM = true;
+            if ($hasStaff && $hasSDM) $isStaffSDM = true;
+            if ($hasGM) $isGM = true; // <-- Set $isGM menjadi true jika nama jabatan mengandung 'General Manager'
+        }
   @endphp
 
   {{-- Header Sidebar --}}
@@ -73,12 +79,12 @@
           </a>
           <ul :class="selected === 'Forms' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
             <li><a href="{{ route('cuti.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan Izin</a></li>
-            <li><a href="{{ route('approvals.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat Surat Cuti</a></li>
+            <li><a href="{{ route('approvals.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Daftar Surat Cuti</a></li>
           </ul>
         </li>
 
         {{-- Menu Peringatan (Hanya Senior SDM) --}}
-        @if ($isSeniorSDM)
+        @if ($isSeniorSDM || $isGM)
           <li>
             <a
               href="#"
@@ -95,8 +101,8 @@
               </svg>
             </a>
             <ul :class="selected === 'Tables' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
-              <li><a href="{{ route('sp.create') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Buat Peringatan</a></li>
-              <li><a href="{{ route('sp.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Daftar SP</a></li>
+              <li><a href="{{ route('sp.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Buat Peringatan</a></li>
+              <li><a href="{{ route('sp.approvals.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Daftar SP</a></li>
             </ul>
           </li>
         @endif
@@ -119,7 +125,7 @@
           </a>
           <ul :class="selected === 'Pages' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
             <li><a href="{{ route('sppd.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan SPPD</a></li>
-            <li><a href="{{ route('sppd.approvals.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Riwayat SPPD</a></li>
+            <li><a href="{{ route('sppd.approvals.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Daftar SPPD</a></li>
           </ul>
         </li>
 

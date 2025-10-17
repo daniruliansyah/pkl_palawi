@@ -60,9 +60,9 @@ class ApprovalController extends Controller
             // === BAGIAN YANG DIPERBARUI ===
             } elseif ($user->isSdm()) {
                 if ($cuti->status_sdm !== 'Menunggu Persetujuan') return redirect()->back()->with('error', 'Pengajuan ini tidak lagi menunggu persetujuan Anda.');
-                
+
                 $cuti->status_sdm = $status;
-                
+
                 if ($status == 'Disetujui') {
                     // Cek siapa yang mengajukan cuti dari awal
                     $pemohonCuti = $cuti->user;
@@ -94,7 +94,7 @@ class ApprovalController extends Controller
             } else {
                 return redirect()->back()->with('error', 'Anda tidak memiliki wewenang untuk aksi ini.');
             }
-            
+
             $cuti->save();
 
             // Pemicu pembuatan PDF akan tetap berjalan normal jika status GM menjadi 'Disetujui'
@@ -121,7 +121,7 @@ class ApprovalController extends Controller
         $suratCuti = $query->get();
 
         if ($suratCuti->isEmpty()) { return redirect()->back()->with('error', 'Tidak ada surat cuti yang ditemukan untuk periode yang dipilih.'); }
-        
+
         $namaBulan = ($bulan !== 'all') ? \Carbon\Carbon::create()->month($bulan)->isoFormat('MMMM') : 'Setahun';
         $zipFileName = 'laporan-cuti-' . $namaBulan . '-' . $tahun . '.zip';
         $zipPath = storage_path('app/public/' . $zipFileName);
