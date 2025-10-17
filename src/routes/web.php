@@ -24,25 +24,25 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// ... (rute dashboard, verifikasi publik, profile, karyawan, SPPD, Cuti) ...
-
+// Rute Dashboard
 Route::get('/dashboard', function () {
-    // Memanggil view konten yang benar
     return view('pages.dashboard.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Rute verifikasi publik
+// Rute verifikasi publik (Tidak memerlukan autentikasi)
 Route::get('/sppd/verifikasi/{id}', [SppdController::class, 'verifikasi'])->name('sppd.verifikasi');
-Route::get('/sp/verifikasi/{id}', [SPController::class, 'verifikasi'])->name('sp.verifikasi');
+Route::get('/sp/verifikasi/{id}', [SPController::class, 'verifikasi'])->name('sp.verifikasi'); // Pastikan ini tidak duplikat
+Route::get('/cuti/verifikasi/{id}', [CutiController::class, 'verifikasi'])->name('cuti.verifikasi');
 
 Route::middleware('auth')->group(function () {
-    // Rute Profil
+    // -----------------------------------------------------------------
+    // --- RUTE PROFIL & KARYAWAN ---
+    // -----------------------------------------------------------------
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/detail', [ProfileController::class, 'show'])->name('profile.show');
 
-    // Rute Karyawan dan Riwayat Jabatan
     Route::resource('karyawan', UserController::class)->middleware('check.karyawan.access');
     Route::get('/tambahjabatan/{id}', [UserController::class, 'jabatan'])->name('karyawan.tambahjabatan');
     Route::put('/updatejabatan/{id}', [UserController::class, 'updatejabatan'])->name('karyawan.updatejabatan');
@@ -52,78 +52,84 @@ Route::middleware('auth')->group(function () {
     Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
     Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit')->middleware('check.karyawan.access');
     Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update')->middleware('check.karyawan.access');
+    Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
 
-    // --- RUTE SPPD (UNTUK PRIBADI) ---
-    Route::resource('sppd', SppdController::class)->only(['index', 'create', 'store']);
+    // -----------------------------------------------------------------
+    // --- RUTE SPPD ---
+    // -----------------------------------------------------------------
+    Route::resource('sppd', SppdController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('sppd/download/{sppd}', [SppdController::class, 'download'])->name('sppd.download');
-
-    // --- RUTE PERSETUJUAN SPPD ---
+    // PERSETUJUAN SPPD
     Route::get('/sppd-approvals', [SppdApprovalController::class, 'index'])->name('sppd.approvals.index');
     Route::put('/sppd-approvals/{sppd}', [SppdApprovalController::class, 'update'])->name('sppd.approvals.update');
+    Route::get('/sppd-approvals/laporan/download', [SppdApprovalController::class, 'downloadReport'])->name('sppd.downloadReport');
 
+<<<<<<< Updated upstream
     // Rute untuk Fitur Pertanggungjawaban SPPD
     Route::get('/pertanggungjawaban/{sppd}/create', [\App\Http\Controllers\PertanggungjawabanController::class, 'create'])->name('pertanggungjawaban.create');
     Route::post('/pertanggungjawaban/{sppd}', [\App\Http\Controllers\PertanggungjawabanController::class, 'store'])->name('pertanggungjawaban.store');
     Route::get('/pertanggungjawaban/{pertanggungjawaban}/download', [\App\Http\Controllers\PertanggungjawabanController::class, 'download'])->name('pertanggungjawaban.download');
 
     // --- RUTE CUTI (UNTUK PRIBADI) ---
+=======
+    // -----------------------------------------------------------------
+    // --- RUTE CUTI ---
+    // -----------------------------------------------------------------
+>>>>>>> Stashed changes
     Route::resource('cuti', CutiController::class)->only(['index', 'create', 'store', 'show']);
     Route::put('/cuti/{cuti}/updatestatus', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
     Route::delete('/cuti/{cuti}/cancel', [CutiController::class, 'cancel'])->name('cuti.cancel');
     Route::get('/cuti/{cuti}/download', [CutiController::class, 'download'])->name('cuti.download');
-    Route::get('/cuti/verifikasi/{id}', [CutiController::class, 'verifikasi'])->name('cuti.verifikasi');
-
-    // --- RUTE PERSETUJUAN CUTI (MENGGUNAKAN ApprovalController) ---
-    // Dipertahankan karena ini adalah Controller khusus Cuti
+    // PERSETUJUAN CUTI
     Route::get('/approval', [ApprovalController::class, 'index'])->name('approvals.index');
     Route::put('/approval/cuti/{cuti}', [ApprovalController::class, 'update'])->name('approvals.cuti.update');
-    // Cuti Report
     Route::get('/approval/laporan/download', [ApprovalController::class, 'downloadReport'])->name('approvals.downloadReport');
 
-    // -----------------------------------------------------------------
+   // -----------------------------------------------------------------
     // --- RUTE SURAT PERINGATAN (SP) ---
     // -----------------------------------------------------------------
 
-    // Rute SP (Pribadi/Pembuatan)
-    // Hapus Route::resource('sp', SPController::class)->middleware('check.peringatan.access'); dan Route::resource('sp', SPController::class); yang duplikat
-    Route::resource('sp', SPController::class)->except(['edit', 'update']);
-    Route::get('sp/download/{sp}', [SPController::class, 'download'])->name('sp.download');
-    Route::get('sp/download-bukti/{sp}', [SPController::class, 'downloadBukti'])->name('sp.downloadBukti');
-    Route::get('cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
-
-    // --- RUTE PERSETUJUAN SP (MENGGUNAKAN SPApprovalController) ---
-    // Ganti route approvals.cuti.update menjadi SP specific.
-
-    Route::prefix('sp-approvals')->name('sp.')->group(function () {
-        // Menggunakan indexApproval di SPController untuk memisahkan view.
-        Route::get('/', [SPController::class, 'indexApproval'])->name('approvals.index');
-
-        // Route untuk persetujuan/penolakan SP oleh GM atau SDM (menggunakan SPApprovalController)
-        Route::put('/{sp}', [SPApprovalController::class, 'update'])->name('approvals.update');
-
-        // Report SP (Jika perlu)
-        Route::get('/laporan/download', [SPApprovalController::class, 'downloadReport'])->name('downloadReport');
+    // GRUP UNTUK MANAJEMEN SP (Membuat, Melihat Daftar, Detail)
+    Route::prefix('sp')->name('sp.')->group(function () {
+        Route::get('/', [SPController::class, 'index'])->name('index');
+        Route::get('/create', [SPController::class, 'create'])->name('create');
+        Route::post('/', [SPController::class, 'store'])->name('store');
+        Route::get('/{sp}', [SPController::class, 'show'])->name('show');
+        Route::get('/{id}/download', [SPController::class, 'download'])->name('download');
+        Route::get('/cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
     });
 
-    // ... (rute notifikasi dan kalender) ...
+    // GRUP KHUSUS UNTUK PROSES PERSETUJUAN SP
+    Route::prefix('sp-approvals')->name('sp.approvals.')->group(function () {
+        Route::get('/', [SPApprovalController::class, 'index'])->name('index');
+        Route::post('/{sp}/update-status', [SPApprovalController::class, 'updateStatus'])->name('update'); // Perhatikan 'updateStatus'
+        Route::get('/report/download', [SPApprovalController::class, 'downloadReport'])->name('downloadReport');
+    });
+
+    // -----------------------------------------------------------------
+    // --- RUTE LAINNYA ---
+    // -----------------------------------------------------------------
     Route::get('/cek-php', function () {
         phpinfo();
     });
 
-    // Rute Notifikasi
+    // NOTIFIKASI
     Route::get('/notifications', [NotifikasiController::class, 'index'])->name('notifikasi.index');
     Route::post('/notifications/mark-all-read', [NotifikasiController::class, 'markAllAsRead'])->name('notifikasi.mark-all-read');
     Route::post('/notifications/{notification}/mark-read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.mark-single-read');
 
-    // ... rute kalender lainnya ...
+    // KALENDER
     Route::get('/calendar/calendar', [KalenderController::class, 'showCalendar'])->name('calendar.index');
     Route::get('/calendar/notes', [KalenderController::class, 'index'])->name('calendar.api.index');
     Route::post('/calendar/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
     Route::delete('/calendar/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
+<<<<<<< Updated upstream
 
     Route::resource('gaji', GajiController::class)->only(['create', 'store']);
 
     Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
+=======
+>>>>>>> Stashed changes
 });
 
 require __DIR__.'/auth.php';

@@ -9,33 +9,45 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('sp', function (Blueprint $table) {
-            $table->id();
+   public function up(): void
+{
+    Schema::create('sp', function (Blueprint $table) {
+        $table->id();
 
-            // Kolom baru dari form
-            $table->string('hal_surat')->nullable(); // Ditambahkan
-            // $table->string('kepada_yth')->nullable(); // Ditambahkan
-            $table->enum('jenis_sp', ['Pertama', 'Kedua', 'Terakhir']); // Ditambahkan
-            $table->text('isi_surat'); // Ditambahkan
-            $table->json('tembusan')->nullable(); // Ditambahkan untuk menyimpan array jabatan
+        // Kolom dari form
+        $table->string('hal_surat')->nullable();
+        $table->enum('jenis_sp', ['Pertama', 'Kedua', 'Terakhir']);
+        $table->text('isi_surat');
+        $table->json('tembusan')->nullable();
 
-            // Kolom yang sudah ada
-            $table->string('nip_user', 20); // Tambahkan kolom relasi ke User
-            $table->date('tgl_mulai');
-            $table->date('tgl_selesai');
-            $table->date('tgl_sp_terbit');
-            $table->string('no_surat', 100)->unique(); // Jadikan unique
-            $table->string('file_sp', 100)->nullable(); // Jadikan nullable
-            $table->string('file_bukti', 100)->nullable();
+        // Kolom Utama
+        $table->string('nip_user', 20);
+        $table->string('nip_pembuat', 20);
+        $table->date('tgl_mulai');
+        $table->date('tgl_selesai');
+        $table->date('tgl_sp_terbit');
+        $table->string('no_surat', 100)->unique();
+        $table->string('file_sp', 100)->nullable();
+        $table->string('file_bukti', 100)->nullable();
 
-            $table->timestamps();
+        // Kolom Approval (MENGGUNAKAN STRING (VARCHAR) DENGAN PANJANG 25)
+        $table->string('status_sdm', 25)->default('Menunggu Persetujuan');
+        $table->string('nip_user_sdm', 25)->nullable();
+        $table->timestamp('tgl_persetujuan_sdm')->nullable();
 
-            // Tambahkan foreign key constraint
-            $table->foreign('nip_user')->references('nip')->on('users')->onDelete('cascade');
-        });
-    }
+        $table->string('status_gm', 25)->default('Menunggu');
+        $table->string('nip_user_gm', 25)->nullable();
+        $table->timestamp('tgl_persetujuan_gm')->nullable();
+
+        $table->text('alasan_penolakan')->nullable();
+ 
+        $table->timestamps();
+
+        // Tambahkan foreign key constraint
+        $table->foreign('nip_user')->references('nip')->on('users')->onDelete('cascade');
+        $table->foreign('nip_pembuat')->references('nip')->on('users')->onDelete('cascade');
+    });
+}
 
     /**
      * Reverse the migrations.
