@@ -8,6 +8,8 @@ use App\Models\MasterPotongan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; // Import DB Facade untuk transaction
 use Illuminate\Support\Facades\Log; // Import Log Facade untuk error logging
+use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GajiController extends Controller
 {
@@ -15,13 +17,48 @@ class GajiController extends Controller
      * Menampilkan form untuk membuat data gaji baru.
      * Kita juga akan mengirimkan data karyawan dan master potongan ke view.
      */
-    public function create()
+    public function indexForKaryawan(User $user)
     {
-        $karyawan = User::all(); // Ambil semua data user/karyawan
-        $masterPotongan = MasterPotongan::where('is_active', true)->get(); // Ambil semua potongan yang aktif
+        $gajiHistory = $user->gaji()
+                            ->orderBy('tahun', 'desc')
+                            ->orderBy('bulan', 'desc')
+                            ->paginate(10);
 
-        // Tampilkan view 'gaji.create' dan kirimkan data karyawan & potongan
-        return view('admin.gaji.create', compact('karyawan', 'masterPotongan'));
+        // Mengirim data ke view 'gaji.index'
+        return view('pages.gaji.index', [
+            'user' => $user,
+            'gajiHistory' => $gajiHistory
+        ]);
+    }
+
+    public function destroy(Gaji $gaji)
+    {
+        try {
+            // Hapus data gaji.
+            // Detail potongan yang terkait akan ikut terhapus otomatis
+            // karena Anda sudah menggunakan onDelete('cascade') di migrasi.
+            $gaji->delete();
+
+            // Redirect kembali ke halaman sebelumnya dengan pesan sukses
+            return redirect()->back()->with('success', 'Data gaji berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            // Jika terjadi error, redirect kembali dengan pesan error
+            return redirect()->back()->with('error', 'Gagal menghapus data gaji: ' . $e->getMessage());
+        }
+    }
+
+    public function create(User $user) // <-- 1. Terima variabel $user dari route
+    {
+        $masterPotongan = MasterPotongan::where('is_active', true)
+                                    ->orderBy('nama_potongan')
+                                    ->get();
+
+        // 2. Kirim $user dan $masterPotongan ke view
+        return view('pages.gaji.create', [
+            'user' => $user, 
+            'masterPotongan' => $masterPotongan
+        ]);
     }
 
     /**
@@ -29,65 +66,78 @@ class GajiController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input dasar
-        $request->validate([
+        // 1. Validasi Input
+        $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
             'bulan' => 'required|integer|between:1,12',
-            'tahun' => 'required|integer',
+            'tahun' => 'required|integer|digits:4',
             'gaji_pokok' => 'required|numeric|min:0',
+            'potongan.*' => 'nullable|numeric|min:0', // Validasi semua input potongan
         ]);
-        
-        // Memulai database transaction
-        // Ini memastikan semua proses berhasil atau tidak sama sekali (dibatalkan)
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // Gunakan transaction untuk memastikan semua data tersimpan atau tidak sama sekali
         DB::beginTransaction();
-
         try {
+            // 2. Proses Potongan dan Hitung Totalnya
             $totalPotongan = 0;
-            $potonganInputs = $request->input('potongan', []);
+            $potonganInput = $request->input('potongan', []);
+            $detailPotonganToSave = [];
 
-            // Hitung total semua potongan dari input form
-            foreach ($potonganInputs as $jumlah) {
-                if (!empty($jumlah) && is_numeric($jumlah)) {
+            foreach ($potonganInput as $master_potongan_id => $jumlah) {
+                // Hanya proses potongan yang nilainya diisi dan lebih dari 0
+                if ($jumlah > 0) {
                     $totalPotongan += $jumlah;
+                    $detailPotonganToSave[] = [
+                        'master_potongan_id' => $master_potongan_id,
+                        'jumlah' => $jumlah,
+                    ];
                 }
             }
-            
-            // Buat record gaji utama
+
+            // 3. Hitung Gaji Diterima
+            $gajiDiterima = $request->gaji_pokok - $totalPotongan;
+
+            // 4. Simpan Data Utama ke Tabel `gaji`
             $gaji = Gaji::create([
                 'user_id' => $request->user_id,
                 'bulan' => $request->bulan,
                 'tahun' => $request->tahun,
                 'gaji_pokok' => $request->gaji_pokok,
                 'total_potongan' => $totalPotongan,
-                'gaji_diterima' => $request->gaji_pokok - $totalPotongan,
+                'gaji_diterima' => $gajiDiterima,
                 'keterangan' => $request->keterangan,
             ]);
 
-            // Simpan rincian potongan (hanya yang nilainya lebih dari 0)
-            foreach ($potonganInputs as $master_id => $jumlah) {
-                if (!empty($jumlah) && is_numeric($jumlah) && $jumlah > 0) {
-                    $gaji->detailPotongan()->create([
-                        'master_potongan_id' => $master_id,
-                        'jumlah' => $jumlah,
-                    ]);
+            // 5. Simpan detail potongan ke tabel `detail_potongan`
+            // Pastikan data $gaji berhasil dibuat sebelum lanjut
+            if ($gaji) {
+                foreach ($detailPotonganToSave as $detail) {
+                    $gaji->detailPotongan()->create($detail);
                 }
             }
 
-            // Jika semua proses berhasil, commit transaction
+            // Jika semua berhasil, commit transaksi
             DB::commit();
 
-            // Redirect dengan pesan sukses
-            return redirect()->route('gaji.index')->with('success', 'Data gaji berhasil disimpan.');
+            // 6. Cek apakah user ingin "Simpan & Cetak"
+            if ($request->has('simpan_cetak')) {
+                // Arahkan ke route untuk mencetak slip gaji dengan ID gaji yang baru dibuat
+                return redirect()->route('gaji.cetak', $gaji->id)
+                                 ->with('success', 'Data gaji berhasil disimpan.');
+            }
+
+            // Jika hanya simpan, kembali ke halaman daftar gaji
+            return redirect()->route('gaji.indexForKaryawan', $request->user_id)
+                             ->with('success', 'Data gaji berhasil disimpan.');
 
         } catch (\Exception $e) {
-            // Jika terjadi error, batalkan semua query (rollback)
+            // Jika ada error, batalkan semua proses (rollback)
             DB::rollBack();
-            
-            // Log error untuk debugging
-            Log::error('Error saat menyimpan gaji: ' . $e->getMessage());
-
-            // Redirect kembali dengan pesan error
-            return back()->with('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -96,15 +146,16 @@ class GajiController extends Controller
      */
     public function cetakSlip(Gaji $gaji)
     {
-        // Load relasi agar data user dan detail potongan ikut terambil
+        // Load relasi yang dibutuhkan
         $gaji->load('user', 'detailPotongan.masterPotongan');
 
-        // Di sini Anda akan memanggil library PDF seperti DomPDF atau Snappy
-        // Contoh dengan DomPDF:
-        // $pdf = PDF::loadView('pdf.slip_gaji', compact('gaji'));
-        // return $pdf->download('slip-gaji-'.$gaji->user->name.'-'.$gaji->bulan.'-'.$gaji->tahun.'.pdf');
+        // Generate PDF dari view 'pdf.slip_gaji' dengan data $gaji
+        $pdf = PDF::loadView('pages.gaji.slip', compact('gaji'));
 
-        // Untuk sekarang, kita tampilkan datanya saja dalam format JSON untuk verifikasi
-        return response()->json($gaji);
+        // Buat nama file yang dinamis
+        $fileName = 'slip-gaji-' . $gaji->user->nama_lengkap . '-' . $gaji->bulan . '-' . $gaji->tahun . '.pdf';
+
+        // Tampilkan PDF di browser (stream) atau langsung download (download)
+        return $pdf->stream($fileName);
     }
 }

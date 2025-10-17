@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder {
         SppdSeeder::class,
         CutiSeeder::class,
         CalendarSeeder::class,
+        MasterPotonganSeeder::class, 
+        GajiSeeder::class,
     ]);
   }
 }

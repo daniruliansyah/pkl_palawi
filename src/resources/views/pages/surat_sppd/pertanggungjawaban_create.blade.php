@@ -1,5 +1,6 @@
-{{-- Ganti dengan layout utama Anda --}}
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('title', 'Pertanggung jawaban')
 
 @section('content')
 <div class="container mx-auto p-4">
