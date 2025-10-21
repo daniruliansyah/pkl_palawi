@@ -170,11 +170,11 @@
             placeholder: 'Cari berdasarkan NIP atau Nama Karyawan',
             allowClear: true,
             ajax: {
-                url: '{{ route("cari-karyawan") }}',
+                url: '{{ route("sp.cari-karyawan") }}',
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {
-                    return { q: params.term };
+                    return { term: params.term };
                 },
                 processResults: function(data) {
                     return data;
