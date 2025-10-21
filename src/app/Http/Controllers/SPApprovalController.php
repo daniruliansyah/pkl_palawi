@@ -13,7 +13,6 @@ use Illuminate\Support\Str;
 use App\Notifications\StatusSuratDiperbarui;
 use Illuminate\Support\Carbon;
 use ZipArchive;
-// PERBAIKAN: Menggunakan 'use' statement untuk library Chillerlan
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -39,7 +38,7 @@ class SPApprovalController extends Controller
 
         } elseif ($user->isSdm()) {
             $spsForApproval = SP::with('user.jabatanTerbaru.jabatan')
-                ->where('status_sdm', 'Menunggu Persetujuan')
+                ->where('status_sdm', 'Menunggu Persetujui')
                 ->latest()->get();
             $spsHistory = SP::with('user.jabatanTerbaru.jabatan')->where($baseSpQuery)->latest()->get();
             return view('pages.riwayat_sp.index-sdm', compact('spsForApproval', 'spsHistory'));
@@ -62,7 +61,7 @@ class SPApprovalController extends Controller
         DB::beginTransaction();
         try {
             if ($user->isSdm()) {
-                if ($sp->status_sdm !== 'Menunggu Persetujuan') {
+                if ($sp->status_sdm !== 'Menunggu Persetujui') {
                     return back()->with('error', 'SP ini tidak lagi menunggu persetujuan SDM.');
                 }
                 if ($status === 'Disetujui') {
@@ -72,28 +71,42 @@ class SPApprovalController extends Controller
                     $sp->update(['status_sdm' => 'Ditolak SDM', 'nip_user_sdm' => $user->nip, 'tgl_persetujuan_sdm' => Carbon::now(), 'status_gm' => 'Ditolak', 'alasan_penolakan' => $request->alasan_penolakan]);
                     $this->sendApprovalNotification($user, $sp, null);
                 }
+            
+            // ==========================================================
+            // BLOK GM YANG DIPERBAIKI
+            // ==========================================================
             } elseif ($user->isGm()) {
                 if ($sp->status_gm !== 'Menunggu Persetujuan' || $sp->status_sdm !== 'Disetujui SDM') {
                     return back()->with('error', 'SP ini belum siap untuk persetujuan GM.');
                 }
+                
+                // Cek statusnya lagi (ini yang Anda hapus)
                 if ($status === 'Disetujui') {
-                    $sp->update(['status_gm' => 'Disetujui', 'nip_user_gm' => $user->nip, 'tgl_persetujuan_gm' => Carbon::now()]);
-                    if (empty($sp->no_surat)) {
-                        $sp->update(['no_surat' => $this->generateNoSurat()]);
-                    }
+                    // Update status GM
+                    $sp->update(['status_gm' => 'Disetujui', 'nip_user_gm' => $user->nip, 'tgl_persetujuan_gm' => Carbon::now(), 'alasan_penolakan' => null]);
+                    
+                    // Blok 'if' untuk generate no_surat SUDAH DIHAPUS (BENAR)
+
+                    // Generate PDF
                     $filePath = $this->generateSuratPdf($sp);
                     if (!$filePath) {
                         throw new \Exception('Gagal menghasilkan file PDF. Periksa log untuk detail.');
                     }
+                    
+                    // Simpan path PDF
                     $sp->update(['file_sp' => $filePath]);
                     $this->sendApprovalNotification($user, $sp, 'final');
-                } else {
+
+                } else { // Ini adalah blok 'Ditolak' oleh GM
                     $sp->update(['status_gm' => 'Ditolak', 'nip_user_gm' => $user->nip, 'tgl_persetujuan_gm' => Carbon::now(), 'alasan_penolakan' => $request->alasan_penolakan]);
                     $this->sendApprovalNotification($user, $sp, null);
                 }
+            // ==========================================================
+
             } else {
                 return back()->with('error', 'Anda tidak memiliki wewenang untuk aksi ini.');
             }
+            
             DB::commit();
             return redirect()->route('sp.approvals.index')->with('success', 'Status Surat Peringatan berhasil diperbarui.');
         } catch (\Exception $e) {
@@ -114,20 +127,6 @@ class SPApprovalController extends Controller
     // =============================================================
     // HELPER FUNCTIONS (KHUSUS UNTUK PROSES APPROVAL)
     // =============================================================
-
-    /**
-     * FUNGSI HELPER: Menghasilkan Nomor Surat (Hanya dipanggil saat GM menyetujui).
-     */
-    private function generateNoSurat(): string
-    {
-        // ... (Kode fungsi ini tidak berubah, sudah benar)
-    }
-
-    protected function numberToRoman($number)
-    {
-        // ... (Kode fungsi ini tidak berubah, sudah benar)
-    }
-
     /**
      * FUNGSI HELPER: Menghasilkan PDF (Hanya dipanggil saat GM menyetujui).
      */
@@ -140,22 +139,20 @@ class SPApprovalController extends Controller
 
             $qrCodeUrl = route('sp.verifikasi', ['id' => $sp->id]);
 
-            // PERBAIKAN: Menggunakan sintaks dari library Chillerlan untuk membuat QR Code
             $options = new QROptions([
-                'outputType'      => QRCode::OUTPUT_IMAGE_PNG,
-                'imageBase64'     => true, // Ini akan menghasilkan data URI lengkap (data:image/png;base64,...)
-                'eccLevel'        => QRCode::ECC_H,
-                'scale'           => 5,
-                'quietzoneSize'   => 1,
+                'outputType'    => QRCode::OUTPUT_IMAGE_PNG,
+                'imageBase64'   => true,
+                'eccLevel'      => QRCode::ECC_H,
+                'scale'         => 5,
+                'quietzoneSize' => 1,
             ]);
-            // Hasilnya adalah data URI yang bisa langsung dipakai di tag <img> HTML
             $qrCodeDataUri = (new QRCode($options))->render($qrCodeUrl);
 
             $karyawan = $sp->user;
             $gm = $sp->gm;
             $tembusanArray = json_decode($sp->tembusan, true) ?? [];
 
-            $pathToLogo = public_path('images/econique.jpg');
+            $pathToLogo = public_path('images/logo2.jpg');
             if (File::exists($pathToLogo)) {
                 $type = pathinfo($pathToLogo, PATHINFO_EXTENSION);
                 $data = file_get_contents($pathToLogo);
@@ -164,7 +161,6 @@ class SPApprovalController extends Controller
                 $embed = null;
             }
 
-            // Ganti variabel `qrCodeBase64` menjadi `qrCodeDataUri` agar sesuai
             $pdf = Pdf::loadView('pages.sp.template-surat', compact('sp', 'qrCodeDataUri', 'karyawan', 'gm', 'embed', 'tembusanArray'))
                 ->setOptions(['isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true])
                 ->setPaper('A4', 'portrait');
@@ -183,38 +179,53 @@ class SPApprovalController extends Controller
     private function sendApprovalNotification($approver, SP $sp, $nextAction)
     {
         $jenisSurat = 'Surat Peringatan';
-        $pemohon = $sp->user;
+        $pemohon = $sp->user; // Ini adalah karyawan yg dapat SP
+        $pembuat = $sp->pembuat; // Kita perlu relasi ini di Model SP
         $currentStatus = '';
         $keteranganNotif = '';
         $urlDetail = route('sp.show', $sp->id);
 
         if ($sp->status_gm === 'Ditolak' || $sp->status_sdm === 'Ditolak SDM') {
             $currentStatus = 'Ditolak';
-            $keteranganNotif = "Pengajuan {$jenisSurat} Anda ditolak oleh {$approver->nama_lengkap}.";
+            $keteranganNotif = "Pengajuan {$jenisSurat} untuk {$pemohon->nama_lengkap} ditolak oleh {$approver->nama_lengkap}.";
             if ($sp->alasan_penolakan) { $keteranganNotif .= " Alasan: {$sp->alasan_penolakan}"; }
         } elseif ($sp->status_gm === 'Disetujui') {
             $currentStatus = 'Disetujui Penuh';
-            $keteranganNotif = $jenisSurat . ' sudah disetujui penuh dan diterbitkan.';
+            $keteranganNotif = $jenisSurat . ' untuk ' . $pemohon->nama_lengkap . ' sudah disetujui penuh dan diterbitkan.';
             $urlDetail = route('sp.download', $sp->id);
         } elseif ($sp->status_gm === 'Menunggu Persetujuan' && $sp->status_sdm === 'Disetujui SDM') {
             $currentStatus = 'Menunggu Persetujuan GM';
             $keteranganNotif = "Disetujui oleh {$approver->nama_lengkap}, diteruskan ke GM.";
         }
 
-        if ($pemohon && !empty($keteranganNotif)) {
+        // Kirim notifikasi ke Pembuat Surat (misal: HRD yg input)
+        if ($pembuat && !empty($keteranganNotif)) {
             try {
+                // Jangan kirim notif ke diri sendiri jika pembuat = approver
+                if($pembuat->nip !== $approver->nip) {
+                    $pembuat->notify(new StatusSuratDiperbarui($approver, $jenisSurat, $currentStatus, $keteranganNotif, $urlDetail));
+                }
+            } catch (\Exception $e) {
+                Log::error("Notif ke Pembuat gagal: " . $e->getMessage());
+            }
+        }
+        
+        // Kirim notifikasi ke Karyawan ybs HANYA JIKA SUDAH FINAL
+        if ($pemohon && ($currentStatus === 'Disetujui Penuh' || $currentStatus === 'Ditolak')) {
+             try {
                 $pemohon->notify(new StatusSuratDiperbarui($approver, $jenisSurat, $currentStatus, $keteranganNotif, $urlDetail));
             } catch (\Exception $e) {
                 Log::error("Notif ke Pemohon gagal: " . $e->getMessage());
             }
         }
 
+        // Kirim notifikasi ke approver berikutnya (GM)
         if ($nextAction === 'to_gm') {
             $penerimaBerikutnya = User::whereHas('jabatanTerbaru', fn($q) => $q->where('jabatan_id', 1))->first(); // Asumsi ID 1 adalah GM
             if ($penerimaBerikutnya) {
                 try {
                     $penerimaBerikutnya->notify(new StatusSuratDiperbarui(
-                        $approver, $jenisSurat, 'Menunggu Persetujuan',
+                        $approver, $jenisSurat, 'Menunggu Persetujui',
                         'Ada ' . $jenisSurat . ' yang menunggu persetujuan Anda untuk karyawan ' . $pemohon->nama_lengkap,
                         route('sp.approvals.index')
                     ));
@@ -224,4 +235,5 @@ class SPApprovalController extends Controller
             }
         }
     }
-}
+
+} 

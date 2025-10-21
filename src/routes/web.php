@@ -64,18 +64,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/sppd-approvals/{sppd}', [SppdApprovalController::class, 'update'])->name('sppd.approvals.update');
     Route::get('/sppd-approvals/laporan/download', [SppdApprovalController::class, 'downloadReport'])->name('sppd.downloadReport');
 
-<<<<<<< Updated upstream
     // Rute untuk Fitur Pertanggungjawaban SPPD
     Route::get('/pertanggungjawaban/{sppd}/create', [\App\Http\Controllers\PertanggungjawabanController::class, 'create'])->name('pertanggungjawaban.create');
     Route::post('/pertanggungjawaban/{sppd}', [\App\Http\Controllers\PertanggungjawabanController::class, 'store'])->name('pertanggungjawaban.store');
     Route::get('/pertanggungjawaban/{pertanggungjawaban}/download', [\App\Http\Controllers\PertanggungjawabanController::class, 'download'])->name('pertanggungjawaban.download');
 
     // --- RUTE CUTI (UNTUK PRIBADI) ---
-=======
-    // -----------------------------------------------------------------
-    // --- RUTE CUTI ---
-    // -----------------------------------------------------------------
->>>>>>> Stashed changes
     Route::resource('cuti', CutiController::class)->only(['index', 'create', 'store', 'show']);
     Route::put('/cuti/{cuti}/updatestatus', [CutiController::class, 'updateStatus'])->name('cuti.updateStatus');
     Route::delete('/cuti/{cuti}/cancel', [CutiController::class, 'cancel'])->name('cuti.cancel');
@@ -91,12 +85,17 @@ Route::middleware('auth')->group(function () {
 
     // GRUP UNTUK MANAJEMEN SP (Membuat, Melihat Daftar, Detail)
     Route::prefix('sp')->name('sp.')->group(function () {
-        Route::get('/', [SPController::class, 'index'])->name('index');
-        Route::get('/create', [SPController::class, 'create'])->name('create');
-        Route::post('/', [SPController::class, 'store'])->name('store');
-        Route::get('/{sp}', [SPController::class, 'show'])->name('show');
-        Route::get('/{id}/download', [SPController::class, 'download'])->name('download');
-        Route::get('/cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
+    Route::get('/', [SPController::class, 'index'])->name('index');
+    Route::get('/create', [SPController::class, 'create'])->name('create');
+    
+    // PINDAHKAN ROUTE STATIS KE ATAS SINI
+    Route::get('/cari-karyawan', [SPController::class, 'cariKaryawan'])->name('cari-karyawan');
+    
+    Route::post('/', [SPController::class, 'store'])->name('store');
+    
+    // ROUTE DINAMIS BIARKAN DI BAWAH
+    Route::get('/{sp}', [SPController::class, 'show'])->name('show');
+    Route::get('/{id}/download', [SPController::class, 'download'])->name('download');
     });
 
     // GRUP KHUSUS UNTUK PROSES PERSETUJUAN SP
@@ -123,7 +122,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/calendar/notes', [KalenderController::class, 'index'])->name('calendar.api.index');
     Route::post('/calendar/notes', [KalenderController::class, 'storeOrUpdate'])->name('calendar.api.store');
     Route::delete('/calendar/notes/{id}', [KalenderController::class, 'destroy'])->name('calendar.api.destroy');
-<<<<<<< Updated upstream
 
     // Gunakan GET untuk menampilkan halaman form
     Route::get('/gaji/create/{user}', [GajiController::class, 'create'])->name('gaji.create');
@@ -133,8 +131,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/karyawan/{user}/gaji', [GajiController::class, 'indexForKaryawan'])->name('gaji.indexForKaryawan');
     Route::delete('/gaji/{gaji}', [GajiController::class, 'destroy'])->name('gaji.destroy');
     Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
-=======
->>>>>>> Stashed changes
 });
 
 require __DIR__.'/auth.php';
