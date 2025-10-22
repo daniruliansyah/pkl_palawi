@@ -13,6 +13,7 @@ use App\Http\Controllers\GajiController;
 use App\Http\Controllers\SPApprovalController; // Controller SP BARU
 use App\Http\Controllers\SppdApprovalController;
 use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\RiwayatPendidikanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +132,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/karyawan/{user}/gaji', [GajiController::class, 'indexForKaryawan'])->name('gaji.indexForKaryawan');
     Route::delete('/gaji/{gaji}', [GajiController::class, 'destroy'])->name('gaji.destroy');
     Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
+
+    // =================================================================
+    // --- RUTE RIWAYAT PENDIDIKAN (BARU) ---
+    // =================================================================
+    // Grup ini menangani route yang terkait langsung dengan Karyawan (create, store)
+    Route::prefix('karyawan/{karyawan}/pendidikan')->name('karyawan.pendidikan.')->group(function () {
+        Route::get('/create', [RiwayatPendidikanController::class, 'create'])->name('create');
+        Route::post('/', [RiwayatPendidikanController::class, 'store'])->name('store');
+    });
+
+    // Grup ini menangani route yang terkait langsung dengan data Pendidikan (edit, update, destroy)
+    Route::prefix('pendidikan')->name('pendidikan.')->group(function () {
+        Route::get('/{pendidikan}/edit', [RiwayatPendidikanController::class, 'edit'])->name('edit')->middleware('check.karyawan.access');
+        Route::put('/{pendidikan}', [RiwayatPendidikanController::class, 'update'])->name('update')->middleware('check.karyawan.access');
+        Route::delete('/{pendidikan}', [RiwayatPendidikanController::class, 'destroy'])->name('destroy')->middleware('check.karyawan.access');
+    });
+    // =================================================================
 });
 
 require __DIR__.'/auth.php';

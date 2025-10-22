@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Tambah Karyawan')
+@section('title', 'Tambah Jabatan Karyawan') {{-- Judul saya sesuaikan sedikit --}}
 
 @section('content')
 <div class="p-6 mx-auto max-w-screen-lg">
@@ -26,7 +26,7 @@
             {{-- Container untuk riwayat jabatan --}}
             <div id="jabatan-container">
                 <template x-for="(jabatan, index) in riwayatJabatan" :key="index">
-                    <div class="jabatan-item mb-4 border p-4 rounded-lg">
+                    <div class="jabatan-item mb-4 border p-4 rounded-lg space-y-4"> {{-- Menambahkan space-y-4 untuk jarak --}}
                         {{-- Tombol Hapus --}}
                         <div class="flex justify-end">
                             <button type="button" 
@@ -39,8 +39,9 @@
 
                         {{-- Form input jabatan --}}
                         <div>
-                            <label for="jabatan_id" class="mb-2 block text-sm font-medium">Jabatan</label>
+                            <label :for="'jabatan_id_' + index" class="mb-2 block text-sm font-medium">Jabatan</label>
                             <select :name="'jabatan_id[' + index + ']'" 
+                                    :id="'jabatan_id_' + index"
                                     x-model="jabatan.jabatan_id" 
                                     class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                                 <option value="">Pilih Jabatan</option>
@@ -50,25 +51,41 @@
                             </select>
                         </div>
                         <div>
-                            <label for="area_bekerja" class="mb-2 block text-sm font-medium">Area Kerja</label>
+                            <label :for="'area_bekerja_' + index" class="mb-2 block text-sm font-medium">Area Kerja</label>
                             <input type="text"
-                                :name="'area_bekerja[]'"
-                                x-model="jabatan.area_bekerja"
-                                class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                                   :name="'area_bekerja[' + index + ']'" {{-- DISESUAIKAN: menggunakan index --}}
+                                   :id="'area_bekerja_' + index"
+                                   x-model="jabatan.area_bekerja"
+                                   class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                        </div>
+                        
+                        {{-- INPUT JENJANG BARU DITAMBAHKAN DI SINI --}}
+                        <div>
+                            <label :for="'jenjang_' + index" class="mb-2 block text-sm font-medium">Jenjang (Pangkat/Gol)</label>
+                            <input type="text"
+                                   :name="'jenjang[' + index + ']'"
+                                   :id="'jenjang_' + index"
+                                   x-model="jabatan.jenjang"
+                                   placeholder="Cth: IIA, IIB, IIIA" {{-- DIGANTI SESUAI CONTOH ANDA --}}
+                                   class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                        </div>
+                        {{-- AKHIR INPUT JENJANG --}}
+
+                        <div>
+                            <label :for="'tgl_mulai_' + index" class="mb-2 block text-sm font-medium">Tanggal Mulai</label>
+                            <input type="date" 
+                                   :name="'tgl_mulai[' + index + ']'" 
+                                   :id="'tgl_mulai_' + index"
+                                   x-model="jabatan.tgl_mulai"
+                                   class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                         </div>
                         <div>
-                            <label for="tgl_mulai" class="mb-2 block text-sm font-medium">Tanggal Mulai</label>
+                            <label :for="'tgl_selesai_' + index" class="mb-2 block text-sm font-medium">Tanggal Selesai</label>
                             <input type="date" 
-                                :name="'tgl_mulai[' + index + ']'" 
-                                x-model="jabatan.tgl_mulai"
-                                class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
-                        </div>
-                        <div>
-                            <label for="tgl_selesai" class="mb-2 block text-sm font-medium">Tanggal Selesai</label>
-                            <input type="date" 
-                                :name="'tgl_selesai[' + index + ']'" 
-                                x-model="jabatan.tgl_selesai"
-                                class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                                   :name="'tgl_selesai[' + index + ']'" 
+                                   :id="'tgl_selesai_' + index"
+                                   x-model="jabatan.tgl_selesai"
+                                   class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                         </div>
                     </div>
                 </template>

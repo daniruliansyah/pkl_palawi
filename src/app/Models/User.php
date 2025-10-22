@@ -147,4 +147,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Gaji::class);
     }
+
+    public function riwayatPendidikan(): HasMany
+    {
+        // Karena kita mengikuti konvensi Laravel (user_id),
+        // kita tidak perlu menentukan nama kolom foreign key.
+        return $this->hasMany(RiwayatPendidikan::class);
+    }
 }
