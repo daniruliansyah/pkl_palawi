@@ -58,18 +58,6 @@
                                    x-model="jabatan.area_bekerja"
                                    class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                         </div>
-                        
-                        {{-- INPUT JENJANG BARU DITAMBAHKAN DI SINI --}}
-                        <div>
-                            <label :for="'jenjang_' + index" class="mb-2 block text-sm font-medium">Jenjang (Pangkat/Gol)</label>
-                            <input type="text"
-                                   :name="'jenjang[' + index + ']'"
-                                   :id="'jenjang_' + index"
-                                   x-model="jabatan.jenjang"
-                                   placeholder="Cth: IIA, IIB, IIIA" {{-- DIGANTI SESUAI CONTOH ANDA --}}
-                                   class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
-                        </div>
-                        {{-- AKHIR INPUT JENJANG --}}
 
                         <div>
                             <label :for="'tgl_mulai_' + index" class="mb-2 block text-sm font-medium">Tanggal Mulai</label>
