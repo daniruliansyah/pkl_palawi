@@ -11,13 +11,11 @@
         .header-section { margin-bottom: 25px; }
         .logo-container { width: 100%; text-align: left; vertical-align: top; }
         
-        /* PERBAIKAN 3: Logo kop surat diperbesar */
-        .logo-image { max-height: 85px; width: auto; } /* Ukuran diubah dari 70px menjadi 85px */
+        .logo-image { max-height: 85px; width: auto; }
         
         .date-right { text-align: right; font-size: 11pt; vertical-align: top; white-space: nowrap; }
         
-        /* PERBAIKAN 1: CSS untuk watermark sudah benar (center). Jika masih kurang pas, kemungkinan ada spasi kosong di file gambar logo itu sendiri. */
-        .watermark { position: fixed; top: 50%; left: 50%; width: 350px; height: auto; opacity: 0.08; transform: translate(-50%, -50%); z-index: -1; }
+        .watermark { position: fixed; top: 50%; left: 35%; width: 350px; height: auto; opacity: 0.08; transform: translate(-50%, -50%); z-index: -1; }
         
         .page-break { page-break-before: always; }
         .detail-surat-table td { padding: 2px 0; vertical-align: top; }
@@ -25,9 +23,9 @@
         .detail-surat-table .separator { width: 10px; }
         .isi-surat { margin: 20px 0; text-align: justify; }
         
-        /* PERBAIKAN 2: Mencegah TTD dan Tembusan terpotong di akhir halaman */
-        .ttd-section { margin-top: 50px; page-break-inside: avoid; }
-        .tembusan { font-size: 10pt; margin-top: 50px; page-break-inside: avoid; }
+        /* PERBAIKAN: Margin atas dikurangi agar lebih fleksibel dan tidak mudah terlempar ke halaman baru */
+        .ttd-section { margin-top: 25px; page-break-inside: avoid; }
+        .tembusan { font-size: 10pt; margin-top: 25px; page-break-inside: avoid; }
 
         .ttd-section table { table-layout: fixed; }
         .ttd-section td { width: 50%; text-align: center; vertical-align: top; }
@@ -37,7 +35,6 @@
 </head>
 <body>
 
-<!-- PERBAIKAN 4: Nama file logo diubah di Controller, bukan di sini. Template ini hanya menerima variabel $embed. -->
 @if($embed)
     <img src="{{ $embed }}" class="watermark" alt="Watermark">
 @endif
@@ -136,3 +133,4 @@
 
 </body>
 </html>
+
