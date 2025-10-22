@@ -285,5 +285,76 @@
                     </a>
                 </div>
             </div>
+
+            <!-- AWAL SECTION RIWAYAT PENDIDIKAN -->
+            <div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+              <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between mb-6">
+                  <div>
+                      <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+                          Riwayat Pendidikan
+                      </h4>
+                  </div>
+                  {{-- Tombol Tambah tetap di header section --}}
+                  <div>
+                      <a href="{{ route('karyawan.pendidikan.create', $karyawan->id) }}" class="flex w-full items-center justify-center gap-2 rounded-full bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 lg:inline-flex lg:w-auto">
+                          <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M15.75 9.75H9.75V15.75H8.25V9.75H2.25V8.25H8.25V2.25H9.75V8.25H15.75V9.75Z" fill="currentColor"/>
+                          </svg>
+                          Tambah
+                      </a>
+                  </div>
+              </div>
+
+              {{-- Daftar Riwayat Pendidikan --}}
+              <div class="space-y-6">
+                  @forelse ($karyawan->riwayatPendidikan->sortByDesc('tahun_lulus') as $pendidikan)
+                      <div class="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-b-0 last:pb-0">
+                          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                              {{-- Detail Pendidikan --}}
+                              <div class="mb-4 sm:mb-0">
+                                  <p class="text-sm font-semibold text-gray-800 dark:text-white/90">
+                                      {{ $pendidikan->jenjang }} - {{ $pendidikan->nama_institusi }}
+                                  </p>
+                                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Jurusan: {{ $pendidikan->jurusan ?: '-' }}
+                                  </p>
+                                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Lulus Tahun {{ $pendidikan->tahun_lulus }}
+                                    @if($pendidikan->ipk)
+                                        - IPK: {{ number_format($pendidikan->ipk, 2) }}
+                                    @endif
+                                  </p>
+                              </div>
+
+                              {{-- Tombol Aksi per Item --}}
+                              <div class="flex items-center space-x-3 flex-shrink-0">
+                                  {{-- Tombol Edit --}}
+                                  <a href="{{ route('pendidikan.edit', $pendidikan->id) }}"
+                                    class="flex items-center justify-center gap-1 rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
+                                      <svg class="fill-current" width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path fill-rule="evenodd" clip-rule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="currentColor"></path>
+                                      </svg>
+                                      Edit
+                                  </a>
+                                  {{-- Tombol Delete (dengan form dan konfirmasi JS) --}}
+                                  <form action="{{ route('pendidikan.destroy', $pendidikan->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat pendidikan ini?');">
+                                      @csrf
+                                      @method('DELETE')
+                                      <button type="submit"
+                                              class="flex items-center justify-center gap-1 rounded-full border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 shadow-sm hover:bg-red-100 dark:border-red-700 dark:bg-red-900/[0.3] dark:text-red-400 dark:hover:bg-red-900/[0.5]">
+                                          <svg class="fill-current" width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <path fill-rule="evenodd" clip-rule="evenodd" d="M10 3V2H6V3H2V4H3V13C3 13.5523 3.44772 14 4 14H12C12.5523 14 13 13.5523 13 13V4H14V3H10ZM12 4H4V13H12V4ZM7 6H8V11H7V6ZM10 6H9V11H10V6Z" fill="currentColor"/>
+                                          </svg>
+                                          Hapus
+                                      </button>
+                                  </form>
+                              </div>
+                          </div>
+                      </div>
+                  @empty
+                      <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada data riwayat pendidikan.</p>
+                  @endforelse
+              </div>
+          </div>
 </div>
 @endsection

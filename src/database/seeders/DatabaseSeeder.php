@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder {
         CalendarSeeder::class,
         MasterPotonganSeeder::class, 
         GajiSeeder::class,
+        RiwayatPendidikanSeeder::class,
     ]);
   }
 }
