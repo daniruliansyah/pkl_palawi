@@ -10,14 +10,10 @@ class Cuti extends Model
 {
     use HasFactory;
 
-    /**
-     * Nama tabel yang terhubung dengan model ini.
-     */
     protected $table = 'pengajuan_cuti';
 
     /**
      * Kolom yang diizinkan untuk diisi secara massal (mass assignment).
-     * Disesuaikan dengan struktur database dan controller yang baru.
      */
     protected $fillable = [
         'nip_user',
@@ -31,10 +27,11 @@ class Cuti extends Model
         'no_surat',
         'nip_user_ssdm',
         'nip_user_sdm',
+        'nip_user_manager', // <-- TAMBAHKAN
         'nip_user_gm',
-        // Kolom status yang baru ditambahkan
         'status_ssdm',
         'status_sdm',
+        'status_manager', // <-- TAMBAHKAN
         'status_gm',
         'alasan_penolakan',
         'file_surat',
@@ -63,6 +60,16 @@ class Cuti extends Model
     {
         return $this->belongsTo(User::class, 'nip_user_sdm', 'nip');
     }
+
+    /**
+     * === PERUBAHAN 5: Menambahkan Relasi Manager ===
+     * Relasi ke user approver (Manager).
+     */
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'nip_user_manager', 'nip');
+    }
+    // =============================================
 
     /**
      * Relasi ke user approver level 3 (GM).

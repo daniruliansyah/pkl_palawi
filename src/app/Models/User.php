@@ -45,12 +45,20 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // === PERUBAHAN DI SINI: Menambahkan Primary Key NIP ===
+    // Ini penting karena semua relasi dan controller Anda menggunakan NIP
+    protected $primaryKey = 'nip';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    // ===================================================
+
+
     // Relasi untuk Jabatan (Bawaan)
     public function jabatans()
     {
         return $this->belongsToMany(Jabatan::class, 'riwayat_jabatan', 'nip_user', 'id_jabatan')
-                    ->withPivot('tgl_mulai', 'tgl_selesai', 'area_bekerja')
-                    ->withTimestamps();
+            ->withPivot('tgl_mulai', 'tgl_selesai', 'area_bekerja')
+            ->withTimestamps();
     }
 
     /**
@@ -67,7 +75,7 @@ class User extends Authenticatable
     public function jabatanTerbaru(): HasOne
     {
         return $this->hasOne(RiwayatJabatan::class, 'nip_user', 'nip')
-                    ->latestOfMany('tgl_mulai');
+            ->latestOfMany('tgl_mulai');
     }
 
     /**
@@ -78,18 +86,20 @@ class User extends Authenticatable
         return $this->hasMany(SP::class, 'nip_user', 'nip');
     }
 
-    // --- LOGIKA PENGECEKAN PERAN ---
+    // --- LOGIKA PENGECEKAN PERAN (DISESUAIKAN UNTUK ALUR CUTI) ---
 
     /**
      * Mengambil nama jabatan terbaru.
      */
     private function getNamaJabatan(): ?string
     {
+        // Menggunakan relasi 'jabatanTerbaru' lalu 'jabatan'
         return $this->jabatanTerbaru?->jabatan?->nama_jabatan;
     }
 
     /**
      * Memeriksa apakah user adalah General Manager.
+     * (Menggunakan stripos agar lebih fleksibel)
      */
     public function isGm(): bool
     {
@@ -99,6 +109,7 @@ class User extends Authenticatable
 
     /**
      * Memeriksa apakah user adalah Senior Analis Keuangan, SDM & Umum.
+     * (Sesuai seeder)
      */
     public function isSdm(): bool
     {
@@ -107,23 +118,62 @@ class User extends Authenticatable
     }
 
     /**
-     * Memeriksa apakah user adalah Senior/Manager, TAPI bukan SDM atau GM.
+     * === FUNGSI DIPERBAIKI ===
+     * Memeriksa apakah user adalah Manager.
+     * (Logika diubah untuk memastikan 'General Manager' tidak terhitung sebagai 'Manager')
+     */
+    public function isManager(): bool
+    {
+        $namaJabatan = $this->getNamaJabatan();
+
+        // 1. Pastikan dia BUKAN General Manager
+        if ($this->isGm()) {
+            return false;
+        }
+
+        // 2. Jika bukan GM, periksa apakah dia 'Manager'
+        return $namaJabatan &&
+            (
+                // Cek spesifik dari seeder
+                stripos($namaJabatan, 'Manager Perencanaan dan Standarisasi') !== false ||
+                // Cek 'Manager' lain (jika ada)
+                stripos($namaJabatan, 'Manager') !== false
+            );
+    }
+
+
+    /**
+     * === FUNGSI DIPERBARUI ===
+     * Memeriksa apakah user adalah Senior, TAPI bukan SDM, GM, atau Manager.
+     * (LOGIKA DIPERBARUI: TIDAK LAGI MENCAKUP MANAGER)
      */
     public function isSenior(): bool
     {
         $namaJabatan = $this->getNamaJabatan();
-        if (!$namaJabatan || $this->isGm() || $this->isSdm()) {
+        // Cek dulu apakah dia peran lain
+        if (!$namaJabatan || $this->isGm() || $this->isSdm() || $this->isManager()) {
             return false;
         }
-        return (stripos($namaJabatan, 'Senior') !== false || stripos($namaJabatan, 'Manager') !== false);
+        // Cek "Senior Analis Pengelolaan" (dari seeder) ATAU "Senior" lain
+        return $namaJabatan &&
+            (stripos($namaJabatan, 'Senior Analis Pengelolaan Destinasi') !== false ||
+                (stripos($namaJabatan, 'Senior') !== false && !$this->isSdm()));
     }
 
     /**
-     * Memeriksa apakah user adalah karyawan biasa (Bukan GM, SDM, atau Senior/Manager).
+     * === FUNGSI DIPERBARUI ===
+     * Memeriksa apakah user adalah karyawan biasa (Bukan GM, SDM, Senior, atau Manager).
      */
     public function isKaryawanBiasa(): bool
     {
-        return !$this->isGm() && !$this->isSdm() && !$this->isSenior();
+        // Pengecekan Karyawan Biasa dari seeder
+        $namaJabatan = $this->getNamaJabatan();
+        if ($namaJabatan && stripos($namaJabatan, 'Karyawan Biasa') !== false) {
+            return true;
+        }
+
+        // Fallback: jika bukan salah satu peran di atas
+        return !$this->isGm() && !$this->isSdm() && !$this->isManager() && !$this->isSenior();
     }
 
     /**
@@ -155,3 +205,4 @@ class User extends Authenticatable
         return $this->hasMany(RiwayatPendidikan::class);
     }
 }
+
