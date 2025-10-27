@@ -10,19 +10,19 @@
         table { width:100%; border-collapse: collapse; }
         .header-section { margin-bottom: 25px; }
         .logo-container { width: 100%; text-align: left; vertical-align: top; }
-        
+
         .logo-image { max-height: 85px; width: auto; }
-        
+
         .date-right { text-align: right; font-size: 11pt; vertical-align: top; white-space: nowrap; }
-        
+
         .watermark { position: fixed; top: 50%; left: 35%; width: 350px; height: auto; opacity: 0.08; transform: translate(-50%, -50%); z-index: -1; }
-        
+
         .page-break { page-break-before: always; }
         .detail-surat-table td { padding: 2px 0; vertical-align: top; }
         .detail-surat-table .label { width: 100px; }
         .detail-surat-table .separator { width: 10px; }
         .isi-surat { margin: 20px 0; text-align: justify; }
-        
+
         /* PERBAIKAN: Margin atas dikurangi agar lebih fleksibel dan tidak mudah terlempar ke halaman baru */
         .ttd-section { margin-top: 25px; page-break-inside: avoid; }
         .tembusan { font-size: 10pt; margin-top: 25px; page-break-inside: avoid; }
@@ -30,7 +30,21 @@
         .ttd-section table { table-layout: fixed; }
         .ttd-section td { width: 50%; text-align: center; vertical-align: top; }
         .qr-code-image { width: 80px; height: 80px; display: block; margin: 5px auto; }
-        .footer { position: fixed; bottom: 10mm; left: 25mm; right: 25mm; font-size: 8pt; text-align: justify; border-top: 1px solid #ccc; padding-top: 5px; color: #000; }
+
+        /* --- INI YANG DIUBAH --- */
+        .footer {
+            position: fixed;
+            bottom: 5mm;   /* DIUBAH: dari 10mm ke 5mm agar lebih ke bawah */
+            left: 20mm;    /* DIUBAH: dari 25mm ke 20mm agar margin lebih kecil */
+            right: 20mm;   /* DIUBAH: dari 25mm ke 20mm agar margin lebih kecil */
+            font-size: 8pt;
+            text-align: justify;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+            color: #000;
+        }
+        /* --- BATAS PERUBAHAN --- */
+
     </style>
 </head>
 <body>
@@ -133,4 +147,3 @@
 
 </body>
 </html>
-

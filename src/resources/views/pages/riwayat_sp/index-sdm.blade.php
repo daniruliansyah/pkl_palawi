@@ -25,7 +25,8 @@
                         <th class="py-3 px-4 font-medium">Karyawan</th>
                         <th class="py-3 px-4 font-medium">Jabatan</th>
                         <th class="py-3 px-4 font-medium">Jenis SP</th>
-                        <th class="py-3 px-4 font-medium">Hal Surat</th>
+                        {{-- DIUBAH: Mengganti 'Hal Surat' menjadi 'Ringkasan Isi' --}}
+                        <th class="py-3 px-4 font-medium">Ringkasan Isi</th>
                         <th class="py-3 px-4 font-medium">Bukti</th>
                         <th class="py-3 px-4 font-medium text-center">Aksi</th>
                     </tr>
@@ -36,7 +37,12 @@
                             <td class="px-4 py-3 text-gray-700">{{ $sp->user->nama_lengkap ?? 'N/A' }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $sp->user->jabatanTerbaru->jabatan->nama_jabatan ?? 'N/A' }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ $sp->jenis_sp }}</td>
-                            <td class="px-4 py-3 text-gray-500">{{ $sp->hal_surat }}</td>
+
+                            {{-- DIUBAH: Menampilkan isi surat (bukan hal_surat) dengan truncate dan tooltip --}}
+                            <td class="px-4 py-3 text-gray-500">
+                                <p class="max-w-[200px] truncate" title="{{ strip_tags($sp->isi_surat) }}">{{ strip_tags($sp->isi_surat) }}</p>
+                            </td>
+
                             <td class="px-4 py-3 text-gray-500">
                                 @if($sp->file_bukti)
                                     <a href="{{ Storage::url($sp->file_bukti) }}" target="_blank" class="text-blue-600 hover:underline">Lihat Bukti</a>
@@ -70,6 +76,7 @@
                             </td>
                         </tr>
                     @empty
+                        {{-- Colspan 6 sudah benar karena kita mengganti kolom, bukan menambah --}}
                         <tr><td colspan="6" class="py-8 text-center text-gray-500">Tidak ada Surat Peringatan yang menunggu persetujuan Anda saat ini.</td></tr>
                     @endforelse
                 </tbody>
@@ -78,6 +85,35 @@
     </div>
 
     <hr class="my-8">
+
+        {{-- Form Download Laporan ARSIP SPPD (PASTIKAN DIV INI ADA) --}}
+    <div class="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 shadow-sm sm:px-6">
+        <h3 class="text-lg font-semibold text-gray-800">Download Laporan Arsip Surat SPPD</h3>
+        <p class="text-sm text-gray-500 mb-4">Pilih periode untuk mengunduh semua surat SPPD yang disetujui dalam format ZIP.</p>
+
+        <form action="{{ route('sppd.downloadReport') }}" method="GET" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
+            <div>
+                <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan</label>
+                <select name="bulan" id="bulan" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="all">Semua Bulan (Tahunan)</option>
+                    @foreach(range(1, 12) as $month)
+                        <option value="{{ $month }}" {{ request('bulan', date('m')) == $month ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($month)->isoFormat('MMMM') }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="tahun" class="block text-sm font-medium text-gray-700">Tahun</label>
+                <select name="tahun" id="tahun" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    @foreach(range(date('Y'), date('Y') - 5) as $year)
+                        <option value="{{ $year }}" {{ request('tahun', date('Y')) == $year ? 'selected' : '' }}>{{ $year }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="mt-4 sm:mt-0 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                Download Laporan
+            </button>
+        </form>
+    </div>
 
     {{-- Tabel 2: Riwayat Tindakan --}}
     <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 shadow-sm sm:px-6">
