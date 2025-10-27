@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
         $jabatanSDM = Jabatan::where('nama_jabatan', 'Senior Analis Keuangan, SDM & Umum')->first();
         $jabatanKaryawan = Jabatan::where('nama_jabatan', 'Senior Analis Pengelolaan Destinasi')->first();
         $jabatanBiasa = Jabatan::where('nama_jabatan', 'Karyawan Biasa')->first();
+        $jabatanM2 = Jabatan::where('nama_jabatan', 'Manager Perencanaan dan Standarisasi')->first();
 
         $users = [
             [
@@ -162,6 +163,26 @@ class UserSeeder extends Seeder
                 'join_date' => '2022-01-01',
                 'jatah_cuti' => 12,
                 'jabatan' => $jabatanBiasa,
+            ],
+            [
+                'nama_lengkap' => 'Pak Indra',
+                'nip' => '434221050',
+                'nik' => '4578156908040055',
+                'email' => 'pakindra@example.com',
+                'password' => bcrypt('12345678'),
+                'no_telp' => '081122111115',
+                'jenis_kelamin' => '1',
+                'alamat' => 'Jl.M2',
+                'tgl_lahir' => '2005-01-05',
+                'tempat_lahir' => 'Kota Jember',
+                'agama' => 'Islam',
+                'status_perkawinan' => 'Kawin',
+                'status_aktif' => '1',
+                'npk_baru' => 'NPK4342213',
+                'npwp' => '22.333.444.12352.910',
+                'join_date' => '2021-01-01',
+                'jatah_cuti' => 12,
+                'jabatan' => $jabatanM2,
             ],
         ];
 
