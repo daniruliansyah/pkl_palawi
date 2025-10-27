@@ -58,7 +58,15 @@
                                    x-model="jabatan.area_bekerja"
                                    class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                         </div>
-
+                        <div>
+                            <label :for="'jenjang_' + index" class="mb-2 block text-sm font-medium">Jenjang</label>
+                            <input type="text"
+                                :name="'jenjang[' + index + ']'" 
+                                :id="'jenjang_' + index"
+                                x-model="jabatan.jenjang"
+                                placeholder="Contoh: IIA, IIB (Opsional)"
+                                class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                        </div>
                         <div>
                             <label :for="'tgl_mulai_' + index" class="mb-2 block text-sm font-medium">Tanggal Mulai</label>
                             <input type="date" 

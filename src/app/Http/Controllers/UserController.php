@@ -149,9 +149,13 @@ class UserController extends Controller
             'tgl_mulai.*' => 'required|date',
             'tgl_selesai' => 'nullable|array',
             'tgl_selesai.*' => 'nullable|date|after_or_equal:tgl_mulai.*',
-            // Tambahkan validasi untuk area_bekerja
             'area_bekerja' => 'required|array',
             'area_bekerja.*' => 'required|string',
+            
+            // --- TAMBAHAN ---
+            'jenjang' => 'nullable|array', 
+            'jenjang.*' => 'nullable|string|max:10', // Sesuaikan max length jika perlu
+            // --- END TAMBAHAN ---
         ]);
 
         // 2. Ambil semua data
@@ -159,6 +163,10 @@ class UserController extends Controller
         $mulais      = $request->tgl_mulai;
         $selesais    = $request->tgl_selesai;
         $areais      = $request->area_bekerja;
+
+        // --- TAMBAHAN ---
+        $jenjangs = $request->jenjang; 
+        // --- END TAMBAHAN ---
 
         // 3. Loop dan simpan data, tambahkan pengecekan nilai
         foreach ($jabatan_ids as $i => $jabatan_id) {
@@ -169,6 +177,10 @@ class UserController extends Controller
                     'tgl_mulai'    => $mulais[$i],
                     'tgl_selesai'  => $selesais[$i],
                     'area_bekerja' => $areais[$i],
+
+                    // --- TAMBAHAN ---
+                    'jenjang'      => $jenjangs[$i] ?? null, // Gunakan null coalescing
+                    // --- END TAMBAHAN ---
                 ]);
             }
         }

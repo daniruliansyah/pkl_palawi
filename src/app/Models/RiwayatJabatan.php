@@ -17,6 +17,7 @@ class RiwayatJabatan extends Model
         'tgl_mulai',
         'tgl_selesai',
         'area_bekerja',
+        'jenjang',
     ];
 
     public function user()
