@@ -224,7 +224,7 @@
                           Pangkat
                         </p>
                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                          -durung migrate-
+                          {{ $karyawan->jabatanTerbaru?->jenjang ?? '-' }}
                         </p>
                       </div>
                     </div>
