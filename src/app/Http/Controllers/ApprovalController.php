@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use ZipArchive;
+// Import CutiController untuk menggunakan logikanya
+use App\Http\Controllers\CutiController;
 
 class ApprovalController extends Controller
 {
-    // ... method index() tidak berubah ...
+    // ... method index() tidak diubah ...
     public function index()
     {
         $user = Auth::user();
@@ -42,75 +44,42 @@ class ApprovalController extends Controller
 
     /**
      * Mengupdate status pengajuan cuti.
+     * Menggunakan logika dari CutiController@updateStatus untuk menjaga konsistensi alur approval.
      */
     public function update(Request $request, Cuti $cuti)
     {
+        // PENTING: Untuk menghindari duplikasi logika dan menjaga satu sumber kebenaran (single source of truth),
+        // Sebaiknya action update di ApprovalController ini diarahkan untuk menggunakan logic di CutiController@updateStatus.
+        // Karena kodenya sudah dipisahkan, saya akan memanggil CutiController@updateStatus.
+        // Anda HARUS memastikan rute 'approvals.update' memanggil method ini.
+
+        $cutiController = new CutiController();
+        return $cutiController->updateStatus($request, $cuti);
+
+        /* // Logika aslinya (DITINGGALKAN, karena sudah dipindah ke CutiController::updateStatus)
         $request->validate(['status' => 'required|in:Disetujui,Ditolak', 'alasan_penolakan' => 'nullable|string|required_if:status,Ditolak']);
         $user = auth()->user();
         $status = $request->input('status');
 
         DB::beginTransaction();
         try {
-            // Logika untuk GM tetap sama
-            if ($user->isGm()) {
-                if ($cuti->status_gm !== 'Menunggu Persetujuan') return redirect()->back()->with('error', 'Pengajuan ini tidak lagi menunggu persetujuan Anda.');
-                $cuti->status_gm = $status;
-                if ($status == 'Ditolak') $cuti->alasan_penolakan = $request->input('alasan_penolakan');
+            // ... (Logika approval di sini, SAMA persis seperti di CutiController::updateStatus)
 
-            // === BAGIAN YANG DIPERBARUI ===
-            } elseif ($user->isSdm()) {
-                if ($cuti->status_sdm !== 'Menunggu Persetujuan') return redirect()->back()->with('error', 'Pengajuan ini tidak lagi menunggu persetujuan Anda.');
+            // Pemicu pembuatan PDF DIBUANG karena sudah di-handle di CutiController@updateStatus
+            // if ($cuti->status_gm === 'Disetujui') {
+            //     app(CutiController::class)->finalizeCuti($cuti);
+            // }
 
-                $cuti->status_sdm = $status;
-
-                if ($status == 'Disetujui') {
-                    // Cek siapa yang mengajukan cuti dari awal
-                    $pemohonCuti = $cuti->user;
-                    if ($pemohonCuti->isGm()) {
-                        // Jika pemohon adalah GM, persetujuan SDM adalah final
-                        $cuti->status_gm = 'Disetujui';
-                        $cuti->tgl_persetujuan_gm = now(); // Catat tanggal seolah-olah GM setuju
-                    } else {
-                        // Jika pemohon bukan GM, teruskan ke GM
-                        $cuti->status_gm = 'Menunggu Persetujuan';
-                    }
-                } else {
-                    // Jika SDM menolak, alur berhenti
-                    $cuti->alasan_penolakan = $request->input('alasan_penolakan');
-                    $cuti->status_gm = 'Ditolak';
-                }
-
-            // Logika untuk Senior tetap sama
-            } elseif ($user->isSenior()) {
-                if ($cuti->status_ssdm !== 'Menunggu Persetujuan') return redirect()->back()->with('error', 'Pengajuan ini tidak lagi menunggu persetujuan Anda.');
-                $cuti->status_ssdm = $status;
-                if ($status == 'Disetujui') {
-                    $cuti->status_sdm = 'Menunggu Persetujuan';
-                } else {
-                    $cuti->alasan_penolakan = $request->input('alasan_penolakan');
-                    $cuti->status_sdm = 'Ditolak';
-                    $cuti->status_gm = 'Ditolak';
-                }
-            } else {
-                return redirect()->back()->with('error', 'Anda tidak memiliki wewenang untuk aksi ini.');
-            }
-
-            $cuti->save();
-
-            // Pemicu pembuatan PDF akan tetap berjalan normal jika status GM menjadi 'Disetujui'
-            if ($cuti->status_gm === 'Disetujui') {
-                app(CutiController::class)->finalizeCuti($cuti);
-            }
-
-            DB::commit();
-            return redirect()->route('approvals.index')->with('success', 'Status pengajuan berhasil diperbarui.');
+            // DB::commit();
+            // return redirect()->route('approvals.index')->with('success', 'Status pengajuan berhasil diperbarui.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            // DB::rollBack();
+            // return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+        */
     }
 
-    // ... method downloadReport() tidak berubah ...
+    // ... method downloadReport() tidak diubah ...
     public function downloadReport(Request $request)
     {
         $request->validate([ 'bulan' => 'required|string', 'tahun' => 'required|integer|min:2020|max:' . date('Y'), ]);
@@ -140,4 +109,3 @@ class ApprovalController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 }
-
