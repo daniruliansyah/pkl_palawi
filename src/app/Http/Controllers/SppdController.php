@@ -21,19 +21,23 @@ class SppdController extends Controller
     /**
      * Menampilkan daftar SPPD yang diajukan oleh user atau yang perlu diverifikasi oleh user.
      */
+   // File: SppdController.php
+
     public function index()
     {
         $user = Auth::user();
-        $userNip = $user->nip;
-        $userJabatanId = $user->jabatanTerbaru->id_jabatan ?? null;
 
-        // Memuat SPPD di mana user adalah pemohon ATAU user adalah pemberi tugas (verifier)
-        $sppds = Sppd::with('user')
-            ->where('nip_user', $userNip)
-            ->orWhere('pemberi_tugas_id', $userJabatanId)
+        // Query ini HANYA mengambil SPPD
+        // yang NIP pembuatnya = NIP user yang login.
+        // Tidak peduli apa role-nya.
+        $sppds = Sppd::query()
+            ->with('user')
+            ->where('nip_user', $user->nip) // <-- KUNCI UTAMANYA DI SINI
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Kirim data yang SUDAH DIFILTER ke view
+        // (View Anda: pages.surat_sppd.index atau riwayat.blade.php)
         return view('pages.surat_sppd.index', compact('sppds'));
     }
 

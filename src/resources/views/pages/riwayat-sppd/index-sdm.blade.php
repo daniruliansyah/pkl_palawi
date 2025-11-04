@@ -54,11 +54,20 @@
                                     <form action="{{ route('approvals.update', $sppd->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
                                         @csrf
                                         @method('PUT')
-                                        <input type="hidden" name="status" value="Disetujui">
+                                        {{-- <input type="hidden" name="status" value="Disetujui">
                                         <button type="submit" class="rounded-md bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200">Setujui</button>
                                     </form>
                                     <button @click="openModal = true" class="rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-200">Tolak</button>
+                                </div> --}}
+
+                                       <button type="submit" class="rounded-md bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200">Setujui</button>
+                                    </form>
+                                    <button @click="openModal = true" class="rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-200">Tolak</button>
                                 </div>
+
+
+
+
                                 <div x-show="openModal" @click.away="openModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" style="display: none;">
                                     <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
                                         <h3 class="text-lg font-semibold mb-4 text-gray-800 text-left">Alasan Penolakan</h3>

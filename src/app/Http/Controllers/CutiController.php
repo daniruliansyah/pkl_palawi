@@ -50,18 +50,14 @@ class CutiController extends Controller
         // 1. General Manager (GM)
         if ($user->isGm()) {
             $cutisForApproval = Cuti::where(function ($query) {
-                // Alur 1, 2 (Karyawan/Senior -> SDM -> GM)
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'NOT LIKE', '%SDM%')->where('nama_jabatan', 'NOT LIKE', '%Manager%')->where('nama_jabatan', 'NOT LIKE', '%General Manager%'))
+                // Alur 1, 2, 4 (Karyawan/Senior/Manager -> SDM -> GM)
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'NOT LIKE', '%SDM%')->where('nama_jabatan', 'NOT LIKE', '%General Manager%'))
                     ->where('status_sdm', 'Disetujui')
                     ->where('status_gm', 'Menunggu Persetujuan');
             })->orWhere(function ($query) {
                 // Alur 3: SDM -> Manager -> GM
                 $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%Senior Analis Keuangan, SDM & Umum%'))
                     ->where('status_manager', 'Disetujui')
-                    ->where('status_gm', 'Menunggu Persetujuan');
-            })->orWhere(function ($query) {
-                // Alur 4: Manager -> GM
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%Manager%')->where('nama_jabatan', 'NOT LIKE', '%General Manager%'))
                     ->where('status_gm', 'Menunggu Persetujuan');
             })->latest()->get();
             return view('pages.approval.index-gm', compact('cutisForApproval'));
@@ -75,13 +71,7 @@ class CutiController extends Controller
                     ->where('status_manager', 'Menunggu Persetujuan')
                     ->where('nip_user_manager', $userNip);
             })->orWhere(function ($query) use ($userNip) {
-                // Alur 5: Menunggu persetujuan Manager dari GM (setelah SDM setuju)
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%General Manager%'))
-                    ->where('status_sdm', 'Disetujui')
-                    ->where('status_manager', 'Menunggu Persetujuan')
-                    ->where('nip_user_manager', $userNip);
-            })->orWhere(function ($query) use ($userNip) {
-                // Alur 1 (Jika Manager juga bertindak sebagai SSDM/Atasan Langsung)
+                // Alur 1 (Jika Manager juga bertindak sebagai SSDM/Atasan Langsung untuk Karyawan Biasa)
                 $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')->where('nama_jabatan', 'NOT LIKE', '%Manager%')->where('nama_jabatan', 'NOT LIKE', '%Senior%'))
                     ->where('status_ssdm', 'Menunggu Persetujuan')
                     ->where('nip_user_ssdm', $userNip);
@@ -92,13 +82,12 @@ class CutiController extends Controller
         // 3. SDM (Senior Analis Keuangan, SDM & Umum)
         if ($user->isSdm()) {
             $cutisForApproval = Cuti::where(function ($query) {
-                // Alur 1 & 2: Karyawan/Senior -> SSDM -> SDM
+                // Alur 1, 2, 4: Karyawan/Senior/Manager -> SSDM/SSDM/Manager -> SDM
                 $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'NOT LIKE', '%SDM%')->where('nama_jabatan', 'NOT LIKE', '%General Manager%'))
-                    ->where('status_ssdm', 'Disetujui')
-                    ->where('status_sdm', 'Menunggu Persetujuan');
-            })->orWhere(function ($query) {
-                // Alur 5: GM -> SDM
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%General Manager%'))
+                    ->where(function ($q2) {
+                        $q2->where('status_ssdm', 'Disetujui') // Alur 1 (setelah SSDM/Manager)
+                            ->orWhere('status_manager', 'Disetujui'); // Alur 4 (setelah Manager Self-Approve)
+                    })
                     ->where('status_sdm', 'Menunggu Persetujuan');
             })->latest()->get();
             return view('pages.approval.index-sdm', compact('cutisForApproval'));
@@ -181,55 +170,49 @@ class CutiController extends Controller
         $nipUserSsdm = null; $nipUserSdm = null; $nipUserManager = null; $nipUserGm = null;
         $penerimaNotifikasi = null;
 
-        // Alur 1: Karyawan Biasa -> SSDM -> SDM -> GM
+        // Alur 1: Karyawan Biasa -> Senior/Manager (ttd) -> SDM (ttd) -> GM (ttd) - 3 TTD
         if ($user->isKaryawanBiasa()) {
             $statusSsdm = 'Menunggu Persetujuan';
-            $nipUserSsdm = $request->input('nip_user_ssdm');
+            $statusSdm = 'Menunggu'; // Menunggu setelah SSDM
+            $statusGm = 'Menunggu'; // Menunggu setelah SDM
+            $nipUserSsdm = $request->input('nip_user_ssdm'); // Atasan yang dipilih
             $nipUserSdm = $sdmUser?->nip;
             $nipUserGm = $gmUser?->nip;
             $penerimaNotifikasi = User::where('nip', $nipUserSsdm)->first();
         }
-        // Alur 2: Senior (Non-SDM/Manager) -> SDM -> GM
+        // Alur 2: Senior -> SDM (ttd) -> GM (ttd) - 2 TTD
         elseif ($user->isSenior()) {
-            $statusSsdm = 'Disetujui'; // Bypass
-            $statusSdm = 'Menunggu Persetujuan';
-            $nipUserSsdm = $user->nip; // Self
+            $statusSsdm = 'Disetujui'; // BYPASS: Senior Self-Approve TTD Atasan Langsung
+            $statusSdm = 'Menunggu Persetujuan'; // TTD SDM adalah langkah pertama di alur digital/surat
+            $statusGm = 'Menunggu'; // Menunggu setelah SDM
+
+            $nipUserSsdm = $user->nip; // Senior Self-Approve di kolom SSDM
             $nipUserSdm = $sdmUser?->nip;
             $nipUserGm = $gmUser?->nip;
             $penerimaNotifikasi = $sdmUser;
         }
-        // Alur 3: SDM -> Manager -> GM
+        // Alur 3: SDM -> Manager (ttd) -> GM (ttd) - 2 TTD
         elseif ($user->isSdm()) {
-            $statusSsdm = 'Disetujui'; // Bypass
-            $statusSdm = 'Disetujui'; // Bypass
-            $statusManager = 'Menunggu Persetujuan';
-            $nipUserSsdm = $user->nip; // Self
-            $nipUserSdm = $user->nip; // Self
-            $nipUserManager = $managerUser?->nip;
+            $statusSsdm = 'Disetujui'; // BYPASS
+            $statusSdm = 'Disetujui'; // SDM Self-Approve di kolom SDM (Agar TTD SDM tidak muncul di surat)
+            $statusManager = 'Menunggu Persetujuan'; // TTD Manager adalah langkah pertama di alur digital/surat
+
+            $nipUserSsdm = $managerUser?->nip; // Manager sebagai Atasan Langsung (untuk ditampilkan di PDF jika perlu)
+            $nipUserSdm = $user->nip; // SDM Self-Approve di kolom SDM
+            $nipUserManager = $managerUser?->nip; // NIP Manager untuk persetujuan
             $nipUserGm = $gmUser?->nip;
             $penerimaNotifikasi = $managerUser;
         }
-        // Alur 4: Manager -> GM
+        // Alur 4: Manager -> SDM (ttd) -> GM (ttd) - 2 TTD
         elseif ($user->isManager()) {
-            $statusSsdm = 'Disetujui'; // Bypass
-            $statusSdm = 'Disetujui'; // Bypass
-            $statusManager = 'Disetujui'; // Bypass
-            $statusGm = 'Menunggu Persetujuan';
-            $nipUserSsdm = $user->nip; // Self
-            $nipUserSdm = $sdmUser?->nip; // Referensi SDM
-            $nipUserManager = $user->nip; // Self
+            $statusSsdm = 'Disetujui'; // Manager Self-Approve di kolom SSDM
+            $statusManager = 'Disetujui'; // Manager Self-Approve di kolom Manager (Agar TTD Manager tidak muncul di surat)
+            $statusSdm = 'Menunggu Persetujuan'; // TTD SDM adalah langkah pertama di alur digital/surat
+
+            $nipUserSsdm = $user->nip; // Manager Self-Approve di kolom SSDM
+            $nipUserSdm = $sdmUser?->nip; // NIP SDM untuk persetujuan
+            $nipUserManager = $user->nip; // Manager Self-Approve di kolom Manager
             $nipUserGm = $gmUser?->nip;
-            $penerimaNotifikasi = $gmUser;
-        }
-        // Alur 5: GM -> SDM -> Manager
-        elseif ($user->isGm()) {
-            $statusSsdm = 'Disetujui'; // Bypass
-            $statusSdm = 'Menunggu Persetujuan';
-            $statusGm = 'Disetujui'; // Bypass (GM tidak perlu approve diri sendiri)
-            $nipUserSsdm = $user->nip; // Self
-            $nipUserSdm = $sdmUser?->nip;
-            $nipUserManager = $managerUser?->nip;
-            $nipUserGm = $user->nip; // Self
             $penerimaNotifikasi = $sdmUser;
         }
 
@@ -293,20 +276,20 @@ class CutiController extends Controller
 
         DB::beginTransaction();
         try {
-            // --- Cek Otorisasi ---
+            // --- Cek Otorisasi --- (Tetap dipertahankan dari kode lama Anda)
+            // Cek apakah user berhak memproses status saat ini.
             if ($user->isGm() && $cuti->status_gm !== 'Menunggu Persetujuan') {
-                return back()->with('error', 'Bukan antrian/wewenang Anda untuk GM.');
+                 return back()->with('error', 'Bukan antrian/wewenang Anda untuk GM.');
             } elseif ($user->isSdm() && $cuti->status_sdm !== 'Menunggu Persetujuan') {
-                return back()->with('error', 'Bukan antrian/wewenang Anda untuk SDM.');
-            } elseif ($user->isManager() && $cuti->status_manager !== 'Menunggu Persetujuan') {
-                return back()->with('error', 'Bukan antrian/wewenang Anda untuk Manager.');
-            } elseif ($user->isSenior() && $cuti->status_ssdm !== 'Menunggu Persetujuan') {
-                return back()->with('error', 'Bukan antrian/wewenang Anda untuk Atasan Langsung.');
+                 return back()->with('error', 'Bukan antrian/wewenang Anda untuk SDM.');
+            } elseif ($user->isManager() && $cuti->status_manager !== 'Menunggu Persetujuan' && $cuti->nip_user_manager == $user->nip) {
+                // Manager check
+            } elseif ($user->isSenior() && $cuti->status_ssdm !== 'Menunggu Persetujuan' && $cuti->nip_user_ssdm == $user->nip) {
+                // Otentikasi Senior/SSDM diperkuat dengan cek nip
             } elseif (!$user->isGm() && !$user->isSdm() && !$user->isManager() && !$user->isSenior()) {
-                return back()->with('error', 'Anda tidak berwenang memproses pengajuan cuti ini.');
+                 return back()->with('error', 'Anda tidak berwenang memproses pengajuan cuti ini.');
             }
             // --- End Cek Otorisasi ---
-
 
             // 1. General Manager (GM)
             if ($user->isGm()) {
@@ -326,38 +309,41 @@ class CutiController extends Controller
                 }
             }
             // 2. Manager
-            elseif ($user->isManager()) {
+            elseif ($user->isManager() && $cuti->nip_user_manager == $user->nip) {
                 $cuti->status_manager = $status;
                 $cuti->nip_user_manager = $user->nip;
                 $cuti->tgl_persetujuan_manager = now();
 
                 if ($status == 'Disetujui') {
-                    $isPemohonGm = $pembuatCuti->isGm() ?? false;
-                    $isPemohonSdm = $pembuatCuti->isSdm() ?? false;
+                    $isPemohonSdm = $pembuatCuti->isSdm();
 
-                    if ($isPemohonGm) {
-                        // Alur 5 (GM Cuti) - Final approval oleh Manager
-                        $isFinalApproval = true;
-                        $currentStatus = 'Disetujui Penuh';
-                        $keteranganNotif = "Cuti Anda sudah disetujui penuh (Finalisasi oleh Manager).";
-                        $urlDetail = route('cuti.download', $cuti->id);
-                    } elseif ($isPemohonSdm) {
-                        // Alur 3 (SDM Cuti) - Diteruskan ke GM
+                    // Manager sebagai Atasan Langsung Karyawan Biasa (Alur 1)
+                    if ($pembuatCuti->isKaryawanBiasa() && $cuti->nip_user_ssdm == $user->nip) {
+                        // Manager sebagai SSDM, diteruskan ke SDM
+                        $cuti->status_ssdm = 'Disetujui'; // Set status SSDM karena dia bertindak sebagai SSDM
+                        $cuti->tgl_persetujuan_ssdm = now(); // Tambahkan tanggal persetujuan SSDM
+                        $cuti->status_sdm = 'Menunggu Persetujuan';
+                        $penerimaNotifikasiBerikutnya = $cuti->sdm; // Relasi SDM
+                        $currentStatus = 'Menunggu Persetujuan SDM';
+                        $keteranganNotif = "Disetujui Atasan Langsung (Manager), diteruskan ke SDM.";
+                    }
+                    // Manager menyetujui Cuti SDM (Alur 3)
+                    elseif ($isPemohonSdm && $cuti->nip_user_manager == $user->nip) {
+                        // Manager di alur SDM -> Manager -> GM
                         $cuti->status_gm = 'Menunggu Persetujuan';
                         $penerimaNotifikasiBerikutnya = $cuti->gm; // Relasi GM
                         $currentStatus = 'Menunggu Persetujuan GM';
                         $keteranganNotif = "Disetujui Manager, diteruskan ke GM.";
                     }
-                    // Jika Manager juga sebagai SSDM (Alur 1), teruskan ke SDM
-                    elseif ($pembuatCuti->isKaryawanBiasa() && $cuti->nip_user_ssdm == $user->nip) {
-                         $cuti->status_sdm = 'Menunggu Persetujuan';
-                         $penerimaNotifikasiBerikutnya = $cuti->sdm; // Relasi SDM
-                         $currentStatus = 'Menunggu Persetujuan SDM';
-                         $keteranganNotif = "Disetujui Atasan Langsung (Manager), diteruskan ke SDM.";
+                    else {
+                        // Jika Manager bukan SSDM dan bukan menyetujui SDM, ini adalah skenario yang tidak teridentifikasi
+                         DB::rollBack();
+                         return back()->with('error', 'Cuti disetujui, tapi alur persetujuan selanjutnya tidak teridentifikasi. [Manager]');
                     }
                 } else {
                     $cuti->alasan_penolakan = $request->alasan_penolakan;
-                    $cuti->status_gm = 'Ditolak'; // Otomatis tolak GM
+                    $cuti->status_sdm = 'Ditolak'; // Otomatis tolak
+                    $cuti->status_gm = 'Ditolak'; // Otomatis tolak
                     $currentStatus = 'Ditolak';
                     $keteranganNotif = "Cuti Anda ditolak Manager. Alasan: " . $cuti->alasan_penolakan;
                 }
@@ -369,21 +355,12 @@ class CutiController extends Controller
                 $cuti->tgl_persetujuan_sdm = now();
 
                 if ($status == 'Disetujui') {
-                    $isPemohonGm = $pembuatCuti->isGm() ?? false;
-                    
-                    if ($isPemohonGm) {
-                        // Alur 5 (GM Cuti) - Diteruskan ke Manager
-                        $cuti->status_manager = 'Menunggu Persetujuan';
-                        $penerimaNotifikasiBerikutnya = $cuti->manager; // Relasi Manager
-                        $currentStatus = 'Menunggu Persetujuan Manager';
-                        $keteranganNotif = "Disetujui SDM, diteruskan ke Manager.";
-                    } else {
-                        // Alur 1 atau 2 - Diteruskan ke GM
-                        $cuti->status_gm = 'Menunggu Persetujuan';
-                        $penerimaNotifikasiBerikutnya = $cuti->gm; // Relasi GM
-                        $currentStatus = 'Menunggu Persetujuan GM';
-                        $keteranganNotif = "Disetujui SDM, diteruskan ke GM.";
-                    }
+                    // Cuti dari Karyawan Biasa/Senior (Alur 1 & 2) ATAU Cuti dari Manager (Alur 4)
+                    // Semuanya diteruskan ke GM
+                    $cuti->status_gm = 'Menunggu Persetujuan';
+                    $penerimaNotifikasiBerikutnya = $cuti->gm; // Relasi GM
+                    $currentStatus = 'Menunggu Persetujuan GM';
+                    $keteranganNotif = "Disetujui SDM, diteruskan ke GM.";
                 } else {
                     $cuti->alasan_penolakan = $request->alasan_penolakan;
                     $cuti->status_manager = 'Ditolak'; $cuti->status_gm = 'Ditolak';
@@ -392,7 +369,7 @@ class CutiController extends Controller
                 }
             }
             // 4. Senior (SSDM)
-            elseif ($user->isSenior()) {
+            elseif ($user->isSenior() && $cuti->nip_user_ssdm == $user->nip) {
                 $cuti->status_ssdm = $status;
                 $cuti->tgl_persetujuan_ssdm = now();
 
@@ -414,9 +391,9 @@ class CutiController extends Controller
             if ($isFinalApproval && $status == 'Disetujui') {
                 if ($this->isCutiMengurangiJatah($cuti->jenis_izin, !is_null($cuti->file_izin))) {
                     if ($pembuatCuti->jatah_cuti < $cuti->jumlah_hari) {
-                         // Dobel cek jatah cuti sebelum finalisasi
-                         DB::rollBack();
-                         return back()->with('error', 'Gagal finalisasi: Jatah cuti karyawan (' . $pembuatCuti->jatah_cuti . ' hari) tidak mencukupi untuk ' . $cuti->jumlah_hari . ' hari.');
+                        // Dobel cek jatah cuti sebelum finalisasi
+                        DB::rollBack();
+                        return back()->with('error', 'Gagal finalisasi: Jatah cuti karyawan (' . $pembuatCuti->jatah_cuti . ' hari) tidak mencukupi untuk ' . $cuti->jumlah_hari . ' hari.');
                     }
                     $pembuatCuti->decrement('jatah_cuti', $cuti->jumlah_hari);
                     $pembuatCuti->refresh();
@@ -424,7 +401,7 @@ class CutiController extends Controller
                 }
 
                 // Generate PDF (Memanggil tanpa parameter kedua)
-                $path = $this->generateSuratPdf($cuti); // <--- PERUBAHAN DI SINI
+                $path = $this->generateSuratPdf($cuti);
                 if ($path) {
                     $cuti->file_surat = $path;
                 } else {
@@ -437,7 +414,6 @@ class CutiController extends Controller
             $cuti->save();
 
             // === PERBAIKAN NOTIFIKASI ===
-            // Notifikasi dibungkus try-catch agar tidak menggagalkan transaksi
 
             // Notifikasi ke Pembuat Cuti
             if ($pembuatCuti) {
@@ -474,7 +450,8 @@ class CutiController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Update Cuti Error [ID {$cuti->id}]: " . $e->getMessage());
+            // LOG ERROR LEBIH DETAIL
+            Log::error("Update Cuti Error [ID {$cuti->id}]: " . $e->getMessage() . " | File: " . $e->getFile() . " | Line: " . $e->getLine());
             // Ini adalah pesan error yang Anda lihat
             return back()->with('error', 'Terjadi kesalahan saat memperbarui status cuti. Cek logs untuk detail.');
         }
@@ -542,20 +519,25 @@ class CutiController extends Controller
         if (Auth::user()->nip !== $cuti->nip_user) {
             return redirect()->route('cuti.index')->with('error', 'Anda tidak berhak membatalkan pengajuan ini.');
         }
-        
+
         // Cek apakah sudah diproses
         $isProcessed = $cuti->status_ssdm !== 'Menunggu Persetujuan' ||
-                         $cuti->status_sdm !== 'Menunggu' ||
-                         $cuti->status_manager !== 'Menunggu' ||
-                         $cuti->status_gm !== 'Menunggu';
-                         
-        // Pengecualian untuk alur yang bypass SSDM
-        if ($cuti->status_ssdm === 'Disetujui' && $cuti->status_sdm === 'Menunggu Persetujuan' && ($cuti->user->isSenior() || $cuti->user->isManager() || $cuti->user->isGm() || $cuti->user->isSdm())) {
+                       $cuti->status_sdm !== 'Menunggu' ||
+                       $cuti->status_manager !== 'Menunggu' ||
+                       $cuti->status_gm !== 'Menunggu';
+
+        // Pengecualian untuk alur yang bypass SSDM (Senior, SDM, Manager)
+        $isProcessedForBypassers = ($cuti->status_sdm !== 'Menunggu Persetujuan' && ($cuti->user->isSenior() || $cuti->user->isManager())) ||
+                                   ($cuti->status_manager !== 'Menunggu Persetujuan' && $cuti->user->isSdm());
+
+        // Jika pemohon adalah karyawan biasa dan sudah diproses
+        if ($cuti->user->isKaryawanBiasa() && $isProcessed) {
              return redirect()->route('cuti.index')->with('error', 'Pengajuan ini sudah diproses dan tidak bisa dibatalkan.');
         }
-        
-        if ($isProcessed && $cuti->user->isKaryawanBiasa()) {
-             return redirect()->route('cuti.index')->with('error', 'Pengajuan ini sudah diproses dan tidak bisa dibatalkan.');
+
+        // Jika pemohon adalah senior/manager/sdm dan sudah melewati tahap pertama persetujuan
+        if (($cuti->user->isSenior() || $cuti->user->isManager() || $cuti->user->isSdm()) && $isProcessedForBypassers) {
+            return redirect()->route('cuti.index')->with('error', 'Pengajuan ini sudah diproses dan tidak bisa dibatalkan.');
         }
 
 
@@ -627,7 +609,6 @@ class CutiController extends Controller
     /**
      * Menghasilkan PDF surat cuti.
      * @param Cuti $cuti Data cuti
-     * PERUBAHAN: Logika pemilihan view dan data yang dikirim
      */
     protected function generateSuratPdf(Cuti $cuti)
     {
@@ -651,7 +632,7 @@ class CutiController extends Controller
             $qrCodeBase64 = (new QRCode($options))->render($qrCodeUrl);
 
             // 2. Siapkan Data View Umum
-            $karyawan = $cuti->user;
+            $karyawan = $cuti->user; // <-- DATA NAMA & NPK
             $tahunCuti = Carbon::parse($cuti->tgl_mulai)->format('Y');
 
             // --- LOGIKA PEMUATAN LOGO DENGAN BASE64 EMBED ---
@@ -664,18 +645,15 @@ class CutiController extends Controller
             }
             // --------------------------------------------------
 
-            // --- LOGIKA PERHITUNGAN CUTI (Sama untuk semua) ---
+            // --- LOGIKA PERHITUNGAN CUTI ---
             $jatahCutiTahunan = 12;
             $semuaCutiTerpakaiSebelumnya = Cuti::where('nip_user', $karyawan->nip)
-                ->where(function ($q) { // Cek semua status final
-                    $q->where('status_gm', 'Disetujui')
-                      ->orWhere('status_manager', 'Disetujui'); // Untuk Alur 5
-                })
+                ->where('status_gm', 'Disetujui') // Cek hanya status final GM (4 Alur)
                 ->where('id', '!=', $cuti->id)
                 ->whereYear('tgl_mulai', $tahunCuti)
                 ->get();
 
-            $dataCutiSDM = [
+            $dataCutiSDM = [ // <-- DATA JUMLAH CUTI TERPAKAI
                 'cuti_tahunan' => 0, 'cuti_besar' => 0, 'cuti_sakit' => 0,
                 'cuti_bersalin' => 0, 'cuti_alasan_penting' => 0,
             ];
@@ -689,67 +667,78 @@ class CutiController extends Controller
                     $totalHariCutiYangMengurangiJatah += $item->jumlah_hari;
                 }
             }
+            // Tambahkan cuti saat ini ke total cuti terpakai di kolom cuti
             $jenisCutiSaatIni = strtolower(str_replace(' ', '_', $cuti->jenis_izin));
             if (isset($dataCutiSDM[$jenisCutiSaatIni])) {
                 $dataCutiSDM[$jenisCutiSaatIni] += $cuti->jumlah_hari;
             }
+            // Tambahkan cuti saat ini ke total HARI cuti yang mengurangi jatah
             if ($this->isCutiMengurangiJatah($cuti->jenis_izin, !is_null($cuti->file_izin))) {
                 $totalHariCutiYangMengurangiJatah += $cuti->jumlah_hari;
             }
+
             $sisaCutiDari12 = max(0, $jatahCutiTahunan - $totalHariCutiYangMengurangiJatah);
+            $dataCutiSDM['sisa_cuti_tahunan'] = $sisaCutiDari12; // <-- TAMBAHKAN KE ARRAY
+
             // --- END LOGIKA PERHITUNGAN CUTI ---
 
             // ==========================================================
-            // LOGIKA PEMILIHAN VIEW DAN DATA SPESIFIK VIEW
+            // LOGIKA PEMILIHAN DATA TANDA TANGAN (SESUAI ALUR KOREKSI)
             // ==========================================================
             $pemohon = $cuti->user;
-            $viewData = compact('cuti', 'qrCodeBase64', 'karyawan', 'dataCutiSDM', 'sisaCutiDari12', 'embed');
-            $viewName = ''; // Nama view yang akan di-load
+            $atasanPertama = null; // TTD Kanan Atas (Senior/Manager)
+            $pejabatSdm = null;    // TTD Kiri Bawah (SDM)
+            $pejabatGm = $cuti->gm; // TTD Kanan Bawah (GM) - Selalu Ada.
 
-            // Jika pemohon adalah SDM (Alur 3) atau GM (Alur 5)
-            if ($pemohon->isSdm() || $pemohon->isGm()) {
-                $viewName = 'pages.cuti.surat_cuti_sdm_pdf'; // Template 2 TTD
-                // Tambahkan data approver spesifik untuk template ini
-                $viewData['manager'] = $cuti->manager;
-                $viewData['gm'] = $cuti->gm; // Untuk Alur 3, GM tetap perlu
-                $viewData['sdm'] = $cuti->sdm; // Untuk Alur 5
+            if ($pemohon->isKaryawanBiasa()) {
+                // ALUR 1: 3 TTD (SSDM, SDM, GM)
+                $atasanPertama = $cuti->ssdm; // Senior/Manager (TTD Kanan Atas)
+                $pejabatSdm = $cuti->sdm;     // SDM (TTD Kiri Bawah)
+            } elseif ($pemohon->isSenior()) {
+                // ALUR 2: 2 TTD (SDM, GM). Menghilangkan TTD Atasan Langsung.
+                $atasanPertama = null;        // Dihilangkan
+                $pejabatSdm = $cuti->sdm;     // SDM (TTD Kiri Bawah)
+            } elseif ($pemohon->isSdm()) {
+                // ALUR 3: 2 TTD (Manager, GM). Menghilangkan TTD SDM.
+                $atasanPertama = $cuti->manager; // Manager (TTD Kanan Atas)
+                $pejabatSdm = null;             // Dihilangkan
+            } elseif ($pemohon->isManager()) {
+                // ALUR 4: 2 TTD (SDM, GM). Menghilangkan TTD Atasan Langsung/Manager.
+                $atasanPertama = null;        // Dihilangkan
+                $pejabatSdm = $cuti->sdm;     // SDM (TTD Kiri Bawah)
             }
-            // Jika pemohon adalah Manager (Alur 4) atau Senior (Alur 2)
-            elseif ($pemohon->isManager() || $pemohon->isSenior()){
-                $viewName = 'pages.cuti.surat_cuti_sdm_pdf'; // Template 2 TTD (SDM & GM)
-                // Tambahkan data approver spesifik untuk template ini
-                 $viewData['sdm'] = $cuti->sdm;
-                 $viewData['gm'] = $cuti->gm;
-            }
-            // Selain itu (Karyawan Biasa - Alur 1)
-            else {
-                $viewName = 'pages.cuti.surat_cuti_umum_pdf'; // Template 3 TTD
-                // Tambahkan data approver spesifik untuk template ini
-                $viewData['ssdm'] = $cuti->ssdm;
-                $viewData['sdm'] = $cuti->sdm;
-                $viewData['gm'] = $cuti->gm;
-            }
-            // ==========================================================
+
+
+            // 1. Inisiasi data dasar dan view tunggal
+            $viewData = compact(
+                'cuti', 'qrCodeBase64', 'karyawan',
+                'dataCutiSDM', 'sisaCutiDari12', 'embed', 'pemohon'
+            );
+            $viewName = 'pages.cuti.surat_cuti_umum_pdf';
+
+            // Variabel untuk TTD
+            $viewData['atasan_langsung'] = $atasanPertama; // Diisi/Null
+            $viewData['sdm'] = $pejabatSdm; // Diisi/Null
+            $viewData['gm'] = $pejabatGm; // Selalu diisi
 
 
             // 3. Load View dan Generate PDF
-            $pdf = Pdf::loadView($viewName, $viewData) // Gunakan viewName dan viewData
+            $pdf = Pdf::loadView($viewName, $viewData) // Gunakan viewName
                 ->setOptions([
                     'isRemoteEnabled' => true,
                     'isHtml5ParserEnabled' => true,
-                ])
-                ->setPaper('A4', 'portrait');
+                    'isPhpEnabled' => true,
+                    'defaultFont' => 'sans-serif' // Tambahkan font default jika perlu
+                ])->setPaper('A4');
 
-            // 4. Simpan PDF ke storage/app/public/file_cuti/
+            // Simpan file
             Storage::disk('public')->put($pathFileCuti, $pdf->output());
 
             return $pathFileCuti; // Return path relatif untuk disimpan di DB
 
         } catch (\Exception $e) {
-            Log::error("PDF Generation Error [Cuti ID {$cuti->id}]: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return null;
+            Log::error("PDF Generation Error: " . $e->getMessage() . " on line " . $e->getLine() . " in file " . $e->getFile());
+            return false;
         }
     }
-
 }
-

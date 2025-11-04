@@ -29,7 +29,7 @@ class ApprovalController extends Controller
             $cutisForApproval = Cuti::where(function ($query) {
                 // Alur 1: Karyawan Biasa
                 // PERBAIKAN: Mengganti ->isKaryawanBiasa() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) =>
                         $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
@@ -39,7 +39,7 @@ class ApprovalController extends Controller
             })->orWhere(function ($query) {
                 // Alur 2: Senior
                 // PERBAIKAN: Mengganti ->isSenior() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) =>
                         $j->where('nama_jabatan', 'LIKE', '%Senior%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Senior Analis Keuangan, SDM & Umum%')
                       )
@@ -54,13 +54,13 @@ class ApprovalController extends Controller
             })->orWhere(function ($query) {
                 // Alur 4: Manager
                 // PERBAIKAN: Mengganti ->isManager() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) =>
                         $j->where('nama_jabatan', 'LIKE', '%Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
                       )
                     ->where('status_gm', 'Menunggu Persetujuan');
             })->latest()->get();
-            
+
             // Mengambil logika history dari kode lama Anda
             $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')->where(function ($query) { $query->where('status_gm', 'Disetujui')->orWhere('status_ssdm', 'Ditolak')->orWhere('status_sdm', 'Ditolak')->orWhere('status_gm', 'Ditolak'); })->latest()->get();
             return view('pages.approval.index-gm', compact('cutisForApproval', 'cutisHistory'));
@@ -89,7 +89,7 @@ class ApprovalController extends Controller
             })->orWhere(function ($query) use ($userNip) {
                 // Alur 1 (Jika Manager juga bertindak sebagai SSDM/Atasan Langsung)
                 // PERBAIKAN: Mengganti ->isKaryawanBiasa() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) =>
                         $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
@@ -118,7 +118,7 @@ class ApprovalController extends Controller
             $cutisForApproval = Cuti::where(function ($query) {
                 // Alur 1: Karyawan Biasa -> SSDM -> SDM
                 // PERBAIKAN: Mengganti ->isKaryawanBiasa() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) =>
                         $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
@@ -128,7 +128,7 @@ class ApprovalController extends Controller
             })->orWhere(function ($query) {
                 // Alur 2: Senior -> SDM
                 // PERBAIKAN: Mengganti ->isSenior() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) =>
                         $j->where('nama_jabatan', 'LIKE', '%Senior%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Senior Analis Keuangan, SDM & Umum%')
                       )
@@ -140,7 +140,7 @@ class ApprovalController extends Controller
                 $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%General Manager%'))
                     ->where('status_sdm', 'Menunggu Persetujuan');
             })->latest()->get();
-            
+
             // Mengambil logika history dari kode lama Anda
             $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')->where(function ($query) { $query->where('status_gm', 'Disetujui')->orWhere('status_ssdm', 'Ditolak')->orWhere('status_sdm', 'Ditolak')->orWhere('status_gm', 'Ditolak'); })->latest()->get();
             return view('pages.approval.index-sdm', compact('cutisForApproval', 'cutisHistory'));
@@ -151,7 +151,7 @@ class ApprovalController extends Controller
             $cutisForApproval = Cuti::where(function ($query) use ($userNip) {
                 // Alur 1: Karyawan Biasa -> SSDM
                 // PERBAIKAN: Mengganti ->isKaryawanBiasa() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) =>
                         $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
                           ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
@@ -159,7 +159,7 @@ class ApprovalController extends Controller
                     ->where('status_ssdm', 'Menunggu Persetujuan')
                     ->where('nip_user_ssdm', $userNip);
             })->latest()->get();
-            
+
             // Mengambil logika history dari kode lama Anda
             $cutisHistory = Cuti::with('user')->where('status_ssdm', '!=', 'Menunggu Persetujuan')->where('nip_user_ssdm', $userNip)->latest()->get();
             return view('pages.approval.index-ssdm', compact('cutisForApproval', 'cutisHistory'));
@@ -184,7 +184,7 @@ class ApprovalController extends Controller
         return $cutiController->updateStatus($request, $cuti);
     }
 
-    // ... method downloadReport() tidak diubah ...
+    // ... method downloadReport() tidak di ubah ...
     public function downloadReport(Request $request)
     {
         $request->validate([ 'bulan' => 'required|string', 'tahun' => 'required|integer|min:2020|max:' . date('Y'), ]);
