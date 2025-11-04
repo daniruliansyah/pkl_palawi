@@ -131,7 +131,7 @@
     <table class="details-table" style="margin-left: 20px;">
         <tr><td>Nama</td><td>:</td><td>{{ $karyawan->nama_lengkap ?? '...' }}</td></tr>
         <tr><td>NPK</td><td>:</td><td>{{ $karyawan->nik ?? '...' }}</td></tr>
-        <tr><td>Pangkat/Gol Ruang</td><td>:</td><td>{{ $karyawan->jabatanTerbaru->jabatan->jenjang ?? '-' }}</td></tr>
+        <tr><td>Pangkat/Gol Ruang</td><td>:</td><td>{{ $karyawan->jabatanTerbaru->jenjang ?? '-' }}</td></tr>
         <tr><td>Jabatan</td><td>:</td><td>{{ $karyawan->jabatanTerbaru->jabatan->nama_jabatan ?? '...' }}</td></tr>
     </table>
 
