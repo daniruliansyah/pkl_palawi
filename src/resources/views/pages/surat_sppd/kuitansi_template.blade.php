@@ -19,7 +19,7 @@
             border-bottom: 2px solid black;
             padding-bottom: 10px;
         }
-        .header-table .logo {
+        .header-table .logo-cell { /* Ganti 'logo' menjadi 'logo-cell' agar konsisten dengan HTML */
             width: 15%;
             vertical-align: top;
         }
@@ -115,12 +115,23 @@
     </style>
 </head>
 <body>
+        {{-- helper embed image --}}
+    @php
+    $embed = function($relativePath) {
+        $full = public_path($relativePath);
+        if (!file_exists($full)) {
+            return '';
+        }
+        $mime = @mime_content_type($full) ?: 'image/png';
+        $data = base64_encode(file_get_contents($full));
+        return "data:{$mime};base64,{$data}";
+    };
+    @endphp
     <div class="container">
         <table class="header-table">
             <tr>
-                <td class="logo">
-                    {{-- Ganti dengan tag <img> jika Anda punya file logo --}}
-                    <img src="{{ public_path('images/logo_palawi.png') }}" alt="Logo" style="width: 100px;">
+                <td class="logo-cell">
+                    <img src="{{ $embed('images/logo2.jpg') }}" alt="Logo" class="logo-image" style="width: 100px;">
                 </td>
                 <td class="company-details">
                     <h1>PT. PERHUTANI ALAM WISATA</h1>
@@ -173,13 +184,27 @@
                 </td>
             </tr>
         </table>
-        
+
+        {{--
+         * =================================================================
+         * PERBAIKAN: "Banyaknya Uang"
+         * Menggunakan helper terbilang() dari riskihajar/terbilang
+         * =================================================================
+         --}}
         <div class="amount-section">
             <strong>Banyaknya Uang :</strong>
-            {{-- Untuk fitur ini, Anda perlu helper/package. Contoh: terbilang/terbilang --}}
-            {{-- {{ Terbilang::make($total, ' rupiah') }} --}}
-            *Tiga Juta Rupiah*
+
+            @if(function_exists('terbilang'))
+                {{--
+                  Helper 'terbilang()' akan menghasilkan: "enam puluh ribu"
+                  Kita tambahkan ucwords() agar jadi: "Enam Puluh Ribu"
+                --}}
+                <i>*{{ ucwords(terbilang($total)) }} Rupiah*</i>
+            @else
+                <i>*Helper 'terbilang' (riskihajar/terbilang) tidak ditemukan.*</i>
+            @endif
         </div>
+
         <div class="amount-section" style="border-top: none; font-style: normal;">
             <strong>Untuk Penerimaan :</strong> Biaya Perjalanan Dinas an. {{ $user->nama_lengkap }} ({{ $sppd->keterangan_sppd }})
         </div>
@@ -292,7 +317,7 @@
                     <td style="width: 25%;"><strong>Keterangan :</strong><br>Barang/Jasa/Pekerjaan telah diterima/dikerjakan dengan baik</td>
                     <td style="width: 25%;"><strong>Mengetahui / Setuju :</strong></td>
                     <td style="width: 25%;"><strong>Boleh Dibayar :</strong></td>
-                    <td style="width: 25%;"><strong>Yang Menerima/ Membayar*)</strong></td>
+                    <td style="width: 25%;"><strong>Yang Menerima/ Membayar* </strong></td>
                 </tr>
                 <tr>
                     <td><strong>Tempat, Tanggal :</strong> Surabaya, {{ \Carbon\Carbon::parse($laporan->tanggal_laporan)->locale('id')->isoFormat('D MMMM YYYY') }}</td>

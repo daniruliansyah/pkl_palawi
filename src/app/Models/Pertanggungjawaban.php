@@ -13,7 +13,7 @@ class Pertanggungjawaban extends Model
 
     protected $fillable = [
         'sppd_id',
-        'user_id',
+        'nip_user',
         'tanggal_laporan',
         'keterangan',
         'file_kuitansi',
@@ -39,6 +39,6 @@ class Pertanggungjawaban extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'nip_user', 'nip');
     }
 }

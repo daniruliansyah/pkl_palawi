@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('pertanggungjawaban', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sppd_id')->constrained('sppd')->onDelete('cascade'); // Terhubung ke tabel sppd
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Terhubung ke tabel users
+            // $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Terhubung ke tabel users
             $table->date('tanggal_laporan');
             $table->text('keterangan')->nullable();
             $table->string('file_kuitansi')->nullable(); // Menyimpan path/lokasi file PDF kuitansi

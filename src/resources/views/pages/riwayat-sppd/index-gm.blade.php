@@ -46,12 +46,12 @@
                             </td>
                             <td class="px-4 py-3 text-center" x-data="{ openModal: false }">
                                 <div class="flex items-center justify-center space-x-2">
-                                    <form action="{{ route('sppd.approvals.update', $sppd->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan SPPD ini? Tindakan ini bersifat final.');">
+                                    <form action="{{ route('sppd.approvals.update', $sppd->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan SPPD ini?');">
                                         @csrf
                                         @method('PUT')
                                         <input type="hidden" name="status" value="Disetujui">
-                                        <input type="hidden" name="level" value="GM">
-                                        <button type="submit" class="rounded-md bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200">Setujui</button>
+                                        {{-- <input type="hidden" name="level" value="GM"> --}}
+                                          <button type="submit" class="rounded-md bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200">Setujui</button>
                                     </form>
                                     <button @click="openModal = true" class="rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-200">Tolak</button>
                                 </div>
