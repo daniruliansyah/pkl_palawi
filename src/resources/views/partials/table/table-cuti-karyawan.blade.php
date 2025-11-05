@@ -138,7 +138,7 @@ Ajukan Cuti Baru
                     {{-- Status Final --}}
                     <td class="px-4 py-3">
                         @php
-                            // PERUBAHAN 4: Sesuaikan logika Status Final
+                            // PERUBAHAN 4: Sesuaikan logika Status Final (HAPUS ALUR 5)
                             $isDitolak = false;
                             $penolak = null;
 
@@ -150,7 +150,7 @@ Ajukan Cuti Baru
                                     $isDitolak = true; $penolak = $cuti->gm;
                                 }
                             } else {
-                                // Alur 1, 2, 4, 5
+                                // Alur 1, 2, 4
                                 if ($cuti->status_ssdm == 'Ditolak') {
                                     $isDitolak = true; $penolak = $cuti->ssdm;
                                 } elseif ($cuti->status_sdm == 'Ditolak') {
@@ -161,13 +161,9 @@ Ajukan Cuti Baru
                             }
                         @endphp
 
-                        @if($cuti->status_gm == 'Disetujui' || ($isUserSdm && $cuti->status_manager == 'Disetujui' && $cuti->user->isGm()))
-                            {{-- Alur 5 (GM Cuti) selesai di Manager, ATAU Alur 1-4 Selesai di GM --}}
-                            @if($cuti->user->isGm() && $cuti->status_manager == 'Disetujui')
-                                <span class="font-semibold text-green-600">Disetujui (Final)</span>
-                            @else
-                                <span class="font-semibold text-green-600">Disetujui</span>
-                            @endif
+                        @if($cuti->status_gm == 'Disetujui')
+                            {{-- SEMUA Alur (1-4) sekarang selesai di GM --}}
+                            <span class="font-semibold text-green-600">Disetujui</span>
                         @elseif($isDitolak)
                             <div class="text-red-600">
                                 <span class="font-semibold">Ditolak</span>
@@ -175,7 +171,7 @@ Ajukan Cuti Baru
                                     <p class="text-xs text-gray-500 italic">oleh: {{ Str::words($penolak->nama_lengkap, 2, '') }}</p>
                                 @endif
                                 @if($cuti->alasan_penolakan)
-                                <p class="text-xs text-gray-500 italic" title="{{ $cuti->alasan_penolakan }}">Alasan: {{ Str::limit($cuti->alasan_penolakan, 20) }}</p>
+                                    <p class="text-xs text-gray-500 italic" title="{{ $cuti->alasan_penolakan }}">Alasan: {{ Str::limit($cuti->alasan_penolakan, 20) }}</p>
                                 @endif
                             </div>
                         @else
@@ -185,12 +181,12 @@ Ajukan Cuti Baru
                     
                     {{-- Aksi --}}
                     <td class="px-4 py-3 text-center">
-                        @if( ($cuti->status_gm == 'Disetujui' || ($cuti->user->isGm() && $cuti->status_manager == 'Disetujui')) && $cuti->file_surat)
-                            {{-- Jika Alur 1-4 disetujui GM, ATAU Alur 5 disetujui Manager --}}
+                        @if ($cuti->status_gm == 'Disetujui' && $cuti->file_surat)
+                            {{-- Jika Alur 1-4 disetujui GM --}}
                             <a href="{{ route('cuti.download', $cuti->id) }}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">
                                 Download Surat
                             </a>
-                        @elseif($cuti->status_ssdm == 'Menunggu Persetujuan' || ($isUserSdm && $cuti->status_manager == 'Menunggu Persetujuan'))
+                        @elseif( ($isUserSdm && $cuti->status_manager == 'Menunggu Persetujuan') || (!$isUserSdm && $cuti->status_ssdm == 'Menunggu Persetujuan') )
                             {{-- Bisa dibatalkan jika masih di approver pertama --}}
                             <form action="{{ route('cuti.cancel', $cuti->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin membatalkan pengajuan ini?');">
                                 @csrf
