@@ -2,29 +2,36 @@
   :class="sidebarToggle ? 'translate-x-0 lg:w-[90px]' : '-translate-x-full'"
   class="sidebar fixed left-0 top-0 z-50 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-300 bg-white px-5 transition-transform duration-300 ease-linear lg:static lg:translate-x-0"
 >
-  @php
-      use Illuminate\Support\Facades\Auth;
+@php
+    use Illuminate\Support\Facades\Auth;
 
-        $user = Auth::user();
-        $isSeniorSDM = false;
-        $isStaffSDM = false;
-        $isGM = false; // <-- Deklarasi variabel baru
+    $user = Auth::user();
+    $isSeniorSDM = false;
+    $isStaffSDM = false;
+    $isGM = false;
+    $isManager = false; // <-- 1. DEKLARASIKAN VARIABEL BARU
 
-        if ($user && $user->jabatanTerbaru && $user->jabatanTerbaru->jabatan) {
-            $jabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
+    if ($user && $user->jabatanTerbaru && $user->jabatanTerbaru->jabatan) {
+        $jabatan = $user->jabatanTerbaru->jabatan->nama_jabatan;
 
-            // --- Pengecekan SDM ---
-            $hasSDM = stripos($jabatan, 'sdm') !== false;
-            $hasSenior = stripos($jabatan, 'senior') !== false;
-            $hasStaff = stripos($jabatan, 'staff') !== false;
-            $hasGM = stripos($jabatan, 'general manager') !== false; // <-- Cek 'General Manager'
-            // ---------------------
+        // --- Pengecekan Jabatan ---
+        $hasSDM = stripos($jabatan, 'sdm') !== false;
+        $hasSenior = stripos($jabatan, 'senior') !== false;
+        $hasStaff = stripos($jabatan, 'staff') !== false;
+        $hasGM = stripos($jabatan, 'general manager') !== false;
+        $hasManager = stripos($jabatan, 'manager') !== false; // <-- 2. TAMBAHKAN LOGIKA CEK
+        // ---------------------
 
-            if ($hasSenior && $hasSDM) $isSeniorSDM = true;
-            if ($hasStaff && $hasSDM) $isStaffSDM = true;
-            if ($hasGM) $isGM = true; // <-- Set $isGM menjadi true jika nama jabatan mengandung 'General Manager'
-        }
-  @endphp
+        // Set variabel berdasarkan pengecekan
+        if ($hasSenior && $hasSDM) $isSeniorSDM = true;
+        if ($hasStaff && $hasSDM) $isStaffSDM = true;
+        if ($hasGM) $isGM = true;
+
+        // <-- 3. SET VARIABEL MANAGER
+        // Cek apakah dia punya kata 'manager' TAPI BUKAN 'general manager'
+        if ($hasManager && !$hasGM) $isManager = true;
+    }
+@endphp
 
   {{-- Header Sidebar --}}
   <div :class="sidebarToggle ? 'justify-center' : 'justify-between'" class="flex items-center gap-2 pt-8 pb-7">
@@ -86,7 +93,7 @@
         </li>
 
         {{-- Menu Peringatan (Hanya Senior SDM) --}}
-        @if ($isSeniorSDM || $isGM)
+        @if ($isSeniorSDM || $isGM || $isManager)
           <li>
             <a
               href="#"

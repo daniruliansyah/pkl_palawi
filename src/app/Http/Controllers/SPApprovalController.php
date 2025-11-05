@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Notifications\StatusSuratDiperbarui;
 use Illuminate\Support\Carbon;
-use ZipArchive;
+use ZipArchive; 
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -20,9 +20,6 @@ use Illuminate\Support\Facades\Storage;
 
 class SPApprovalController extends Controller
 {
-    /**
-     * FUNGSI INTI: Menampilkan halaman "inbox" untuk persetujuan.
-     */
     public function index()
     {
         $user = Auth::user();
@@ -38,17 +35,14 @@ class SPApprovalController extends Controller
 
         } elseif ($user->isSdm()) {
             $spsForApproval = SP::with('user.jabatanTerbaru.jabatan')
-                ->where('status_sdm', 'Menunggu Persetujui')
+                // PERBAIKAN TYPO
+                ->where('status_sdm', 'Menunggu Persetujuan') // 'Persetujui' -> 'Persetujuan'
                 ->latest()->get();
             $spsHistory = SP::with('user.jabatanTerbaru.jabatan')->where($baseSpQuery)->latest()->get();
             return view('pages.riwayat_sp.index-sdm', compact('spsForApproval', 'spsHistory'));
         }
         return redirect()->route('dashboard')->with('error', 'Anda tidak memiliki akses ke halaman persetujuan.');
     }
-
-    /**
-     * FUNGSI INTI: Memproses update status (setuju/tolak).
-     */
     public function updateStatus(Request $request, SP $sp)
     {
         $request->validate([
@@ -61,52 +55,43 @@ class SPApprovalController extends Controller
         DB::beginTransaction();
         try {
             if ($user->isSdm()) {
-                if ($sp->status_sdm !== 'Menunggu Persetujui') {
+                // PERBAIKAN TYPO
+                if ($sp->status_sdm !== 'Menunggu Persetujuan') { // 'Persetujui' -> 'Persetujuan'
                     return back()->with('error', 'SP ini tidak lagi menunggu persetujuan SDM.');
                 }
                 if ($status === 'Disetujui') {
                     $sp->update(['status_sdm' => 'Disetujui SDM', 'nip_user_sdm' => $user->nip, 'tgl_persetujuan_sdm' => Carbon::now(), 'status_gm' => 'Menunggu Persetujuan', 'alasan_penolakan' => null]);
                     $this->sendApprovalNotification($user, $sp, 'to_gm');
                 } else {
-                    $sp->update(['status_sdm' => 'Ditolak SDM', 'nip_user_sdm' => $user->nip, 'tgl_persetujuan_sdm' => Carbon::now(), 'status_gm' => 'Ditolak', 'alasan_penolakan' => $request->alasan_penolakan]);
+                    $sp->update(['status_sdm' => 'Ditolak SDM', 'nip_user_sdm' => $user->nip, 'tgl_persetujuan_sdm' => Carbon::now(), 'status_gm' => 'DitolAK', 'alasan_penolakan' => $request->alasan_penolakan]);
                     $this->sendApprovalNotification($user, $sp, null);
                 }
-            
-            // ==========================================================
-            // BLOK GM YANG DIPERBAIKI
-            // ==========================================================
+
             } elseif ($user->isGm()) {
                 if ($sp->status_gm !== 'Menunggu Persetujuan' || $sp->status_sdm !== 'Disetujui SDM') {
                     return back()->with('error', 'SP ini belum siap untuk persetujuan GM.');
                 }
-                
-                // Cek statusnya lagi (ini yang Anda hapus)
-                if ($status === 'Disetujui') {
-                    // Update status GM
-                    $sp->update(['status_gm' => 'Disetujui', 'nip_user_gm' => $user->nip, 'tgl_persetujuan_gm' => Carbon::now(), 'alasan_penolakan' => null]);
-                    
-                    // Blok 'if' untuk generate no_surat SUDAH DIHAPUS (BENAR)
 
-                    // Generate PDF
+                if ($status === 'Disetujui') {
+                    $sp->update(['status_gm' => 'Disetujui', 'nip_user_gm' => $user->nip, 'tgl_persetujuan_gm' => Carbon::now(), 'alasan_penolakan' => null]);
+
                     $filePath = $this->generateSuratPdf($sp);
                     if (!$filePath) {
                         throw new \Exception('Gagal menghasilkan file PDF. Periksa log untuk detail.');
                     }
-                    
-                    // Simpan path PDF
+
                     $sp->update(['file_sp' => $filePath]);
                     $this->sendApprovalNotification($user, $sp, 'final');
 
-                } else { // Ini adalah blok 'Ditolak' oleh GM
+                } else {
                     $sp->update(['status_gm' => 'Ditolak', 'nip_user_gm' => $user->nip, 'tgl_persetujuan_gm' => Carbon::now(), 'alasan_penolakan' => $request->alasan_penolakan]);
                     $this->sendApprovalNotification($user, $sp, null);
                 }
-            // ==========================================================
 
             } else {
                 return back()->with('error', 'Anda tidak memiliki wewenang untuk aksi ini.');
             }
-            
+
             DB::commit();
             return redirect()->route('sp.approvals.index')->with('success', 'Status Surat Peringatan berhasil diperbarui.');
         } catch (\Exception $e) {
@@ -115,21 +100,57 @@ class SPApprovalController extends Controller
             return back()->with('error', 'Gagal memproses permintaan: ' . $e->getMessage());
         }
     }
-
-    /**
-     * FUNGSI INTI: Membuat laporan arsip ZIP dari SP yang sudah disetujui.
-     */
     public function downloadReport(Request $request)
     {
-        // ... (Kode fungsi ini tidak berubah, sudah benar)
+        $request->validate([
+            'bulan' => 'required|string', // 'all' atau angka 1-12
+            'tahun' => 'required|integer|min:2020|max:' . date('Y'),
+        ]);
+
+        $bulan = $request->input('bulan');
+        $tahun = $request->input('tahun');
+
+        // Query ke model SP, bukan Cuti
+        $query = SP::where('status_gm', 'Disetujui')
+                    ->whereNotNull('file_sp')
+                    ->whereYear('tgl_sp_terbit', $tahun); // Gunakan tgl_sp_terbit
+
+        if ($bulan !== 'all') {
+            $query->whereMonth('tgl_sp_terbit', $bulan);
+        }
+
+        $suratSP = $query->with('user')->get(); // Ambil data SP
+
+        if ($suratSP->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada Surat Peringatan yang ditemukan untuk periode yang dipilih.');
+        }
+
+        $namaBulan = ($bulan !== 'all') ? Carbon::create()->month($bulan)->isoFormat('MMMM') : 'Setahun';
+        $zipFileName = 'laporan-sp-' . $namaBulan . '-' . $tahun . '.zip';
+        $zipPath = storage_path('app/public/' . $zipFileName); // Simpan di public agar bisa didownload
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($suratSP as $surat) {
+                // $surat->file_sp adalah path di 'public' disk, misal: 'file_sp/nama-file.pdf'
+                $filePath = storage_path('app/public/' . $surat->file_sp);
+
+                if (File::exists($filePath)) {
+                    // Buat nama file yang deskriptif di dalam ZIP
+                    $newFileName = 'SP' . $surat->jenis_sp . '-' . str_replace(' ', '_', $surat->user->nama_lengkap) . '-' . $surat->tgl_sp_terbit . '.pdf';
+                    $zip->addFile($filePath, $newFileName);
+                }
+            }
+            $zip->close();
+        } else {
+            return redirect()->back()->with('error', 'Gagal membuat file arsip ZIP.');
+        }
+
+        // Download file ZIP lalu hapus setelah terkirim
+        return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    // =============================================================
-    // HELPER FUNCTIONS (KHUSUS UNTUK PROSES APPROVAL)
-    // =============================================================
-    /**
-     * FUNGSI HELPER: Menghasilkan PDF (Hanya dipanggil saat GM menyetujui).
-     */
     private function generateSuratPdf(SP $sp)
     {
         try {
@@ -152,35 +173,62 @@ class SPApprovalController extends Controller
             $gm = $sp->gm;
             $tembusanArray = json_decode($sp->tembusan, true) ?? [];
 
-            $pathToLogo = public_path('images/logo2.jpg');
+            $pathToLogo = public_path('images/logo2.jpg'); // Pastikan path ini benar
+            $embed = null;
             if (File::exists($pathToLogo)) {
                 $type = pathinfo($pathToLogo, PATHINFO_EXTENSION);
                 $data = file_get_contents($pathToLogo);
                 $embed = 'data:image/' . $type . ';base64,' . base64_encode($data);
             } else {
-                $embed = null;
+                Log::warning('File logo tidak ditemukan di: ' . $pathToLogo);
             }
 
-            $pdf = Pdf::loadView('pages.sp.template-surat', compact('sp', 'qrCodeDataUri', 'karyawan', 'gm', 'embed', 'tembusanArray'))
+            // --- PROSES EMBED FILE BUKTI ---
+            $spForPdf = clone $sp;
+            $fileBuktiBase64 = null;
+
+            if ($sp->file_bukti && Storage::disk('public')->exists($sp->file_bukti)) {
+                try {
+                    $fileContents = Storage::disk('public')->get($sp->file_bukti);
+                    $mimeType = Storage::disk('public')->mimeType($sp->file_bukti);
+
+                    if (in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif'])) {
+                        $fileBuktiBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($fileContents);
+                    } else {
+                        Log::warning("File bukti [SP ID {$sp->id}] bukan gambar ({$mimeType}), tidak bisa di-embed.");
+                    }
+                } catch (\Exception $e) {
+                     Log::error("Gagal membaca/embed file bukti [SP ID {$sp->id}]: " . $e->getMessage());
+                }
+            }
+
+            $spForPdf->file_bukti = $fileBuktiBase64;
+            // --- AKHIR BLOK FILE BUKTI ---
+
+            $pdf = Pdf::loadView('pages.sp.template-surat', [ // Pastikan nama view ini benar
+                'sp' => $spForPdf,
+                'qrCodeDataUri' => $qrCodeDataUri,
+                'karyawan' => $karyawan,
+                'gm' => $gm,
+                'embed' => $embed,
+                'tembusanArray' => $tembusanArray
+            ])
                 ->setOptions(['isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true])
                 ->setPaper('A4', 'portrait');
 
             Storage::disk('public')->put($pathFileSP, $pdf->output());
             return $pathFileSP;
+
         } catch (\Exception $e) {
             Log::error("PDF Generation Error [SP ID {$sp->id}]: " . $e->getMessage());
             return null;
         }
     }
-
-    /**
-     * FUNGSI HELPER: Mengirim notifikasi.
-     */
     private function sendApprovalNotification($approver, SP $sp, $nextAction)
     {
         $jenisSurat = 'Surat Peringatan';
-        $pemohon = $sp->user; // Ini adalah karyawan yg dapat SP
-        $pembuat = $sp->pembuat; // Kita perlu relasi ini di Model SP
+        $pemohon = $sp->user; // Karyawan yg dapat SP
+        $pembuat = $sp->pembuat; // Relasi 'pembuat' harus ada di model SP
         $currentStatus = '';
         $keteranganNotif = '';
         $urlDetail = route('sp.show', $sp->id);
@@ -198,19 +246,18 @@ class SPApprovalController extends Controller
             $keteranganNotif = "Disetujui oleh {$approver->nama_lengkap}, diteruskan ke GM.";
         }
 
-        // Kirim notifikasi ke Pembuat Surat (misal: HRD yg input)
+        // Kirim notifikasi ke Pembuat Surat
         if ($pembuat && !empty($keteranganNotif)) {
             try {
-                // Jangan kirim notif ke diri sendiri jika pembuat = approver
-                if($pembuat->nip !== $approver->nip) {
+                if($pembuat->nip !== $approver->nip) { // Jangan notif diri sendiri
                     $pembuat->notify(new StatusSuratDiperbarui($approver, $jenisSurat, $currentStatus, $keteranganNotif, $urlDetail));
                 }
             } catch (\Exception $e) {
                 Log::error("Notif ke Pembuat gagal: " . $e->getMessage());
             }
         }
-        
-        // Kirim notifikasi ke Karyawan ybs HANYA JIKA SUDAH FINAL
+
+        // Kirim notifikasi ke Karyawan ybs (HANYA JIKA FINAL)
         if ($pemohon && ($currentStatus === 'Disetujui Penuh' || $currentStatus === 'Ditolak')) {
              try {
                 $pemohon->notify(new StatusSuratDiperbarui($approver, $jenisSurat, $currentStatus, $keteranganNotif, $urlDetail));
@@ -221,11 +268,13 @@ class SPApprovalController extends Controller
 
         // Kirim notifikasi ke approver berikutnya (GM)
         if ($nextAction === 'to_gm') {
-            $penerimaBerikutnya = User::whereHas('jabatanTerbaru', fn($q) => $q->where('jabatan_id', 1))->first(); // Asumsi ID 1 adalah GM
+            // PERBAIKAN TYPO KOLOM DB
+            $penerimaBerikutnya = User::whereHas('jabatanTerbaru', fn($q) => $q->where('id_jabatan', 1))->first(); // Asumsi ID 1 = GM
             if ($penerimaBerikutnya) {
                 try {
                     $penerimaBerikutnya->notify(new StatusSuratDiperbarui(
-                        $approver, $jenisSurat, 'Menunggu Persetujui',
+                        $approver, $jenisSurat,
+                        'Menunggu Persetujuan', // PERBAIKAN TYPO STATUS
                         'Ada ' . $jenisSurat . ' yang menunggu persetujuan Anda untuk karyawan ' . $pemohon->nama_lengkap,
                         route('sp.approvals.index')
                     ));
@@ -236,4 +285,4 @@ class SPApprovalController extends Controller
         }
     }
 
-} 
+}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sppd;
 use App\Models\User;
+use ZipArchive;
 use App\Notifications\StatusSuratDiperbarui; // <-- PENTING: Class Notifikasi Diimpor
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; // <-- PENTING: Diperlukan untuk error logging
@@ -12,6 +13,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use chillerlan\QRCode\QRCode; // Diperlukan untuk generateSuratPdf
 use chillerlan\QRCode\QROptions; // Diperlukan untuk generateSuratPdf
+
+// --- TAMBAHKAN DUA BARIS INI ---
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\File;
 
 class SppdApprovalController extends Controller
 {
@@ -118,6 +123,63 @@ class SppdApprovalController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses permintaan.');
         }
     }
+
+  // ... (Setelah fungsi update() dan sebelum numberToRoman())
+
+    /**
+     * FUNGSI BARU: Membuat laporan arsip ZIP dari SPPD yang sudah disetujui.
+     */
+    public function downloadReport(Request $request)
+    {
+        $request->validate([
+            'bulan' => 'required|string', // 'all' atau angka 1-12
+            'tahun' => 'required|integer|min:2020|max:' . date('Y'),
+        ]);
+
+        $bulan = $request->input('bulan');
+        $tahun = $request->input('tahun');
+
+        // Query ke model Sppd
+        $query = Sppd::where('status', 'Disetujui') // Status disetujui
+                    ->whereNotNull('file_sppd')     // Pastikan file PDF-nya ada
+                    ->whereYear('tgl_berangkat', $tahun); // Gunakan tgl_berangkat
+
+        if ($bulan !== 'all') {
+            $query->whereMonth('tgl_berangkat', $bulan);
+        }
+
+        $suratSPPD = $query->with('user')->get(); // Ambil data SPPD
+
+        if ($suratSPPD->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada SPPD yang ditemukan untuk periode yang dipilih.');
+        }
+
+        $namaBulan = ($bulan !== 'all') ? Carbon::create()->month($bulan)->isoFormat('MMMM') : 'Setahun';
+        $zipFileName = 'laporan-sppd-' . $namaBulan . '-' . $tahun . '.zip';
+        $zipPath = storage_path('app/public/' . $zipFileName);
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($suratSPPD as $surat) {
+                // $surat->file_sppd adalah path di 'public' disk, misal: 'sppd/nama-file.pdf'
+                $filePath = storage_path('app/public/' . $surat->file_sppd);
+
+                if (File::exists($filePath)) {
+                    // Buat nama file yang deskriptif di dalam ZIP
+                    $newFileName = 'SPPD-' . str_replace(' ', '_', $surat->user->nama_lengkap) . '-' . $surat->tgl_berangkat . '.pdf';
+                    $zip->addFile($filePath, $newFileName);
+                }
+            }
+            $zip->close();
+        } else {
+            return redirect()->back()->with('error', 'Gagal membuat file arsip ZIP.');
+        }
+
+        // Download file ZIP lalu hapus setelah terkirim
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
 
     // =================================================================
     //  METHOD HELPER YANG DISALIN DARI SppdController (Tetap diperlukan)

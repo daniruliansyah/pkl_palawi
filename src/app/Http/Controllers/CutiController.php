@@ -137,33 +137,72 @@ class CutiController extends Controller
     /**
      * Menyimpan pengajuan cuti baru.
      */
+    /**
+     * Menyimpan pengajuan cuti baru.
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
 
+        // --- PERBAIKAN ATURAN H-3 ---
+
+        // 1. Tentukan tanggal batas untuk H-3
+        // Carbon::now()->addDays(2) -> (Hari ini + 2 hari)
+        // Jika hari ini Rabu, batasnya adalah Jumat.
+        // 'after:'Jumat' berarti tanggal paling cepat adalah Sabtu (H-3).
+        $minDateCutiBiasa = Carbon::now()->addDays(2)->toDateString();
+
         $rules = [
             'jenis_izin' => 'required|string|in:Cuti Tahunan,Cuti Besar,Cuti Sakit,Cuti Bersalin,Cuti Alasan Penting',
-            'tgl_mulai' => 'required|date',
+            'tgl_mulai' => 'required|date|after_or_equal:today',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
-            'jumlah_hari' => 'required|integer|min:1',
             'keterangan' => 'required|string',
             'file_izin' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048|required_if:jenis_izin,Cuti Sakit',
+            'alamat_saat_cuti' => 'required|string|max:255',
+            'no_hp_saat_cuti' => 'required|string|max:20',
         ];
+
+        // 2. Timpa aturan jika BUKAN Cuti Sakit
+        if ($request->input('jenis_izin') !== 'Cuti Sakit') {
+            // Gunakan aturan H-3
+            $rules['tgl_mulai'] = 'required|date|after:' . $minDateCutiBiasa;
+        }
 
         // Hanya user non-senior ke bawah yang perlu memilih atasan SSDM
         if ($user->isKaryawanBiasa()) {
             $rules['nip_user_ssdm'] = 'required|string|exists:users,nip';
         }
 
-        $validatedData = $request->validate($rules, [
+        // 3. Siapkan pesan error kustom
+        $messages = [
             'file_izin.required_if' => 'File izin wajib diunggah untuk Cuti Sakit.',
             'nip_user_ssdm.required' => 'Anda harus memilih atasan langsung/SSDM.',
-        ]);
+            // Pesan untuk Cuti Sakit (jika memilih hari kemarin)
+            'tgl_mulai.after_or_equal' => 'Tanggal mulai Cuti Sakit tidak boleh di hari kemarin.',
+            // Pesan untuk cuti lainnya (H-3)
+            'tgl_mulai.after' => 'Untuk jenis izin ini, pengajuan paling lambat 3 hari sebelum tanggal mulai.',
+        ];
 
-        // Cek sisa cuti HANYA untuk cuti yang mengurangi jatah
+        // Validasi data
+        $validatedData = $request->validate($rules, $messages);
+        // --- PERBAIKAN HITUNG HARI KERJA (ANTI SABTU-MINGGU) ---
+        $tglMulai = Carbon::parse($validatedData['tgl_mulai']);
+        $tglSelesai = Carbon::parse($validatedData['tgl_selesai']);
+        $jumlahHariKerja = 0;
+        $currentDate = $tglMulai->copy();
+        while ($currentDate->lte($tglSelesai)) {
+            if (!$currentDate->isSaturday() && !$currentDate->isSunday()) {
+                $jumlahHariKerja++;
+            }
+            $currentDate->addDay();
+        }
+        if ($jumlahHariKerja == 0) {
+             return redirect()->back()->withErrors(['tgl_selesai' => 'Jumlah hari kerja untuk cuti tidak boleh 0 (misal: hanya memilih Sabtu/Minggu).'])->withInput();
+        }
+        // --- Cek Sisa Jatah Cuti ---
         if ($this->isCutiMengurangiJatah($validatedData['jenis_izin'], $request->hasFile('file_izin'))) {
-            if ($user->jatah_cuti < (int) $validatedData['jumlah_hari']) {
-                return redirect()->back()->withErrors(['jumlah_hari' => 'Sisa jatah cuti Anda (' . $user->jatah_cuti . ' hari) tidak mencukupi.'])->withInput();
+            if ($user->jatah_cuti < $jumlahHariKerja) {
+                return redirect()->back()->withErrors(['tgl_selesai' => 'Sisa jatah cuti Anda (' . $user->jatah_cuti . ' hari) tidak mencukupi untuk ' . $jumlahHariKerja . ' hari kerja.'])->withInput();
             }
         }
 
@@ -171,7 +210,6 @@ class CutiController extends Controller
         $sdmUser = User::whereHas('jabatanTerbaru.jabatan', fn ($q) => $q->where('nama_jabatan', 'LIKE', '%Senior Analis Keuangan, SDM & Umum%'))->first();
         $managerUser = User::whereHas('jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%Manager%')->where('nama_jabatan', 'NOT LIKE', '%General Manager%'))->first();
         $gmUser = User::whereHas('jabatanTerbaru.jabatan', fn ($q) => $q->where('nama_jabatan', 'LIKE', '%General Manager%'))->first();
-
         // Default
         $statusSsdm = 'Menunggu'; $statusSdm = 'Menunggu'; $statusManager = 'Menunggu'; $statusGm = 'Menunggu';
         $nipUserSsdm = null; $nipUserSdm = $sdmUser?->nip; $nipUserManager = null; $nipUserGm = $gmUser?->nip;
@@ -215,12 +253,13 @@ class CutiController extends Controller
         // Alur 5 (GM) sudah diblok di function create()
 
         $pathFileIzin = $request->hasFile('file_izin') ? $request->file('file_izin')->store('file_izin', 'public') : null;
-
         $cuti = Cuti::create(array_merge($validatedData, [
             'nip_user' => $user->nip,
             'no_surat' => $this->generateNomorSurat(),
             'file_izin' => $pathFileIzin,
             'tgl_upload' => now(),
+            // Simpan jumlah hari yang benar
+            'jumlah_hari' => $jumlahHariKerja,
             'status_ssdm' => $statusSsdm,
             'status_sdm' => $statusSdm,
             'status_manager' => $statusManager,
@@ -230,8 +269,6 @@ class CutiController extends Controller
             'nip_user_manager' => $nipUserManager,
             'nip_user_gm' => $nipUserGm,
         ]));
-
-        // Kirim Notifikasi ke Atasan Pertama yang statusnya 'Menunggu Persetjuaan'
         if ($penerimaNotifikasi) {
             try {
                 $penerimaNotifikasi->notify(new StatusSuratDiperbarui(
@@ -239,7 +276,7 @@ class CutiController extends Controller
                     jenisSurat: 'Cuti',
                     statusBaru: 'Menunggu Persetujuan',
                     keterangan: "Terdapat pengajuan cuti baru ({$user->nama_lengkap}) yang menunggu persetujuan Anda.",
-                    url: route('approvals.index') // Arahkan ke halaman approval
+                    url: route('approvals.index')
                 ));
             } catch (\Exception $e) {
                 Log::error("Notif gagal (Store Cuti): " . $e->getMessage());
@@ -248,7 +285,6 @@ class CutiController extends Controller
 
         return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dibuat.');
     }
-
     /**
      * Mengubah status cuti berdasarkan jabatan.
      */
