@@ -47,9 +47,9 @@ class User extends Authenticatable
 
     // === PERUBAHAN DI SINI: Menambahkan Primary Key NIP ===
     // Ini penting karena semua relasi dan controller Anda menggunakan NIP
-    protected $primaryKey = 'nip';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    // protected $primaryKey = 'nip';
+    // public $incrementing = false;
+    // protected $keyType = 'string';
     // ===================================================
 
 

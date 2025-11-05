@@ -85,7 +85,9 @@
             </svg>
           </a>
           <ul :class="selected === 'Forms' ? 'block' : 'hidden'" class="pl-9 mt-2 flex flex-col gap-1">
+            @if (!$isGM) {{-- <-- TAMBAHKAN BARIS INI --}}
             <li><a href="{{ route('cuti.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan Izin</a></li>
+            @endif {{-- <-- TAMBAHKAN BARIS INI --}}
             <li><a href="{{ route('approvals.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Daftar Surat Cuti</a></li>
           </ul>
         </li>
