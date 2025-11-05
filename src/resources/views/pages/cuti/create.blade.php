@@ -3,10 +3,7 @@
 
 @section('content')
 
-    {{-- HILANGKAN SEMUA WRAPPER GANDA. KITA FOKUS PADA FORMULIR DENGAN MAX-WIDTH DI SINI. --}}
-
     <div class="flex items-center justify-center">
-        {{-- Gunakan max-w-2xl untuk membatasi lebar form agar terpusat rapi di dalam padding <main> --}}
         <div class="w-full max-w-2xl rounded-2xl bg-white p-8 shadow">
             <h2 class="mb-6 text-2xl font-bold text-gray-800">Formulir Pengajuan Cuti</h2>
 
@@ -41,10 +38,10 @@
                     </select>
                 </div>
 
-                {{-- Tampilkan dropdown ini JIKA perlu (berdasarkan Auth::user()->isKaryawanBiasa() dari kode Anda yang lama) --}}
+                {{-- Tampilkan dropdown ini HANYA JIKA perlu (berdasarkan Auth::user()->isKaryawanBiasa()) --}}
                 @if(Auth::user()->isKaryawanBiasa())
                     <div>
-                        <label for="nip_user_ssdm" class="block text-sm font-medium text-gray-700">Pilih Atasan Langsung (Senior)</label>
+                        <label for="nip_user_ssdm" class="block text-sm font-medium text-gray-700">Pilih Atasan Langsung</label>
                         <select id="nip_user_ssdm" name="nip_user_ssdm" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('nip_user_ssdm') ? 'border-red-500' : 'border-gray-300' }}" required>
                             <option value="" disabled selected>-- Pilih Atasan Anda --</option>
                             @forelse($seniors as $senior)
@@ -61,24 +58,26 @@
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
                         <label for="tgl_mulai" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
+                        {{-- Atribut 'min' dihapus, akan dikontrol oleh JavaScript --}}
                         <input type="date" name="tgl_mulai" id="tgl_mulai" value="{{ old('tgl_mulai') }}"
-                            min="{{ now()->addDay()->toDateString() }}"
                             class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('tgl_mulai') ? 'border-red-500' : 'border-gray-300' }}" required>
                     </div>
                     <div>
                         <label for="tgl_selesai" class="block text-sm font-medium text-gray-700">Tanggal Selesai</label>
+                        {{-- Atribut 'min' dihapus, akan dikontrol oleh JavaScript --}}
                         <input type="date" name="tgl_selesai" id="tgl_selesai" value="{{ old('tgl_selesai') }}"
-                            min="{{ now()->addDay()->toDateString() }}"
                             class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('tgl_selesai') ? 'border-red-500' : 'border-gray-300' }}" required>
                     </div>
                 </div>
 
                 <div>
-                    <label for="jumlah_hari" class="block text-sm font-medium text-gray-700">Jumlah Hari</label>
-                    <input type="number" name="jumlah_hari" id="jumlah_hari" value="{{ old('jumlah_hari') }}" min="1" placeholder="Contoh: 3" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('jumlah_hari') ? 'border-red-500' : 'border-gray-300' }}" required>
+                    <label for="jumlah_hari" class="block text-sm font-medium text-gray-700">Jumlah Hari Kerja</label>
+                    {{-- Dibuat readonly agar diisi JS & tidak membingungkan user --}}
+                    <input type="number" name="jumlah_hari" id="jumlah_hari" value="{{ old('jumlah_hari') }}" min="1" placeholder="Akan terisi otomatis"
+                           class="mt-1 block w-full rounded-lg border bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('jumlah_hari') ? 'border-red-500' : 'border-gray-300' }}" readonly>
                 </div>
 
-                {{-- Tambahan Kolom Alamat dan HP --}}
+                {{-- Tambahan Kolom Alamat dan HP (Sudah benar) --}}
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
                         <label for="alamat_saat_cuti" class="block text-sm font-medium text-gray-700">Alamat Saat Cuti</label>
@@ -89,7 +88,6 @@
                         <input type="text" name="no_hp_saat_cuti" id="no_hp_saat_cuti" value="{{ old('no_hp_saat_cuti') }}" placeholder="Nomor HP aktif" class="mt-1 block w-full rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors duration-200 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 {{ $errors->has('no_hp_saat_cuti') ? 'border-red-500' : 'border-gray-300' }}" required>
                     </div>
                 </div>
-                {{-- Akhir Tambahan Kolom --}}
 
                 <div>
                     <label for="keterangan" class="block text-sm font-medium text-gray-700">Keperluan Cuti / Keterangan</label>
@@ -113,48 +111,131 @@
     </div>
 @endsection
 
+{{-- ======================================================================== --}}
+{{-- SELURUH JAVASCRIPT DI BAWAH INI TELAH DIPERBARUI --}}
+{{-- ======================================================================== --}}
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const jenisIzinSelect = document.getElementById('jenis_izin');
         const fileLabelInfo = document.getElementById('file-label-info');
+        const tglMulaiInput = document.getElementById('tgl_mulai');
+        const tglSelesaiInput = document.getElementById('tgl_selesai');
+        const jumlahHariInput = document.getElementById('jumlah_hari');
 
+        // --- Variabel Tanggal untuk Validasi ---
+
+        // 'today' (YYYY-MM-DD) untuk Cuti Sakit
+        const today = new Date().toISOString().split('T')[0];
+
+        // 'minDateOther' (H-3) untuk Cuti Lainnya
+        // Aturan backend: after:now()->addDays(2) -> berarti hari pertama yang valid adalah addDays(3)
+        // Kita gunakan Blade untuk mendapatkan tanggal yang pasti dari server
+        const minDateOtherLeave = '{{ Carbon\Carbon::now()->addDays(3)->toDateString() }}';
+
+
+        /**
+         * Mengatur label file input (Wajib/Opsional) berdasarkan Jenis Izin
+         */
         function toggleFileInputRequirement() {
-            // Jika jenis cuti adalah 'Cuti Sakit', file menjadi WAJIB
             if (jenisIzinSelect.value === 'Cuti Sakit') {
                 fileLabelInfo.innerHTML = '<span class="text-red-500">(Wajib)</span>';
-                // Anda mungkin perlu menambahkan atribut 'required' jika validasinya di sisi client.
-                // Namun, validasi wajib harus dilakukan di backend Laravel.
             } else {
                 fileLabelInfo.textContent = '(Opsional)';
             }
         }
 
-        toggleFileInputRequirement();
-        jenisIzinSelect.addEventListener('change', toggleFileInputRequirement);
+        /**
+         * PERBAIKAN 1: Mengatur tanggal 'min' dinamis (H-3 vs Hari H)
+         */
+        function updateMinDate() {
+            let minDate;
+            if (jenisIzinSelect.value === 'Cuti Sakit') {
+                minDate = today; // Boleh hari H
+            } else {
+                minDate = minDateOtherLeave; // Wajib H-3
+            }
 
-        // Opsional: Logika menghitung jumlah hari berdasarkan tanggal
-        const tglMulaiInput = document.getElementById('tgl_mulai');
-        const tglSelesaiInput = document.getElementById('tgl_selesai');
-        const jumlahHariInput = document.getElementById('jumlah_hari');
+            tglMulaiInput.min = minDate;
 
-        function calculateDays() {
-            const start = new Date(tglMulaiInput.value);
-            const end = new Date(tglSelesaiInput.value);
-
-            // Periksa validitas tanggal
-            if (start && end && start <= end) {
-                // Hitung selisih hari (termasuk hari terakhir)
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                jumlahHariInput.value = diffDays;
-            } else if (start && end && start > end) {
-                jumlahHariInput.value = '';
+            // Set tgl_selesai.min juga, tidak boleh sebelum tgl_mulai
+            if (tglMulaiInput.value && tglMulaiInput.value > minDate) {
+                 tglSelesaiInput.min = tglMulaiInput.value;
+            } else {
+                 tglSelesaiInput.min = minDate;
             }
         }
 
-        tglMulaiInput.addEventListener('change', calculateDays);
-        tglSelesaiInput.addEventListener('change', calculateDays);
+        /**
+         * PERBAIKAN 2: Menghitung HARI KERJA (Anti Sabtu-Minggu)
+         */
+        function calculateWorkDays() {
+            const startStr = tglMulaiInput.value;
+            const endStr = tglSelesaiInput.value;
+
+            // Periksa validitas tanggal
+            if (!startStr || !endStr) {
+                jumlahHariInput.value = '';
+                return;
+            }
+
+            // Tambahkan 'T00:00:00' agar konsisten antar browser (hindari masalah timezone)
+            const start = new Date(startStr + 'T00:00:00');
+            const end = new Date(endStr + 'T00:00:00');
+
+            if (start > end) {
+                jumlahHariInput.value = '';
+                return;
+            }
+
+            let workDays = 0;
+            let currentDate = new Date(start.getTime()); // Buat salinan tanggal
+
+            // Loop dari tgl_mulai s/d tgl_selesai
+            while (currentDate <= end) {
+                const dayOfWeek = currentDate.getDay(); // 0 = Minggu, 6 = Sabtu
+
+                // Jika BUKAN Minggu (0) DAN BUKAN Sabtu (6)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    workDays++;
+                }
+
+                // Pindah ke hari berikutnya
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            // Tampilkan hanya jika hari kerja > 0
+            jumlahHariInput.value = workDays > 0 ? workDays : '';
+        }
+
+        // --- Event Listeners ---
+
+        // Jalankan saat 'jenis_izin' berubah
+        jenisIzinSelect.addEventListener('change', function() {
+            toggleFileInputRequirement();
+            updateMinDate();
+            // Hapus tanggal & jumlah hari jika aturan berubah, agar user memilih ulang
+            tglMulaiInput.value = '';
+            tglSelesaiInput.value = '';
+            jumlahHariInput.value = '';
+        });
+
+        // Jalankan saat tanggal berubah
+        tglMulaiInput.addEventListener('change', function() {
+            // Update min tanggal selesai agar tidak < tanggal mulai
+            tglSelesaiInput.min = tglMulaiInput.value;
+            calculateWorkDays();
+        });
+        tglSelesaiInput.addEventListener('change', calculateWorkDays);
+
+        // --- Inisialisasi saat halaman dimuat ---
+        toggleFileInputRequirement();
+        updateMinDate();
+
+        // Hitung ulang jika ada old('value') dari error validasi
+        if (tglMulaiInput.value && tglSelesaiInput.value) {
+            calculateWorkDays();
+        }
     });
 </script>
 @endpush

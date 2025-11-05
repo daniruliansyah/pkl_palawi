@@ -84,13 +84,12 @@
             </table>
         </div>
     </div>
-
-      {{-- Form Download Laporan ARSIP SPPD (PASTIKAN DIV INI ADA) --}}
+      {{-- Form Download Laporan ARSIP SP (PASTIKAN DIV INI ADA) --}}
     <div class="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 shadow-sm sm:px-6">
-        <h3 class="text-lg font-semibold text-gray-800">Download Laporan Arsip Surat SPPD</h3>
-        <p class="text-sm text-gray-500 mb-4">Pilih periode untuk mengunduh semua surat SPPD yang disetujui dalam format ZIP.</p>
+        <h3 class="text-lg font-semibold text-gray-800">Download Laporan Arsip Surat SP</h3>
+        <p class="text-sm text-gray-500 mb-4">Pilih periode untuk mengunduh semua surat SP yang disetujui dalam format ZIP.</p>
 
-        <form action="{{ route('sppd.downloadReport') }}" method="GET" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
+        <form action="{{ route('sp.approvals.downloadReport') }}" method="GET" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
             <div>
                 <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan</label>
                 <select name="bulan" id="bulan" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">

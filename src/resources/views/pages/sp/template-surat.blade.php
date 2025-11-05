@@ -141,9 +141,29 @@
     @endif
 </div>
 
-<div class="footer">
+{{-- ======================================================= --}}
+{{-- BAGIAN BARU UNTUK MENAMPILKAN BUKTI DI HALAMAN TERPISAH --}}
+{{-- ======================================================= --}}
+@if($sp->file_bukti)
+    {{-- Ini akan memaksa PDF untuk membuat halaman baru --}}
+    <div class="page-break"></div>
+
+    {{-- Ini adalah konten untuk halaman lampiran bukti --}}
+    <div class="container">
+        <h3 style="text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 25px;">
+            LAMPIRAN: 
+        </h3>
+
+        <img src="{{ $sp->file_bukti }}" style="width: 100%; max-width: 100%; height: auto; border: 1px solid #ccc;" alt="Bukti Pelanggaran">
+    </div>
+@endif
+{{-- ======================================================= --}}
+{{-- AKHIR BAGIAN BARU --}}
+{{-- ======================================================= --}}
+
+{{-- <div class="footer">
     Dokumen ini sah dan telah ditandatangani secara elektronik melalui Sistem Informasi Karyawan. Keaslian dapat diverifikasi dengan memindai QR Code yang tersedia.
-</div>
+</div> --}}
 
 </body>
 </html>

@@ -8,23 +8,41 @@
                 <th class="py-3 px-4 font-medium">Tanggal Dibuat</th>
                 <th class="py-3 px-4 font-medium">Persetujuan</th>
                 <th class="py-3 px-4 font-medium">Status Final</th>
-                <th class="py-3 px-4 font-medium text-center">Surat</th>
-                {{-- KOLOM BARU --}}
+
+                {{-- --- PERUBAHAN KOLOM KONDISIONAL --- --}}
+                @if(isset($isApprovalPage) && $isApprovalPage)
+                    {{-- Di Halaman Approval, tampilkan Maksud Perjalanan --}}
+                    <th class="py-3 px-4 font-medium">Maksud Perjalanan Dinas</th>
+                @else
+                    {{-- Di Halaman Riwayat/Index, tampilkan link Download Surat --}}
+                    <th class="py-3 px-4 font-medium text-center">Surat</th>
+                @endif
+                {{-- --- BATAS PERUBAHAN --- --}}
+
                 <th class="py-3 px-4 font-medium text-center">Pertanggungjawaban</th>
-                
-                {{-- Kolom Aksi Persetujuan (tidak berubah) --}}
+
+                {{-- Kolom Aksi Persetujuan (Hanya muncul di halaman approval) --}}
                 @if(isset($isApprovalPage) && $isApprovalPage)
                     <th class="py-3 px-4 font-medium text-center">Aksi</th>
                 @endif
             </tr>
         </thead>
+
+        {{-- PASTIKAN TIDAK ADA KODE FORM DOWNLOAD DI SINI --}}
+
         <tbody class="divide-y divide-gray-100">
             @forelse($sppds as $sppd)
             <tr class="hover:bg-gray-50">
-                {{-- Kolom-kolom yang sudah ada (tidak ada perubahan) --}}
+                {{-- Nama Surat --}}
                 <td class="px-4 py-3 text-gray-700 font-medium">SPPD - {{ $sppd->lokasi_tujuan }}</td>
+
+                {{-- Pemohon --}}
                 <td class="px-4 py-3 text-gray-500">{{ $sppd->user->nama_lengkap ?? 'N/A' }}</td>
+
+                {{-- Tanggal Dibuat --}}
                 <td class="px-4 py-3 text-gray-500">{{ $sppd->created_at->format('d-m-Y') }}</td>
+
+                {{-- Persetujuan --}}
                 <td class="px-4 py-3">
                     @php
                         $badgeClass = 'bg-gray-100 text-gray-800';
@@ -45,6 +63,8 @@
                         <p class="text-xs text-gray-500 italic mt-1">oleh: {{ Str::words($sppd->penyetuju->nama_lengkap, 2, '') }}</p>
                     @endif
                 </td>
+
+                {{-- Status Final --}}
                 <td class="px-4 py-3">
                     @if($sppd->status === 'Disetujui')
                         <span class="font-semibold text-green-600">Selesai</span>
@@ -59,60 +79,59 @@
                         <span class="text-yellow-600">Dalam Proses</span>
                     @endif
                 </td>
-                <td class="px-4 py-3 text-center">
-                    @if($sppd->status === 'Disetujui' && $sppd->file_sppd)
-                        <a href="{{ route('sppd.download', $sppd->id) }}" class="text-blue-600 hover:underline">Unduh</a>
-                    @else
-                        -
-                    @endif
-                </td>
 
-                {{-- =============================================== --}}
-                {{-- LOGIKA BARU UNTUK KOLOM PERTANGGUNGJAWABAN --}}
-                {{-- =============================================== --}}
+                {{-- --- PERUBAHAN KOLOM KONDISIONAL --- --}}
+                @if(isset($isApprovalPage) && $isApprovalPage)
+                    {{-- Di Halaman Approval: Tampilkan Maksud Perjalanan --}}
+                    <td class="px-4 py-3 text-gray-500" title="{{ $sppd->keterangan_sppd ?? '' }}">
+                        {{ Str::limit($sppd->keterangan_sppd ?? '-', 40) }}
+                    </td>
+                @else
+                    {{-- Di Halaman Riwayat/Index: Tampilkan link Download Surat --}}
+                    <td class="px-4 py-3 text-center">
+                        @if($sppd->status == 'Disetujui' && $sppd->file_sppd)
+                        <a href="{{ route('sppd.download', $sppd->id) }}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">
+                            Download Surat
+                        </a>
+                        @else - @endif
+                    </td>
+                @endif
+                {{-- --- BATAS PERUBAHAN --- --}}
+
+                {{-- Pertanggungjawaban --}}
                 <td class="px-4 py-3 text-center">
-                    {{-- Tombol hanya muncul jika SPPD 'Disetujui' --}}
                     @if ($sppd->status === 'Disetujui')
-                        
-                        {{-- Cek apakah user yang login adalah pembuat surat --}}
                         @if (Auth::user()->nip == $sppd->nip_user)
-                            {{-- Jika laporan sudah ada, tampilkan tombol download --}}
                             @if ($sppd->pertanggungjawaban)
                                 <a href="{{ route('pertanggungjawaban.download', $sppd->pertanggungjawaban->id) }}" class="text-green-600 hover:underline">Unduh Kuitansi</a>
-                            {{-- Jika belum ada, tampilkan tombol buat --}}
                             @else
                                 <a href="{{ route('pertanggungjawaban.create', $sppd->id) }}" class="text-blue-600 hover:underline">Buat Laporan</a>
                             @endif
-
-                        {{-- Jika user yg login BUKAN pembuat surat (misal: approver), tapi laporan sudah ada --}}
                         @elseif ($sppd->pertanggungjawaban)
                             <a href="{{ route('pertanggungjawaban.download', $sppd->pertanggungjawaban->id) }}" class="text-gray-500 hover:underline">Lihat Kuitansi</a>
-                        
                         @else
                             -
                         @endif
-
                     @else
                         -
                     @endif
                 </td>
 
-                {{-- Kolom Aksi Persetujuan (tidak berubah) --}}
+                {{-- Kolom Aksi Persetujuan (Hanya muncul di halaman approval) --}}
                 @if(isset($isApprovalPage) && $isApprovalPage)
                 <td class="px-4 py-3 text-center" x-data="{ openModal: false }">
-                    {{-- Cek jika status masih menunggu untuk menampilkan tombol --}}
                     @if($sppd->status === 'menunggu')
                         <div class="flex items-center justify-center space-x-2">
                             <form action="{{ route('sppd.approvals.update', $sppd->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menyetujui pengajuan ini?');">
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="status" value="Disetujui">
-                                <button type="submit" class="text-green-600 hover:underline">Setujui</button>
+                                <button type="submit" class="rounded-md bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200">Setujui</button>
                             </form>
-                            <button @click="openModal = true" class="text-red-600 hover:underline">Tolak</button>
+                            <button @click="openModal = true" class="rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-200">Tolak</button>
                         </div>
 
-                        {{-- Modal untuk alasan penolakan (tidak berubah) --}}
+                        {{-- Modal untuk alasan penolakan --}}
                         <div x-show="openModal" @click.away="openModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" style="display: none;">
                             <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
                                 <h3 class="text-lg font-semibold mb-4 text-gray-800 text-left">Alasan Penolakan</h3>
@@ -136,7 +155,7 @@
             </tr>
             @empty
             <tr>
-                {{-- Penyesuaian colspan karena ada 1 kolom baru --}}
+                {{-- Penyesuaian colspan (8 jika ada kolom Aksi, 7 jika tidak) --}}
                 <td colspan="{{ (isset($isApprovalPage) && $isApprovalPage) ? 8 : 7 }}" class="py-8 text-center text-gray-500">
                     Tidak ada data pengajuan SPPD.
                 </td>
