@@ -21,9 +21,6 @@ use chillerlan\QRCode\QROptions;
 
 class CutiController extends Controller
 {
-    /**
-     * Menampilkan daftar cuti berdasarkan peran pengguna.
-     */
     public function index()
     {
         $user = Auth::user();
@@ -37,11 +34,6 @@ class CutiController extends Controller
         return view('pages.cuti.index-karyawan', compact('cutis', 'sisaCuti'));
     }
 
-    /**
-     * Menampilkan halaman PERSETUJUAN CUTI (indexApproval)
-     * NOTE: Logika ini sekarang dipindahkan ke ApprovalController,
-     * tapi kita biarkan di sini jika ada rute lama yang masih menggunakannya.
-     */
     public function indexApproval()
     {
         $user = Auth::user();
@@ -107,18 +99,13 @@ class CutiController extends Controller
         return redirect('/dashboard')->with('error', 'Anda tidak memiliki hak akses ke halaman persetujuan.');
     }
 
-    /**
-     * Menampilkan form untuk membuat pengajuan cuti baru.
-     */
+
     public function create()
     {
-        // === TAMBAHAN BARU ===
-        // Alur 5: GM tidak bisa mengajukan cuti
+
         if (Auth::user()->isGm()) {
             return redirect()->route('cuti.index')->with('error', 'General Manager tidak dapat mengajukan cuti melalui sistem ini.');
         }
-        // === SELESAI TAMBAHAN ===
-
         $sisaCuti = Auth::user()->jatah_cuti;
         // Ambil semua yang jabatannya Senior ATAU Manager
         $seniors = User::whereHas('jabatanTerbaru.jabatan', function ($q) {
@@ -134,22 +121,10 @@ class CutiController extends Controller
         return view('pages.cuti.create', compact('seniors', 'sisaCuti'));
     }
 
-    /**
-     * Menyimpan pengajuan cuti baru.
-     */
-    /**
-     * Menyimpan pengajuan cuti baru.
-     */
     public function store(Request $request)
     {
         $user = Auth::user();
 
-        // --- PERBAIKAN ATURAN H-3 ---
-
-        // 1. Tentukan tanggal batas untuk H-3
-        // Carbon::now()->addDays(2) -> (Hari ini + 2 hari)
-        // Jika hari ini Rabu, batasnya adalah Jumat.
-        // 'after:'Jumat' berarti tanggal paling cepat adalah Sabtu (H-3).
         $minDateCutiBiasa = Carbon::now()->addDays(2)->toDateString();
 
         $rules = [
@@ -162,22 +137,18 @@ class CutiController extends Controller
             'no_hp_saat_cuti' => 'required|string|max:20',
         ];
 
-        // 2. Timpa aturan jika BUKAN Cuti Sakit
         if ($request->input('jenis_izin') !== 'Cuti Sakit') {
-            // Gunakan aturan H-3
+
             $rules['tgl_mulai'] = 'required|date|after:' . $minDateCutiBiasa;
         }
 
-        // Hanya user non-senior ke bawah yang perlu memilih atasan SSDM
         if ($user->isKaryawanBiasa()) {
             $rules['nip_user_ssdm'] = 'required|string|exists:users,nip';
         }
 
-        // 3. Siapkan pesan error kustom
         $messages = [
             'file_izin.required_if' => 'File izin wajib diunggah untuk Cuti Sakit.',
             'nip_user_ssdm.required' => 'Anda harus memilih atasan langsung/SSDM.',
-            // Pesan untuk Cuti Sakit (jika memilih hari kemarin)
             'tgl_mulai.after_or_equal' => 'Tanggal mulai Cuti Sakit tidak boleh di hari kemarin.',
             // Pesan untuk cuti lainnya (H-3)
             'tgl_mulai.after' => 'Untuk jenis izin ini, pengajuan paling lambat 3 hari sebelum tanggal mulai.',
@@ -250,7 +221,6 @@ class CutiController extends Controller
             $nipUserManager = $user->nip; // Manager Self-Approve di kolom Manager
             $penerimaNotifikasi = $sdmUser;
         }
-        // Alur 5 (GM) sudah diblok di function create()
 
         $pathFileIzin = $request->hasFile('file_izin') ? $request->file('file_izin')->store('file_izin', 'public') : null;
         $cuti = Cuti::create(array_merge($validatedData, [
