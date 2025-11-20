@@ -34,9 +34,7 @@ class GajiController extends Controller
     public function destroy(Gaji $gaji)
     {
         try {
-            // Hapus data gaji.
-            // Detail potongan yang terkait akan ikut terhapus otomatis
-            // karena Anda sudah menggunakan onDelete('cascade') di migrasi.
+            
             $gaji->delete();
 
             // Redirect kembali ke halaman sebelumnya dengan pesan sukses
@@ -56,7 +54,7 @@ class GajiController extends Controller
 
         // 2. Kirim $user dan $masterPotongan ke view
         return view('pages.gaji.create', [
-            'user' => $user, 
+            'user' => $user,
             'masterPotongan' => $masterPotongan
         ]);
     }

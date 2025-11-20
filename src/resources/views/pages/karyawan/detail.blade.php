@@ -37,7 +37,7 @@
                     <div class="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
                         <a href="{{ route('gaji.indexForKaryawan', $karyawan->id) }}"
                           class="flex h-11 items-center justify-center gap-2.5 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-theme-xs hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
-                            
+
                             {{-- Ikon slip gaji/dokumen --}}
                             <svg class="fill-current" width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M19 2H5C3.89543 2 3 2.89543 3 4V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V4C21 2.89543 20.1046 2 19 2ZM7 8H17V10H7V8ZM7 12H17V14H7V12ZM7 16H13V18H7V16Z"/>
@@ -156,6 +156,14 @@
                         </p>
                       </div>
 
+                      <div>
+                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                          Alamat
+                        </p>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {{ $karyawan -> alamat }}  
+                        </p>
+                      </div>
                       <div>
                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                           Status Pernikahan
