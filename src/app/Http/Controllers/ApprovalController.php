@@ -4,184 +4,153 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cuti;
-use App\Models\User; // Pastikan User di-import
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use ZipArchive;
-// Import CutiController untuk menggunakan logikanya
 use App\Http\Controllers\CutiController;
 
 class ApprovalController extends Controller
 {
     /**
-     * === FUNGSI INDEX DIPERBARUI ===
-     * Menggunakan logika yang sama persis dengan CutiController@indexApproval
-     * untuk memastikan semua peran (termasuk Manager) bisa melihat antrian mereka.
+     * === LOGIKA HYBRID (PERAN STRUKTURAL + ATASAN LANGSUNG) ===
+     * Memastikan User melihat tugas utamanya (misal: GM/Manager)
+     * TAPI juga melihat tugas tambahannya sebagai Atasan Langsung (SSDM) jika punya anak buah.
      */
     public function index()
     {
         $user = Auth::user();
-        $userNip = $user->nip; // Ambil NIP sekali saja
+        $userNip = $user->nip;
 
         // 1. General Manager (GM)
         if ($user->isGm()) {
-            $cutisForApproval = Cuti::where(function ($query) {
-                // Alur 1: Karyawan Biasa
-                // PERBAIKAN: Mengganti ->isKaryawanBiasa() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                        $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
-                          ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
-                          ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
-                      )
-                    ->where('status_sdm', 'Disetujui')
-                    ->where('status_gm', 'Menunggu Persetujuan');
-            })->orWhere(function ($query) {
-                // Alur 2: Senior
-                // PERBAIKAN: Mengganti ->isSenior() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                        $j->where('nama_jabatan', 'LIKE', '%Senior%')
-                          ->where('nama_jabatan', 'NOT LIKE', '%Senior Analis Keuangan, SDM & Umum%')
-                      )
-                    ->where('status_sdm', 'Disetujui')
-                    ->where('status_gm', 'Menunggu Persetujuan');
-            })->orWhere(function ($query) {
-                // Alur 3: SDM
-                // PERBAIKAN: Mengganti ->isSdm() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%Senior Analis Keuangan, SDM & Umum%'))
-                    ->where('status_manager', 'Disetujui')
-                    ->where('status_gm', 'Menunggu Persetujuan');
-            })->orWhere(function ($query) {
-                // Alur 4: Manager
-                // PERBAIKAN: Mengganti ->isManager() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                        $j->where('nama_jabatan', 'LIKE', '%Manager%')
-                          ->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
-                      )
-                    ->where('status_gm', 'Menunggu Persetujuan');
+            $cutisForApproval = Cuti::where(function ($query) use ($userNip) {
+                // TUGAS UTAMA: Sebagai GM (Final Approval)
+                $query->where('status_gm', 'Menunggu Persetujuan')
+                      ->where(function($q) {
+                          $q->where('status_sdm', 'Disetujui')
+                            ->orWhere('status_manager', 'Disetujui');
+                      });
+            })->orWhere(function ($query) use ($userNip) {
+                // TUGAS TAMBAHAN: Jika GM juga dipilih sebagai Atasan Langsung (SSDM)
+                // Walaupun jarang, sistem harus mengakomodasi ini.
+                $query->where('nip_user_ssdm', $userNip)
+                      ->where('status_ssdm', 'Menunggu Persetujuan');
             })->latest()->get();
-            
-            // Mengambil logika history dari kode lama Anda
-            $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')->where(function ($query) { $query->where('status_gm', 'Disetujui')->orWhere('status_ssdm', 'Ditolak')->orWhere('status_sdm', 'Ditolak')->orWhere('status_gm', 'Ditolak'); })->latest()->get();
+
+            // History GM
+            $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')
+                ->where('nip_user_gm', $userNip)
+                ->where('status_gm', '!=', 'Menunggu Persetujuan')
+                ->where('status_gm', '!=', 'Menunggu')
+                ->latest()->get();
+
             return view('pages.approval.index-gm', compact('cutisForApproval', 'cutisHistory'));
         }
 
         // 2. Manager
-    if ($user->isManager()) {
-        $cutisForApproval = Cuti::where(function ($query) use ($userNip) {
-            // Alur 3: Menunggu persetujuan Manager dari SDM
-            $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => $j->where('nama_jabatan', 'LIKE', '%Senior Analis Keuangan, SDM & Umum%'))
-                ->where('status_manager', 'Menunggu Persetujuan')
-                ->where('nip_user_manager', $userNip);
-        })
-        // === PERBAIKAN: Mengaktifkan Alur 1 (Manager sebagai SSDM) ===
-        ->orWhere(function ($query) use ($userNip) {
-            // Alur 1 (Jika Manager juga bertindak sebagai SSDM/Atasan Langsung)
-            $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                    $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
-                        ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
-                        ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
-                )
-                ->where('status_ssdm', 'Menunggu Persetujuan')
-                ->where('nip_user_ssdm', $userNip);
-        })
-        // === SELESAI PERBAIKAN ===
-        ->latest()->get();
-
-        // === PERBAIKAN: Memperbaiki query Riwayat Tindakan Manager ===
-        $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')
-            ->where(function($query) use ($userNip) {
-                // Dia adalah approver SSDM (Alur 1) DAN dia sudah bertindak
-                $query->where('nip_user_ssdm', $userNip)
-                    ->where('status_ssdm', '!=', 'Menunggu Persetujuan');
-            })->orWhere(function($query) use ($userNip) {
-                // Dia adalah approver Manager (Alur 3) DAN dia sudah bertindak
+        if ($user->isManager()) {
+            $cutisForApproval = Cuti::where(function ($query) use ($userNip) {
+                // TUGAS UTAMA: Sebagai Manager (Cek pengajuan orang SDM) - Alur 3
                 $query->where('nip_user_manager', $userNip)
-                    ->where('status_manager', '!=', 'Menunggu Persetujuan')
-                    ->where('status_manager', '!=', 'Menunggu');
+                      ->where('status_manager', 'Menunggu Persetujuan')
+                      // Filter jabatan ini opsional, tapi bagus untuk memastikan hanya SDM yang masuk sini
+                      ->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
+                          $j->where('nama_jabatan', 'LIKE', '%Senior Analis Keuangan, SDM & Umum%')
+                      );
             })
-            ->latest()
-            ->get();
+            ->orWhere(function ($query) use ($userNip) {
+                // TUGAS TAMBAHAN: Sebagai Atasan Langsung/SSDM (Alur 1 & 4)
+                // Ini menangani approval untuk staf biasa di bawah manager tersebut
+                $query->where('nip_user_ssdm', $userNip)
+                      ->where('status_ssdm', 'Menunggu Persetujuan');
+            })
+            ->latest()->get();
 
-        return view('pages.approval.index-manager', compact('cutisForApproval', 'cutisHistory'));
-    }
+            // History Manager (Gabungan history struktural & history atasan langsung)
+            $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')
+                ->where(function($q) use ($userNip) {
+                    $q->where('nip_user_manager', $userNip)
+                      ->where('status_manager', '!=', 'Menunggu Persetujuan')
+                      ->where('status_manager', '!=', 'Menunggu');
+                })
+                ->orWhere(function($q) use ($userNip) {
+                    $q->where('nip_user_ssdm', $userNip)
+                      ->where('status_ssdm', '!=', 'Menunggu Persetujuan');
+                })
+                ->latest()->get();
+
+            return view('pages.approval.index-manager', compact('cutisForApproval', 'cutisHistory'));
+        }
 
         // 3. SDM (Senior Analis Keuangan, SDM & Umum)
-    if ($user->isSdm()) {
-        $cutisForApproval = Cuti::where(function ($query) {
-            // Alur 1: Karyawan Biasa -> SSDM -> SDM
-            $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                    $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
-                        ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
-                        ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
-                )
-                ->where('status_ssdm', 'Disetujui')
-                ->where('status_sdm', 'Menunggu Persetujui');
-        })->orWhere(function ($query) {
-            // Alur 2: Senior -> SDM
-            $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                    $j->where('nama_jabatan', 'LIKE', '%Senior%')
-                        ->where('nama_jabatan', 'NOT LIKE', '%Senior Analis Keuangan, SDM & Umum%')
-                )
-                ->where('status_ssdm', 'Disetujui') // Senior sdh approve (by pass)
-                ->where('status_sdm', 'Menunggu Persetujuan');
-        })->orWhere(function ($query) {
-            // === PERBAIKAN: Mengganti Alur 5 (GM) dengan Alur 4 (Manager) ===
-            // Alur 4: Manager -> SDM
-            $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                    $j->where('nama_jabatan', 'LIKE', '%Manager%')
-                        ->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
-                )
-                ->where('status_ssdm', 'Disetujui') // Manager bypass
-                ->where('status_manager', 'Disetujui') // Manager bypass
-                ->where('status_sdm', 'Menunggu Persetujuan');
-            // === SELESAI PERBAIKAN ===
-        })->latest()->get();
+        if ($user->isSdm()) {
+            $cutisForApproval = Cuti::where(function ($query) {
+                // TUGAS UTAMA: Sebagai Verifikator HR (Menerima dari SSDM/Manager)
+                $query->where('status_sdm', 'Menunggu Persetujuan')
+                      ->where(function($subQ) {
+                          $subQ->where('status_ssdm', 'Disetujui') // Dari Alur 1 & 2
+                               ->orWhere('status_manager', 'Disetujui'); // Dari Alur 4
+                      });
+            })
+            ->orWhere(function ($query) use ($userNip) {
+                // TUGAS TAMBAHAN: Sebagai Atasan Langsung/SSDM (PENTING!)
+                // Jika Staff SDM mengajukan cuti, Senior SDM ini bertindak sebagai SSDM-nya dulu
+                $query->where('nip_user_ssdm', $userNip)
+                      ->where('status_ssdm', 'Menunggu Persetujuan');
+            })
+            ->latest()->get();
 
-        // Mengambil logika history dari kode lama Anda
-        $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')->where(function ($query) { $query->where('status_gm', 'Disetujui')->orWhere('status_ssdm', 'Ditolak')->orWhere('status_sdm', 'Ditolak')->orWhere('status_gm', 'Ditolak'); })->latest()->get();
-        return view('pages.approval.index-sdm', compact('cutisForApproval', 'cutisHistory'));
-    }
+            // History SDM (Gabungan)
+            $cutisHistory = Cuti::with('user.jabatanTerbaru.jabatan')
+                ->where(function($q) use ($userNip) {
+                    // History sebagai HR
+                    $q->where('nip_user_sdm', $userNip)
+                      ->where('status_sdm', '!=', 'Menunggu Persetujuan')
+                      ->where('status_sdm', '!=', 'Menunggu');
+                })
+                ->orWhere(function($q) use ($userNip) {
+                    // History sebagai Atasan Langsung
+                    $q->where('nip_user_ssdm', $userNip)
+                      ->where('status_ssdm', '!=', 'Menunggu Persetujuan');
+                })
+                ->latest()->get();
 
-        // 4. Senior (SSDM) - Atasan Langsung
-        if ($user->isSenior()) { // HANYA isSenior(), karena isManager() sudah ditangani di atas
+            return view('pages.approval.index-sdm', compact('cutisForApproval', 'cutisHistory'));
+        }
+
+        // 4. Senior (SSDM / Atasan Langsung)
+        // Blok ini menangkap User yang HANYA Senior (Bukan GM, Bukan Manager, Bukan SDM)
+        if ($user->isSenior()) { 
             $cutisForApproval = Cuti::where(function ($query) use ($userNip) {
-                // Alur 1: Karyawan Biasa -> SSDM
-                // PERBAIKAN: Mengganti ->isKaryawanBiasa() dengan query jabatan
-                $query->whereHas('user.jabatanTerbaru.jabatan', fn ($j) => 
-                        $j->where('nama_jabatan', 'NOT LIKE', '%General Manager%')
-                          ->where('nama_jabatan', 'NOT LIKE', '%Manager%')
-                          ->where('nama_jabatan', 'NOT LIKE', '%Senior%')
-                      )
-                    ->where('status_ssdm', 'Menunggu Persetujuan')
-                    ->where('nip_user_ssdm', $userNip);
+                // KUNCI PERBAIKAN: Percaya pada NIP yang tersimpan di kolom nip_user_ssdm
+                // Jangan filter jabatan user pemohon lagi di sini, itu bikin bug.
+                $query->where('nip_user_ssdm', $userNip)
+                      ->where('status_ssdm', 'Menunggu Persetujuan');
             })->latest()->get();
-            
-            // Mengambil logika history dari kode lama Anda
-            $cutisHistory = Cuti::with('user')->where('status_ssdm', '!=', 'Menunggu Persetujuan')->where('nip_user_ssdm', $userNip)->latest()->get();
+           
+            $cutisHistory = Cuti::with('user')
+                ->where('nip_user_ssdm', $userNip)
+                ->where('status_ssdm', '!=', 'Menunggu Persetujuan')
+                ->latest()->get();
+
             return view('pages.approval.index-ssdm', compact('cutisForApproval', 'cutisHistory'));
         }
 
         return redirect()->route('dashboard')->with('error', 'Anda tidak memiliki hak akses ke halaman persetujuan.');
     }
 
-
     /**
-     * Mengupdate status pengajuan cuti.
-     * Menggunakan logika dari CutiController@updateStatus untuk menjaga konsistensi alur approval.
+     * Update memanggil CutiController agar logic status terpusat
      */
     public function update(Request $request, Cuti $cuti)
     {
-        // PENTING: Untuk menghindari duplikasi logika dan menjaga satu sumber kebenaran (single source of truth),
-        // Sebaiknya action update di ApprovalController ini diarahkan untuk menggunakan logic di CutiController@updateStatus.
-        // Karena kodenya sudah dipisahkan, saya akan memanggil CutiController@updateStatus.
-        // Anda HARUS memastikan rute 'approvals.update' memanggil method ini.
-
         $cutiController = new CutiController();
         return $cutiController->updateStatus($request, $cuti);
     }
 
-    // ... method downloadReport() tidak diubah ...
+    // Method downloadReport biarkan seperti kode asli Anda
     public function downloadReport(Request $request)
     {
         $request->validate([ 'bulan' => 'required|string', 'tahun' => 'required|integer|min:2020|max:' . date('Y'), ]);
@@ -211,4 +180,3 @@ class ApprovalController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 }
-

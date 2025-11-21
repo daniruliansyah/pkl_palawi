@@ -11,6 +11,8 @@ Menyesuaikan logika status 'GM' dan 'Final' untuk Alur 3 (SDM -> Manager -> GM).
 // Cek satu kali apakah user yang sedang melihat halaman ini adalah SDM
 // (Senior Analis Keuangan, SDM & Umum)
 $isUserSdm = Auth::user() && Auth::user()->isSdm();
+$isUserSenior = Auth::user() && Auth::user()->isSenior();
+$isUserManager = Auth::user() && Auth::user()->isManager();
 @endphp
 
 {{-- Kotak informasi sisa jatah cuti --}}
@@ -40,11 +42,13 @@ Ajukan Cuti Baru
                 <th class="py-3 px-4 font-medium">Tanggal Diajukan</th>
                 
                 {{-- Hanya tampilkan Status Senior jika BUKAN SDM (karena SDM bypass) --}}
-                @if(!$isUserSdm)
+                @if(!$isUserSenior && !$isUserSdm && !$isUserManager)
                     <th class="py-3 px-4 font-medium">Status Senior</th>
                 @endif
                 
+                @if (!$isUserSdm)
                 <th class="py-3 px-4 font-medium">Status SDM</th>
+                @endif
 
                 {{-- PERUBAHAN 1: Tambah Kolom Header Manager jika user = SDM --}}
                 @if($isUserSdm)

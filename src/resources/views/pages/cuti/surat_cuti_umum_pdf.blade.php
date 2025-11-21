@@ -125,7 +125,7 @@
 
     <p style="text-align: justify; margin-bottom: 0;">
         Dengan ini mengajukan {{ $cuti->jenis_izin }} untuk tahun {{ \Carbon\Carbon::parse($cuti->tgl_mulai)->format('Y') }}
-        selama <b>{{ $cuti->jumlah_hari }} ({{ ucwords(\Terbilang::make($cuti->jumlah_hari)) }})</b> hari kerja, terhitung tanggal
+        selama <b>{{ $cuti->jumlah_hari }} ({{ ucwords((new NumberFormatter('id', NumberFormatter::SPELLOUT))->format($cuti->jumlah_hari)) }})</b> hari kerja, terhitung tanggal
         {{ \Carbon\Carbon::parse($cuti->tgl_mulai)->isoFormat('D MMMM Y') }}
         s/d {{ \Carbon\Carbon::parse($cuti->tgl_selesai)->isoFormat('D MMMM Y') }}
         dengan kesanggupan dan perjanjian sebagai berikut:
