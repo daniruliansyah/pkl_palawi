@@ -34,17 +34,34 @@
                     </div>
 
                     {{-- Tombol untuk melihat riwayat gaji karyawan --}}
-                    <div class="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
-                        <a href="{{ route('gaji.indexForKaryawan', $karyawan->id) }}"
-                          class="flex h-11 items-center justify-center gap-2.5 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-theme-xs hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+                    {{-- Area Tombol Aksi --}}
+                    <div class="flex items-center order-2 gap-3 grow xl:order-3 xl:justify-end">
+                        
+                        {{-- 1. Tombol Baru: Unduh Profil PDF --}}
+                        <a href="{{ route('karyawan.cetakDetail', $karyawan->id) }}"
+                          class="flex h-11 items-center justify-center gap-2.5 rounded-lg border border-yellow-200 bg-yellow-100 px-4 text-sm font-medium text-yellow-800 shadow-theme-xs hover:bg-yellow-200 hover:text-yellow-900 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 dark:hover:bg-yellow-900/50 dark:hover:text-yellow-100">
 
-                            {{-- Ikon slip gaji/dokumen --}}
+                            {{-- Ikon Download --}}
+                            {{-- Saya juga menambahkan class text-yellow-800 pada SVG agar warnanya konsisten dengan teks --}}
+                            <svg class="fill-current text-yellow-800 dark:text-yellow-200" width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                            </svg>
+
+                            <span>Unduh</span>
+                        </a>
+
+                        {{-- 2. Tombol Lama: Riwayat Gaji --}}
+                        <a href="{{ route('gaji.indexForKaryawan', $karyawan->id) }}"
+                           class="flex h-11 items-center justify-center gap-2.5 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-theme-xs hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
+
+                            {{-- Ikon Slip Gaji --}}
                             <svg class="fill-current" width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M19 2H5C3.89543 2 3 2.89543 3 4V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V4C21 2.89543 20.1046 2 19 2ZM7 8H17V10H7V8ZM7 12H17V14H7V12ZM7 16H13V18H7V16Z"/>
                             </svg>
 
                             <span>Riwayat Gaji</span>
                         </a>
+
                     </div>
 
                     <!-- {{-- <div class="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
