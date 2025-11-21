@@ -7,6 +7,7 @@ use App\Models\Jabatan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Notifications\Notifiable;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class UserController extends Controller
@@ -266,5 +267,36 @@ class UserController extends Controller
                 ];
             }),
         ]);
+    }
+
+    public function cetakDetail($id)
+    {
+        // 1. Cari Karyawan berdasarkan ID (Manual Fetching)
+        // Menggunakan findOrFail() agar error 404 jika ID tidak ditemukan
+        $karyawan = User::findOrFail($id);
+
+        // 2. Load Relasi yang dibutuhkan
+        // 'riwayatSP' otomatis menggunakan 'nip' karena sudah diatur di Model User
+        // 'riwayatPendidikan' menggunakan 'id' atau 'nip' sesuai Model User
+        $karyawan->load([
+            'riwayatJabatans.jabatan', 
+            'riwayatPendidikan',       
+            'riwayatSP',               
+            'jabatanTerbaru.jabatan'
+        ]);
+
+        // 3. Generate PDF menggunakan View yang sudah Anda buat
+        $pdf = PDF::loadView('pages.karyawan.cetakinfo', [
+            'karyawan' => $karyawan 
+        ]);
+
+        // 4. Atur Ukuran Kertas
+        $pdf->setPaper('A4', 'portrait');
+
+        // 5. Buat Nama File dan Download
+        // str_replace untuk mengganti spasi dengan strip agar nama file rapi
+        $namaFile = 'CV-' . str_replace(' ', '-', $karyawan->nama_lengkap) . '.pdf';
+        
+        return $pdf->download($namaFile);
     }
 }

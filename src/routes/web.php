@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update')->middleware('check.karyawan.access');
     Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
 
+    Route::get('/karyawan/{id}/cetak-detail', [UserController::class, 'cetakDetail'])->name('karyawan.cetakDetail');
+
     // -----------------------------------------------------------------
     // --- RUTE SPPD ---
     // -----------------------------------------------------------------
