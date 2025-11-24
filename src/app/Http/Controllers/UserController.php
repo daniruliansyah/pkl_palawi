@@ -152,6 +152,8 @@ class UserController extends Controller
             'tgl_selesai.*' => 'nullable|date|after_or_equal:tgl_mulai.*',
             'area_bekerja' => 'required|array',
             'area_bekerja.*' => 'required|string',
+            'link_berkas' => 'required|array',
+            'link_berkas.*' => 'required|string',
             
             // --- TAMBAHAN ---
             'jenjang' => 'nullable|array', 
@@ -164,6 +166,7 @@ class UserController extends Controller
         $mulais      = $request->tgl_mulai;
         $selesais    = $request->tgl_selesai;
         $areais      = $request->area_bekerja;
+        $linkis      = $request->link_berkas;
 
         // --- TAMBAHAN ---
         $jenjangs = $request->jenjang; 
@@ -178,6 +181,7 @@ class UserController extends Controller
                     'tgl_mulai'    => $mulais[$i],
                     'tgl_selesai'  => $selesais[$i],
                     'area_bekerja' => $areais[$i],
+                    'link_berkas' => $linkis[$i],
 
                     // --- TAMBAHAN ---
                     'jenjang'      => $jenjangs[$i] ?? null, // Gunakan null coalescing
@@ -271,13 +275,8 @@ class UserController extends Controller
 
     public function cetakDetail($id)
     {
-        // 1. Cari Karyawan berdasarkan ID (Manual Fetching)
-        // Menggunakan findOrFail() agar error 404 jika ID tidak ditemukan
         $karyawan = User::findOrFail($id);
 
-        // 2. Load Relasi yang dibutuhkan
-        // 'riwayatSP' otomatis menggunakan 'nip' karena sudah diatur di Model User
-        // 'riwayatPendidikan' menggunakan 'id' atau 'nip' sesuai Model User
         $karyawan->load([
             'riwayatJabatans.jabatan', 
             'riwayatPendidikan',       
@@ -285,16 +284,26 @@ class UserController extends Controller
             'jabatanTerbaru.jabatan'
         ]);
 
-        // 3. Generate PDF menggunakan View yang sudah Anda buat
+        // --- LOGIKA TAMBAHAN UNTUK LOGO ---
+        // Sesuaikan path ini dengan lokasi file logo Anda yang sebenarnya
+        // Biasanya ada di public/images/logo.png atau sejenisnya
+        $pathLogo = public_path('images/logo2.png'); 
+        
+        $logoBase64 = null;
+        if (file_exists($pathLogo)) {
+            $type = pathinfo($pathLogo, PATHINFO_EXTENSION);
+            $data = file_get_contents($pathLogo);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+        // ----------------------------------
+
         $pdf = PDF::loadView('pages.karyawan.cetakinfo', [
-            'karyawan' => $karyawan 
+            'karyawan' => $karyawan,
+            'logo' => $logoBase64 // Kirim variabel logo ke view
         ]);
 
-        // 4. Atur Ukuran Kertas
         $pdf->setPaper('A4', 'portrait');
 
-        // 5. Buat Nama File dan Download
-        // str_replace untuk mengganti spasi dengan strip agar nama file rapi
         $namaFile = 'CV-' . str_replace(' ', '-', $karyawan->nama_lengkap) . '.pdf';
         
         return $pdf->download($namaFile);

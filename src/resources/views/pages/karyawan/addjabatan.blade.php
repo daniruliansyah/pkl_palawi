@@ -83,6 +83,14 @@
                                    x-model="jabatan.tgl_selesai"
                                    class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                         </div>
+                        <div>
+                            <label :for="'link_berkas_' + index" class="mb-2 block text-sm font-medium">Link Berkas</label>
+                            <input type="text"
+                                   :name="'link_berkas[' + index + ']'" {{-- DISESUAIKAN: menggunakan index --}}
+                                   :id="'link_berkas_' + index"
+                                   x-model="jabatan.link_berkas"
+                                   class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                        </div>
                     </div>
                 </template>
             </div>

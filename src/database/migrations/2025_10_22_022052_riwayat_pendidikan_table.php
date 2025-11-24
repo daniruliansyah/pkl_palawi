@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('tahun_masuk', 4)->nullable();
             $table->string('tahun_lulus', 4);
             $table->decimal('ipk', 3, 2)->nullable(); // Opsional, untuk universitas
+            $table->string('link_berkas', 255)->nullable();
 
             $table->timestamps(); // created_at dan updated_at
 

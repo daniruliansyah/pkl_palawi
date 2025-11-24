@@ -91,6 +91,10 @@
                             <label for="tgl_selesai" class="mb-2 block text-sm font-medium">Tanggal Selesai</label>
                             <input type="date" x-model="jabatan.tgl_selesai" name="tgl_selesai" class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
                         </div>
+                        <div>
+                            <label for="link_berkas" class="mb-2 block text-sm font-medium">Link Berkas</label>
+                            <input type="text" x-model="jabatan.link_berkas" name="link_berkas" class="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 text-sm outline-none focus:border-primary">
+                        </div>
                     </div>
                 </template>
             </div>

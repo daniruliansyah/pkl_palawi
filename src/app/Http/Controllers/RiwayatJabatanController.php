@@ -30,6 +30,7 @@ class RiwayatJabatanController extends Controller
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'nullable|date|after_or_equal:tgl_mulai',
             'area_bekerja' => 'required|string',
+            'link_berkas'   => 'nullable|string',
             
             // --- TAMBAHAN ---
             'jenjang' => 'nullable|string|max:10', // Sesuaikan max length
@@ -49,6 +50,7 @@ class RiwayatJabatanController extends Controller
 
             // --- TAMBAHAN ---
             'jenjang' => $request->jenjang,
+            'link_berkas'   => $request->link_berkas,
             // --- END TAMBAHAN ---
         ]);
 

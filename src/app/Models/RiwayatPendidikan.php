@@ -26,6 +26,7 @@ class RiwayatPendidikan extends Model
         'tahun_masuk',
         'tahun_lulus',
         'ipk',
+        'link_berkas',
     ];
 
     /**

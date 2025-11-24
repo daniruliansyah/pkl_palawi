@@ -73,6 +73,14 @@
                 @error('ipk') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            {{-- link berkas --}}
+            <div>
+                <label for="link_berkas" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link Berkas<span class="text-red-500">*</span></label>
+                <input type="text" name="link_berkas" id="link_berkas" value="{{ old('link_berkas', $pendidikan->link_berkas) }}" required placeholder="link drive berkas ijazah"
+                       class="mt-1 block w-full rounded-lg border border-gray-300 py-2.5 px-4 text-sm focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
+                @error('link_berkas') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Tombol Aksi --}}
             <div class="flex justify-end space-x-4 pt-4">
                 {{-- Tombol Batal mengarah kembali ke detail karyawan --}}
