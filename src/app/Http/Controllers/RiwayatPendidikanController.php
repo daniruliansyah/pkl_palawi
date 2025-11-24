@@ -31,6 +31,7 @@ class RiwayatPendidikanController extends Controller
             'tahun_masuk' => 'required|numeric|digits:4',
             'tahun_lulus' => 'required|numeric|digits:4|after_or_equal:tahun_masuk',
             'ipk' => 'nullable|numeric|min:0|max:4.00',
+            'link_berkas' => 'required|string|max:255',
         ]);
 
         try {
@@ -72,6 +73,7 @@ class RiwayatPendidikanController extends Controller
             'tahun_masuk' => 'required|numeric|digits:4',
             'tahun_lulus' => 'required|numeric|digits:4|after_or_equal:tahun_masuk',
             'ipk' => 'nullable|numeric|min:0|max:4.00',
+            'link_berkas' => 'required|string|max:255',
         ]);
 
         try {

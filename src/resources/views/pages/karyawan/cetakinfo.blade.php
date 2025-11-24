@@ -4,13 +4,18 @@
     <meta charset="utf-8">
     <title>Detail Data Karyawan - {{ $karyawan->nama_lengkap }}</title>
     <style>
-        /* CSS Dasar untuk PDF (DomPDF support CSS 2.1) */
-        body { font-family: sans-serif; font-size: 11pt; color: #333; line-height: 1.3; }
+        /* CSS Dasar */
+        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #333; line-height: 1.3; margin-top: 0; }
         
-        /* Header Laporan */
-        .header { text-align: center; margin-bottom: 25px; border-bottom: 3px double #333; padding-bottom: 10px; }
+        /* Header Laporan (Format Kop Surat) */
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-bottom: 3px double #333; padding-bottom: 10px; }
+        .header-logo { width: 15%; vertical-align: middle; text-align: left; }
+        .header-text { width: 85%; vertical-align: middle; text-align: center; padding-right: 15%; /* Padding kanan agar teks benar-benar di tengah halaman, mengimbangi lebar logo */ }
+        
+        .logo-image { width: 90px; height: auto; display: block; }
+        
         .header h1 { margin: 0; font-size: 18pt; text-transform: uppercase; font-weight: bold; }
-        .header p { margin: 2px 0; font-size: 10pt; }
+        .header p { margin: 2px 0; font-size: 11pt; }
 
         /* Judul Per Bagian */
         .section-title { 
@@ -18,13 +23,13 @@
             padding: 6px 10px; 
             font-weight: bold; 
             font-size: 12pt; 
-            margin-top: 25px; 
+            margin-top: 20px; 
             margin-bottom: 10px;
             border-left: 5px solid #333;
             text-transform: uppercase;
         }
 
-        /* Container Info Personal (Foto + Data) */
+        /* Container Info Personal */
         .profile-container { width: 100%; margin-bottom: 10px; border-collapse: collapse; }
         .photo-col { width: 130px; vertical-align: top; }
         .info-col { vertical-align: top; padding-left: 10px; }
@@ -38,12 +43,12 @@
             background: #fff;
         }
 
-        /* Tabel Data Baris (Key : Value) */
+        /* Tabel Data Baris */
         .info-table { width: 100%; border-collapse: collapse; }
         .info-table td { padding: 3px 0; vertical-align: top; }
         .label { font-weight: bold; width: 140px; color: #555; }
 
-        /* Tabel List Data (Jabatan, Pendidikan, SP) */
+        /* Tabel List Data */
         .data-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 5px; }
         .data-table th, .data-table td { 
             border: 1px solid #999; 
@@ -57,20 +62,33 @@
             text-align: center;
         }
         
-        /* Utility Classes */
         .text-center { text-align: center; }
-        .text-right { text-align: right; }
         .text-muted { color: #666; font-size: 9pt; font-style: italic; }
         .mb-1 { margin-bottom: 4px; display: block; }
     </style>
 </head>
 <body>
 
-    {{-- HEADER --}}
-    <div class="header">
-        <h1>PT Palawi Risorsis</h1>
-        <p>Laporan Detail Data Karyawan</p>
-    </div>
+    {{-- HEADER (Format Kop Surat dengan Logo) --}}
+    <table class="header-table">
+        <tr>
+            <td class="header-logo">
+                @if(isset($logo) && $logo)
+                    <img src="{{ $logo }}" alt="Logo" class="logo-image">
+                @else
+                    {{-- Placeholder jika logo tidak ditemukan --}}
+                    <b>LOGO</b>
+                @endif
+            </td>
+            <td class="header-text">
+                <div class="header">
+                    <h1>PT PALAWI RISORSIS</h1>
+                    <p style="font-weight: bold;">Area Bisnis Wisata Wilayah Timur</p>
+                    <p>Laporan Detail Data Karyawan</p>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     {{-- 1. INFORMASI PERSONAL --}}
     <div class="section-title">Informasi Personal</div>
@@ -80,7 +98,6 @@
             {{-- Kolom Foto --}}
             <td class="photo-col">
                 @php
-                    // Logika cek file gambar agar PDF tidak error jika file hilang
                     $path = $karyawan->foto ? public_path('storage/' . $karyawan->foto) : public_path('images/default.png');
                     $fotoSrc = file_exists($path) ? $path : public_path('images/default.png'); 
                 @endphp
@@ -157,7 +174,6 @@
             </tr>
         </thead>
         <tbody>
-            {{-- Menggunakan sortByDesc sesuai kode blade Anda --}}
             @forelse($karyawan->riwayatPendidikan->sortByDesc('tahun_lulus') as $index => $pendidikan)
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
@@ -182,7 +198,6 @@
     </table>
 
     {{-- 4. RIWAYAT SURAT PERINGATAN (SP) --}}
-    {{-- Akan otomatis muncul karena relasi di Model User sudah Anda set 'nip' --}}
     <div class="section-title">Riwayat Surat Peringatan (SP)</div>
     <table class="data-table">
         <thead>
@@ -213,7 +228,6 @@
 
     {{-- Footer Tanggal Cetak --}}
     <div style="margin-top: 50px; text-align: right; font-size: 10pt;">
-        {{-- Tambahkan ->locale('id') --}}
         <p>Dicetak pada: {{ now()->locale('id')->translatedFormat('l, d F Y H:i') }} WIB</p>
     </div>
 

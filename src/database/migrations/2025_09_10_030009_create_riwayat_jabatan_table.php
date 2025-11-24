@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('area_bekerja')->nullable();
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
+            $table->string('link_berkas', 255)->nullable();
             $table->timestamps();
         });
     }
