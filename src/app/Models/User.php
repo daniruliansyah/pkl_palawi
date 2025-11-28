@@ -204,5 +204,31 @@ class User extends Authenticatable
         // kita tidak perlu menentukan nama kolom foreign key.
         return $this->hasMany(RiwayatPendidikan::class);
     }
+
+    public function riwayatKpo(): HasMany
+    {
+        return $this->hasMany(RiwayatKpo::class);
+    }
+
+    public function riwayatLatihanJabatan(): HasMany
+    {
+        // Karena kita mengikuti konvensi Laravel (user_id),
+        // kita tidak perlu menentukan nama kolom foreign key.
+        return $this->hasMany(RiwayatLatihanJabatan::class);
+    }
+
+    public function riwayatPangkatPerusahaan(): HasMany
+    {
+        // Karena kita mengikuti konvensi Laravel (user_id),
+        // kita tidak perlu menentukan nama kolom foreign key.
+        return $this->hasMany(RiwayatPangkatPerusahaan::class);
+    }
+
+    public function riwayatPenghargaan(): HasMany
+    {
+        // Karena kita mengikuti konvensi Laravel (user_id),
+        // kita tidak perlu menentukan nama kolom foreign key.
+        return $this->hasMany(RiwayatPenghargaan::class);
+    }
 }
 

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
             $table->string('link_berkas', 255)->nullable();
+            $table->string('no_sk', 100)->nullable();
             $table->timestamps();
         });
     }
