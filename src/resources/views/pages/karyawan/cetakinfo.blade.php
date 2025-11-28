@@ -10,7 +10,7 @@
         /* Header Laporan (Format Kop Surat) */
         .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-bottom: 3px double #333; padding-bottom: 10px; }
         .header-logo { width: 15%; vertical-align: middle; text-align: left; }
-        .header-text { width: 85%; vertical-align: middle; text-align: center; padding-right: 15%; /* Padding kanan agar teks benar-benar di tengah halaman, mengimbangi lebar logo */ }
+        .header-text { width: 85%; vertical-align: middle; text-align: center; padding-right: 15%; }
         
         .logo-image { width: 90px; height: auto; display: block; }
         
@@ -27,6 +27,7 @@
             margin-bottom: 10px;
             border-left: 5px solid #333;
             text-transform: uppercase;
+            page-break-after: avoid; /* Mencegah judul terpisah dari tabelnya */
         }
 
         /* Container Info Personal */
@@ -49,7 +50,8 @@
         .label { font-weight: bold; width: 140px; color: #555; }
 
         /* Tabel List Data */
-        .data-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 5px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 5px; page-break-inside: auto; }
+        .data-table tr { page-break-inside: avoid; page-break-after: auto; }
         .data-table th, .data-table td { 
             border: 1px solid #999; 
             padding: 6px 8px; 
@@ -76,7 +78,6 @@
                 @if(isset($logo) && $logo)
                     <img src="{{ $logo }}" alt="Logo" class="logo-image">
                 @else
-                    {{-- Placeholder jika logo tidak ditemukan --}}
                     <b>LOGO</b>
                 @endif
             </td>
@@ -95,7 +96,6 @@
     
     <table class="profile-container">
         <tr>
-            {{-- Kolom Foto --}}
             <td class="photo-col">
                 @php
                     $path = $karyawan->foto ? public_path('storage/' . $karyawan->foto) : public_path('images/default.png');
@@ -103,8 +103,6 @@
                 @endphp
                 <img src="{{ $fotoSrc }}" class="photo-img" alt="Foto">
             </td>
-
-            {{-- Kolom Biodata --}}
             <td class="info-col">
                 <table class="info-table">
                     <tr><td class="label">Nama Lengkap</td><td>: <strong>{{ $karyawan->nama_lengkap }}</strong></td></tr>
@@ -155,9 +153,7 @@
                 </td>
             </tr>
             @empty
-            <tr>
-                <td colspan="4" class="text-center" style="padding: 15px;">Belum ada riwayat jabatan.</td>
-            </tr>
+            <tr><td colspan="4" class="text-center">Tidak ada data.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -170,7 +166,7 @@
                 <th style="width: 5%">No</th>
                 <th style="width: 40%">Institusi & Jenjang</th>
                 <th style="width: 35%">Jurusan</th>
-                <th style="width: 20%">Tahun Lulus</th>
+                <th style="width: 20%">Lulus</th>
             </tr>
         </thead>
         <tbody>
@@ -178,8 +174,7 @@
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td>
-                    <span class="mb-1"><strong>{{ $pendidikan->jenjang }}</strong></span>
-                    {{ $pendidikan->nama_institusi }}
+                    <strong>{{ $pendidikan->jenjang }}</strong> - {{ $pendidikan->nama_institusi }}
                 </td>
                 <td>{{ $pendidikan->jurusan ?: '-' }}</td>
                 <td class="text-center">
@@ -190,14 +185,112 @@
                 </td>
             </tr>
             @empty
-            <tr>
-                <td colspan="4" class="text-center" style="padding: 15px;">Belum ada riwayat pendidikan.</td>
-            </tr>
+            <tr><td colspan="4" class="text-center">Tidak ada data.</td></tr>
             @endforelse
         </tbody>
     </table>
 
-    {{-- 4. RIWAYAT SURAT PERINGATAN (SP) --}}
+    {{-- 4. RIWAYAT KPO --}}
+    <div class="section-title">Riwayat KPO</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%">No</th>
+                <th style="width: 35%">Jabatan</th>
+                <th style="width: 35%">Organisasi</th>
+                <th style="width: 25%">Tgl Menjabat</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($karyawan->riwayatKpo->sortByDesc('tgl_jabat') as $kpo)
+            <tr>
+                <td class="text-center">{{ $loop->iteration }}</td>
+                <td><strong>{{ $kpo->nama_jabatan }}</strong></td>
+                <td>{{ $kpo->nama_organisasi }}</td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($kpo->tgl_jabat)->format('d/m/Y') }}</td>
+            </tr>
+            @empty
+            <tr><td colspan="4" class="text-center">Tidak ada data.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- 5. RIWAYAT LATIHAN JABATAN --}}
+    <div class="section-title">Riwayat Latihan Jabatan</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%">No</th>
+                <th style="width: 45%">Nama Latihan</th>
+                <th style="width: 25%">Tgl Mulai</th>
+                <th style="width: 25%">Tgl Selesai</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($karyawan->riwayatLatihanJabatan->sortByDesc('tgl_mulai') as $latihan)
+            <tr>
+                <td class="text-center">{{ $loop->iteration }}</td>
+                <td><strong>{{ $latihan->nama_latihan }}</strong></td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($latihan->tgl_mulai)->format('d/m/Y') }}</td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($latihan->tgl_selesai)->format('d/m/Y') }}</td>
+            </tr>
+            @empty
+            <tr><td colspan="4" class="text-center">Tidak ada data.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- 6. RIWAYAT PANGKAT --}}
+    <div class="section-title">Riwayat Pangkat</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%">No</th>
+                <th style="width: 25%">Golongan</th>
+                <th style="width: 25%">TMT Golongan</th>
+                <th style="width: 25%">No SK</th>
+                <th style="width: 20%">Tgl SK</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($karyawan->riwayatPangkatPerusahaan->sortByDesc('tmt_gol') as $pangkat)
+            <tr>
+                <td class="text-center">{{ $loop->iteration }}</td>
+                <td><strong>{{ $pangkat->gol_ruang }}</strong></td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($pangkat->tmt_gol)->format('d/m/Y') }}</td>
+                <td>{{ $pangkat->no_sk }}</td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($pangkat->tgl_sk)->format('d/m/Y') }}</td>
+            </tr>
+            @empty
+            <tr><td colspan="5" class="text-center">Tidak ada data.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- 7. RIWAYAT PENGHARGAAN --}}
+    <div class="section-title">Riwayat Penghargaan</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%">No</th>
+                <th style="width: 60%">Nama Penghargaan</th>
+                <th style="width: 35%">Tanggal Diterima</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($karyawan->riwayatPenghargaan->sortByDesc('tgl_terima') as $penghargaan)
+            <tr>
+                <td class="text-center">{{ $loop->iteration }}</td>
+                <td><strong>{{ $penghargaan->nama_penghargaan }}</strong></td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($penghargaan->tgl_terima)->format('d/m/Y') }}</td>
+            </tr>
+            @empty
+            <tr><td colspan="3" class="text-center">Tidak ada data.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- 8. RIWAYAT SURAT PERINGATAN (SP) --}}
     <div class="section-title">Riwayat Surat Peringatan (SP)</div>
     <table class="data-table">
         <thead>
@@ -215,12 +308,12 @@
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td>{{ $sp->no_surat }}</td>
                 <td>{{ $sp->jenis_sp }}</td>
-                <td>{{ \Carbon\Carbon::parse($sp->tanggal_sp)->format('d/m/Y') }}</td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($sp->tanggal_sp)->format('d/m/Y') }}</td>
                 <td>{{ $sp->isi_surat }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="text-center" style="padding: 15px;">Tidak ada riwayat surat peringatan.</td>
+                <td colspan="5" class="text-center">Tidak ada riwayat surat peringatan.</td>
             </tr>
             @endforelse
         </tbody>

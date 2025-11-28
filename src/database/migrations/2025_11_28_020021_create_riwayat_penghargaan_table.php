@@ -24,6 +24,7 @@ return new class extends Migration
             
             $table->string('nama_penghargaan', 50)->nullable();
             $table->date('tgl_terima')->nullable();
+            $table->string('link_berkas')->nullable();
 
             $table->timestamps(); // created_at dan updated_at
         });

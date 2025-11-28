@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class RiwayatPendidikan extends Model
+class RiwayatPenghargaan extends Model
 {
     use HasFactory;
 
@@ -22,6 +22,7 @@ class RiwayatPendidikan extends Model
         'user_id', // <-- Disesuaikan untuk foreign key 'id'
         'nama_penghargaan',
         'tgl_terima',
+        'link_berkas',
     ];
 
     /**

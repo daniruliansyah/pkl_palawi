@@ -281,7 +281,11 @@ class UserController extends Controller
             'riwayatJabatans.jabatan', 
             'riwayatPendidikan',       
             'riwayatSP',               
-            'jabatanTerbaru.jabatan'
+            'jabatanTerbaru.jabatan',
+            'riwayatKpo',
+            'riwayatLatihanJabatan',
+            'riwayatPangkatPerusahaan',
+            'riwayatPenghargaan',
         ]);
 
         // --- LOGIKA TAMBAHAN UNTUK LOGO ---
