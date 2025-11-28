@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('nama_jabatan', 100)->nullable(); 
             $table->string('nama_organisasi', 100)->nullable(); 
             $table->date('tgl_jabat')->nullable();
+            $table->string('link_berkas')->nullable();
 
             $table->timestamps(); // created_at dan updated_at
         });

@@ -14,6 +14,10 @@ use App\Http\Controllers\SPApprovalController; // Controller SP BARU
 use App\Http\Controllers\SppdApprovalController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\RiwayatPendidikanController;
+use App\Http\Controllers\RiwayatKpoController;
+use App\Http\Controllers\RiwayatLatihanJabatanController;
+use App\Http\Controllers\RiwayatPangkatPerusahaanController;
+use App\Http\Controllers\RiwayatPenghargaanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/updatekep/{id}', [UserController::class, 'updatekep'])->name('karyawan.updatekep');
     Route::get('/karyawan/{karyawan}/riwayat/{riwayat}/edit', [RiwayatJabatanController::class, 'edit'])->name('riwayat.edit')->middleware('check.karyawan.access');
     Route::put('/karyawan/{karyawan}/riwayat/{riwayat}/update', [RiwayatJabatanController::class, 'update'])->name('riwayat.update')->middleware('check.karyawan.access');
+    Route::delete('/karyawan/{karyawan}/riwayat/{riwayat}', [RiwayatJabatanController::class, 'destroy'])->name('riwayat.destroy')->middleware('check.karyawan.access');
     Route::get('karyawan-cari', [UserController::class, 'cariKaryawan'])->name('karyawan.cari')->middleware('check.karyawan.access');
 
     Route::get('/karyawan/{id}/cetak-detail', [UserController::class, 'cetakDetail'])->name('karyawan.cetakDetail');
@@ -151,6 +156,66 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{pendidikan}', [RiwayatPendidikanController::class, 'destroy'])->name('destroy')->middleware('check.karyawan.access');
     });
     // =================================================================
+
+    // =================================================================
+    // --- 1. RIWAYAT KPO ---
+    // =================================================================
+    Route::prefix('karyawan/{karyawan}/kpo')->name('karyawan.kpo.')->group(function () {
+        Route::get('/create', [RiwayatKpoController::class, 'create'])->name('create');
+        Route::post('/', [RiwayatKpoController::class, 'store'])->name('store');
+    });
+
+    Route::prefix('kpo')->name('kpo.')->group(function () {
+        // Parameter {kpo} harus sesuai dengan type hint di controller: edit(RiwayatKpo $kpo)
+        Route::get('/{kpo}/edit', [RiwayatKpoController::class, 'edit'])->name('edit');
+        Route::put('/{kpo}', [RiwayatKpoController::class, 'update'])->name('update');
+        Route::delete('/{kpo}', [RiwayatKpoController::class, 'destroy'])->name('destroy');
+    });
+
+    // =================================================================
+    // --- 2. RIWAYAT LATIHAN JABATAN ---
+    // =================================================================
+    Route::prefix('karyawan/{karyawan}/latihan-jabatan')->name('karyawan.latihan-jabatan.')->group(function () {
+        Route::get('/create', [RiwayatLatihanJabatanController::class, 'create'])->name('create');
+        Route::post('/', [RiwayatLatihanJabatanController::class, 'store'])->name('store');
+    });
+
+    Route::prefix('latihan-jabatan')->name('latihan-jabatan.')->group(function () {
+        // Parameter {latihan} sesuai controller: edit(RiwayatLatihanJabatan $latihan)
+        Route::get('/{latihan}/edit', [RiwayatLatihanJabatanController::class, 'edit'])->name('edit');
+        Route::put('/{latihan}', [RiwayatLatihanJabatanController::class, 'update'])->name('update');
+        Route::delete('/{latihan}', [RiwayatLatihanJabatanController::class, 'destroy'])->name('destroy');
+    });
+
+    // =================================================================
+    // --- 3. RIWAYAT PANGKAT PERUSAHAAN ---
+    // =================================================================
+    Route::prefix('karyawan/{karyawan}/pangkat')->name('karyawan.pangkat.')->group(function () {
+        Route::get('/create', [RiwayatPangkatPerusahaanController::class, 'create'])->name('create');
+        Route::post('/', [RiwayatPangkatPerusahaanController::class, 'store'])->name('store');
+    });
+
+    Route::prefix('pangkat')->name('pangkat.')->group(function () {
+        // Parameter {pangkat} sesuai controller: edit(RiwayatPangkatPerusahaan $pangkat)
+        Route::get('/{pangkat}/edit', [RiwayatPangkatPerusahaanController::class, 'edit'])->name('edit');
+        Route::put('/{pangkat}', [RiwayatPangkatPerusahaanController::class, 'update'])->name('update');
+        Route::delete('/{pangkat}', [RiwayatPangkatPerusahaanController::class, 'destroy'])->name('destroy');
+    });
+
+    // =================================================================
+    // --- 4. RIWAYAT PENGHARGAAN ---
+    // =================================================================
+    Route::prefix('karyawan/{karyawan}/penghargaan')->name('karyawan.penghargaan.')->group(function () {
+        Route::get('/create', [RiwayatPenghargaanController::class, 'create'])->name('create');
+        Route::post('/', [RiwayatPenghargaanController::class, 'store'])->name('store');
+    });
+
+    Route::prefix('penghargaan')->name('penghargaan.')->group(function () {
+        // Parameter {penghargaan} sesuai controller: edit(RiwayatPenghargaan $penghargaan)
+        Route::get('/{penghargaan}/edit', [RiwayatPenghargaanController::class, 'edit'])->name('edit');
+        Route::put('/{penghargaan}', [RiwayatPenghargaanController::class, 'update'])->name('update');
+        Route::delete('/{penghargaan}', [RiwayatPenghargaanController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

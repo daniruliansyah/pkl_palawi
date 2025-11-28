@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('tmt_gol', 50)->nullable(); 
             $table->string('no_sk', 100)->nullable(); 
             $table->date('tgl_sk', 4)->nullable();
-
+            $table->string('link_berkas')->nullable();
             $table->timestamps(); // created_at dan updated_at
         });
 
