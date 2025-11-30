@@ -134,12 +134,11 @@ class CutiController extends Controller
             'keterangan' => 'required|string',
             'file_izin' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048|required_if:jenis_izin,Cuti Sakit',
             'alamat_saat_cuti' => 'required|string|max:255',
-            'no_hp_saat_cuti' => 'required|string|max:20',
+            'no_hp_saat_cuti' => 'required|string|max:13',
         ];
 
-        if ($request->input('jenis_izin') !== 'Cuti Sakit') {
-
-            $rules['tgl_mulai'] = 'required|date|after:' . $minDateCutiBiasa;
+        if ($request->input('jenis_izin') !== 'Cuti Sakit' && $request->input('jenis_izin') !== 'Cuti Bersalin') {
+        $rules['tgl_mulai'] = 'required|date|after:' . $minDateCutiBiasa;
         }
 
         if ($user->isKaryawanBiasa()) {
@@ -588,8 +587,8 @@ class CutiController extends Controller
     private function isCutiMengurangiJatah(string $jenisIzin, bool $adaFile): bool
     {
         // Cuti Sakit dengan dokumen pendukung TIDAK mengurangi jatah cuti tahunan.
-        if ($jenisIzin === 'Cuti Sakit' && $adaFile) {
-            return false;
+        if (($jenisIzin === 'Cuti Sakit' || $jenisIzin === 'Cuti Bersalin') && $adaFile) {
+        return false;
         }
 
         // Semua jenis cuti lainnya (Cuti Tahunan, Cuti Besar, Cuti Bersalin, Cuti Alasan Penting, atau Cuti Sakit tanpa file)
