@@ -72,7 +72,7 @@
         {{-- Teks Sapaan (Posisi Kanan - Jarak Dipertahankan Lebar) --}}
         <div class="flex-grow pt-4 md:ml-12">
             <h1 class="text-3xl font-bold text-green-800 dark:text-green-800 mb-2">
-                {{ $greeting }}, {{ $user->name ?? 'User' }}
+                {{ $greeting }}, {{ $user->nama_lengkap ?? 'User' }}
             </h1>
 
             <p class="text-3xl sm:text-4xl text-gray-800 dark:text-gray-200 font-semibold">
