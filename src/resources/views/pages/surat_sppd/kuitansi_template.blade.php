@@ -113,36 +113,140 @@
             font-style: italic;
         }
     </style>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kuitansi Pembayaran SPPD - {{ $sppd->no_surat }}</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10px;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* === FIX KOP SURAT AGAR CENTER SEMPURNA === */
+        .header-wrapper {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+        }
+        .logo-cell {
+            width: 20%;
+        }
+        .logo-image {
+            max-height: 70px;
+        }
+        .header-center {
+            flex: 1;
+            text-align: center;
+        }
+        .header-right {
+            width: 20%;
+        }
+
+        .title-box {
+            background-color: black;
+            color: white;
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        /* CSS lainnya tetap milik kamu */
+        .info-section { width: 100%; margin-top: 15px; }
+        .info-section .left-info, .info-section .right-info { width: 48%; vertical-align: top; padding: 5px; }
+        .info-section .right-info table { width: 100%; border-collapse: collapse; }
+        .info-section .right-info td, .info-section .right-info th { border: 1px solid black; padding: 4px; }
+
+        .amount-section {
+            width: 100%;
+            border: 1px solid #000;
+            padding: 5px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        table.main-details {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table.main-details th, table.main-details td {
+            border: 1px solid black;
+            padding: 5px;
+        }
+        table.main-details th { background-color: #f2f2f2; text-align: center; }
+        .text-right { text-align: right; }
+
+        .signature-section { width: 100%; margin-top: 20px; }
+        .signature-section table { width: 100%; border-collapse: collapse; }
+        .signature-section td { border: 1px solid black; padding: 5px; text-align: center; font-size: 9px; }
+        .signature-space { height: 50px; }
+
+        .footer-note {
+            margin-top: 5px;
+            font-size: 8px;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-        {{-- helper embed image --}}
-    @php
-    $embed = function($relativePath) {
-        $full = public_path($relativePath);
-        if (!file_exists($full)) {
-            return '';
-        }
-        $mime = @mime_content_type($full) ?: 'image/png';
-        $data = base64_encode(file_get_contents($full));
-        return "data:{$mime};base64,{$data}";
-    };
-    @endphp
-    <div class="container">
-        <table class="header-table">
-            <tr>
-                <td class="logo-cell">
-                    <img src="{{ $embed('images/logo2.jpg') }}" alt="Logo" class="logo-image" style="width: 100px;">
-                </td>
-                <td class="company-details">
-                    <h1>PT. PERHUTANI ALAM WISATA</h1>
-                    <p>(PALAWI RISORSIS)</p>
-                </td>
-            </tr>
-        </table>
 
-        <div class="title-box">
-            KWITANSI PEMBAYARAN
-        </div>
+@php
+$embed = function($relativePath) {
+    $full = public_path($relativePath);
+    if (!file_exists($full)) return '';
+    $mime = @mime_content_type($full) ?: 'image/png';
+    $data = base64_encode(file_get_contents($full));
+    return "data:{$mime};base64,{$data}";
+};
+@endphp
+
+<div class="container">
+
+    <!-- ======================= -->
+    <!-- KOP SURAT FIXED CENTER  -->
+    <!-- ======================= -->
+<table style="width:100%; border-bottom:2px solid black; padding-bottom:10px;">
+    <tr>
+
+        <!-- Kolom Logo -->
+        <td style="width:18%; text-align:left; vertical-align:middle;">
+            <img src="{{ $embed('images/logo2.jpg') }}"
+                 alt="Logo"
+                 style="height:70px; margin-left:5px;">
+        </td>
+
+        <!-- Kolom Teks (colspan 2) — ini yang bikin center sempurna -->
+        <td colspan="2" style="text-align:center; font-weight:bold;">
+
+            <div>PT. PERHUTANI ALAM WISATA RISORSIS</div>
+            <div>AREA BISNIS WISATA WILAYAH TIMUR</div>
+            <div>GRAHA PERHUTANI SURABAYA</div>
+            <div>JL. GENTENGKALI NO. 49 SURABAYA</div>
+
+            <div style="margin-top:6px; font-weight:bold;">
+                SURAT PERINTAH PERJALANAN DINAS
+            </div>
+
+        </td>
+
+        <!-- Kolom dummy kanan: penyeimbang visual -->
+        <td style="width:18%;"></td>
+
+    </tr>
+</table>
+
+    <div class="title-box">KWITANSI PEMBAYARAN</div>
 
         <table class="info-section">
             <tr>
@@ -195,10 +299,6 @@
             <strong>Banyaknya Uang :</strong>
 
             @if(function_exists('terbilang'))
-                {{--
-                  Helper 'terbilang()' akan menghasilkan: "enam puluh ribu"
-                  Kita tambahkan ucwords() agar jadi: "Enam Puluh Ribu"
-                --}}
                 <i>*{{ ucwords(terbilang($total)) }} Rupiah*</i>
             @else
                 <i>*Helper 'terbilang' (riskihajar/terbilang) tidak ditemukan.*</i>
