@@ -1,3 +1,9 @@
+@php
+// Cek satu kali apakah user yang sedang melihat halaman ini adalah SDM
+// (Senior Analis Keuangan, SDM & Umum)
+$isUserSdm = Auth::user() && Auth::user()->isSdm();
+@endphp
+
 <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 shadow-sm sm:px-6">
     {{-- Header: Judul dan Tombol Aksi --}}
     <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -6,11 +12,13 @@
                 Riwayat Gaji untuk: <span class="text-blue-600">{{ $user->nama_lengkap }}</span>
             </h3>
         </div>
+        @if ($isUserSdm)
         <div>
             <a href="{{ route('gaji.create', $user->id) }}" class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
                 Buat Gaji Baru
             </a>
         </div>
+        @endif
     </div>
 
     {{-- Tabel Riwayat Gaji --}}
@@ -49,6 +57,7 @@
                                 </a>
                                 
                                 {{-- Tombol Hapus Gaji --}}
+                                @if ($isUserSdm)
                                 <form action="{{ route('gaji.destroy', $gaji->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menghapus data gaji ini?');">
                                     @csrf
                                     @method('DELETE')
@@ -56,6 +65,7 @@
                                         Hapus
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
