@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('no_surat', 100)->nullable();
             $table->string('file_izin', 255)->nullable();
             $table->string('file_surat', 255)->nullable(); // Menambahkan kolom file_surat (ada di model Anda)
+            $table->string('alamat_saat_cuti', 255)->nullable();
+            $table->string('no_hp_saat_cuti', 13)->nullable();
 
             // Kolom Foreign Key untuk User dan Approvers
             $table->string('nip_user', 20); // NIP Karyawan yang mengajukan

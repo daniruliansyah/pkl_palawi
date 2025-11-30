@@ -122,7 +122,7 @@
         const minDateOtherLeave = '{{ Carbon\Carbon::now()->addDays(3)->toDateString() }}';
 
         function toggleFileInputRequirement() {
-            if (jenisIzinSelect.value === 'Cuti Sakit') {
+            if (jenisIzinSelect.value === 'Cuti Sakit'|| jenisIzinSelect.value === 'Cuti Bersalin') {
                 fileLabelInfo.innerHTML = '<span class="text-red-500">(Wajib)</span>';
             } else {
                 fileLabelInfo.textContent = '(Opsional)';
@@ -132,7 +132,7 @@
 
         function updateMinDate() {
             let minDate;
-            if (jenisIzinSelect.value === 'Cuti Sakit') {
+            if (jenisIzinSelect.value === 'Cuti Sakit' || jenisIzinSelect.value === 'Cuti Bersalin') {
                 minDate = today;
             } else {
                 minDate = minDateOtherLeave;

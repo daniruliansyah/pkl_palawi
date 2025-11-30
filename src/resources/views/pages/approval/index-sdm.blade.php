@@ -125,6 +125,7 @@
                         <th class="py-3 px-4 font-medium">Pemohon</th>
                         <th class="py-3 px-4 font-medium">Jenis Izin</th>
                         <th class="py-3 px-4 font-medium">Tanggal Cuti</th>
+                        <th class="py-3 px-4 font-medium">Keputusan Anda</th>
                         <th class="py-3 px-4 font-medium">Status Final</th>
                         <th class="py-3 px-4 font-medium text-center">Aksi</th>
                     </tr>
@@ -136,10 +137,20 @@
                             <td class="px-4 py-3 text-gray-700">{{ $cuti->jenis_izin }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ \Carbon\Carbon::parse($cuti->tgl_mulai)->format('d M Y') }}</td>
                             <td class="px-4 py-3">
+                                <span @class([
+                                    'px-2 py-1 text-xs font-medium rounded-full',
+                                    'bg-green-100 text-green-800' => $cuti->status_sdm == 'Disetujui',
+                                    'bg-red-100 text-red-800' => $cuti->status_sdm == 'Ditolak',
+                                ])>{{ $cuti->status_sdm }}</span>
+                                @if($cuti->tgl_persetujuan_sdm)
+                                <span class="block text-xs text-gray-400 mt-1">{{ \Carbon\Carbon::parse($cuti->tgl_persetujuan_sdm)->format('d M Y') }}</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
                                 @if($cuti->status_gm == 'Disetujui')
                                     <span class="font-semibold text-green-600">Disetujui</span>
                                 @else
-                                    <span class="font-semibold text-red-600">Ditolak</span>
+                                    <span class="font-semibold text-yellow-600">Menunggu</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-center">

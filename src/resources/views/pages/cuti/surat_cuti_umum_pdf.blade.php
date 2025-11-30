@@ -137,8 +137,8 @@
         <li>
             <table class="details-table" style="margin-top: 3px; width: 85%;">
                 <tr><td>Keperluan Cuti</td><td>:</td><td>{{ $cuti->keterangan }}</td></tr>
-                <tr><td>Alamat</td><td>:</td><td><b>{{ $karyawan->alamat ?? '...' }}</b></td></tr>
-                <tr><td>No HP</td><td>:</td><td><b>{{ $karyawan->no_telp ?? '...' }}</b></td></tr>
+                <tr><td>Alamat</td><td>:</td><td><b>{{ $cuti->alamat_saat_cuti ?? '...' }}</b></td></tr>
+                <tr><td>No HP</td><td>:</td><td><b>{{ $cuti->no_hp_saat_cuti ?? '...' }}</b></td></tr>
             </table>
         </li>
     </ol>

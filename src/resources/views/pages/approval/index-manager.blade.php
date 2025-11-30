@@ -162,8 +162,8 @@
                                         $color = 'text-red-600';
                                     } elseif ($cuti->status_manager == 'Disetujui') {
                                         // INI YANG ANDA MAKSUD:
-                                        $statusFinal = 'Menunggu Persetujuan GM'; 
-                                        $color = 'text-blue-600';
+                                        $statusFinal = 'Menunggu Persetujuan'; 
+                                        $color = 'text-yellow-600';
                                     }
                                 }
                                 // Cek Alur 5 (Pemohon GM)

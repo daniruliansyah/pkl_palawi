@@ -24,6 +24,8 @@ class Cuti extends Model
         'keterangan',
         'file_izin',
         'tgl_upload',
+        'alamat_saat_cuti',
+        'no_hp_saat_cuti',
         'no_surat',
         'nip_user_ssdm',
         'nip_user_sdm',

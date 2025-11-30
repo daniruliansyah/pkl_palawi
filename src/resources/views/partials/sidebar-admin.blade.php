@@ -9,6 +9,7 @@
     $isSeniorSDM = false;
     $isStaffSDM = false;
     $isGM = false;
+    $isSenior = false;
     $isManager = false; // <-- 1. DEKLARASIKAN VARIABEL BARU
 
     if ($user && $user->jabatanTerbaru && $user->jabatanTerbaru->jabatan) {
@@ -26,6 +27,7 @@
         if ($hasSenior && $hasSDM) $isSeniorSDM = true;
         if ($hasStaff && $hasSDM) $isStaffSDM = true;
         if ($hasGM) $isGM = true;
+        if ($hasSenior) $isSenior = true; 
 
         // <-- 3. SET VARIABEL MANAGER
         // Cek apakah dia punya kata 'manager' TAPI BUKAN 'general manager'
@@ -88,7 +90,9 @@
             @if (!$isGM) {{-- <-- TAMBAHKAN BARIS INI --}}
             <li><a href="{{ route('cuti.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Pengajuan Izin</a></li>
             @endif {{-- <-- TAMBAHKAN BARIS INI --}}
+            @if ($isGM || $isStaffSDM || $isSeniorSDM || $isManager || $isSenior) {{-- <-- TAMBAHKAN BARIS INI --}}
             <li><a href="{{ route('approvals.index') }}" class="p-2 rounded hover:bg-green-50 transition-colors text-gray-700 hover:text-gray-900 block">Daftar Surat Cuti</a></li>
+            @endif {{-- <-- TAMBAHKAN BARIS INI --}}
           </ul>
         </li>
 

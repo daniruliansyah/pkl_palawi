@@ -88,7 +88,7 @@ Ajukan Cuti Baru
                                     $statusSdm = ($cuti->status_ssdm == 'Ditolak') ? 'Ditolak' : $cuti->status_sdm;
                                 } else {
                                     // Jika user ADALAH SDM, status_sdm di-bypass
-                                    $statusSdm = $cuti->status_sdm;
+                                    $statusSdm = $cuti->status_manager;
                                 }
                             @endphp
                             <span @class([
@@ -106,7 +106,7 @@ Ajukan Cuti Baru
                             @php
                                 // Untuk user SDM, status_ssdm dan status_sdm di-bypass.
                                 // Status Manager adalah yang relevan.
-                                $statusManager = $cuti->status_manager;
+                                $statusManager = $cuti->status_gm;
                             @endphp
                             <span @class([
                                 'px-2 py-1 text-xs font-medium rounded-full',
@@ -119,6 +119,7 @@ Ajukan Cuti Baru
                     @endif
 
                     {{-- Status GM --}}
+                    @if(!$isUserSdm)
                     <td class="px-4 py-3">
                         @php
                             // PERUBAHAN 3: Sesuaikan logika status GM
@@ -138,6 +139,7 @@ Ajukan Cuti Baru
                             'bg-gray-100 text-gray-800' => $statusGm == 'Menunggu',
                         ])>{{ $statusGm }}</span>
                     </td>
+                    @endif
                     
                     {{-- Status Final --}}
                     <td class="px-4 py-3">
