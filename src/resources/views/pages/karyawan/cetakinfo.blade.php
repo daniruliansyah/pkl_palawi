@@ -4,66 +4,88 @@
     <meta charset="utf-8">
     <title>Detail Data Karyawan - {{ $karyawan->nama_lengkap }}</title>
     <style>
-        /* CSS Dasar */
-        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #333; line-height: 1.3; margin-top: 0; }
-        
-        /* Header Laporan (Format Kop Surat) */
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-bottom: 3px double #333; padding-bottom: 10px; }
-        .header-logo { width: 15%; vertical-align: middle; text-align: left; }
-        .header-text { width: 85%; vertical-align: middle; text-align: center; padding-right: 15%; }
-        
-        .logo-image { width: 90px; height: auto; display: block; }
-        
-        .header h1 { margin: 0; font-size: 18pt; text-transform: uppercase; font-weight: bold; }
-        .header p { margin: 2px 0; font-size: 11pt; }
+        /* ... (CSS sebelumnya, termasuk .watermark, dipertahankan) ... */
+        @page { margin: 18mm 25mm 25mm 25mm; }
+        body { position: relative; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #333; line-height: 1.3; margin-top: 0; }
 
-        /* Judul Per Bagian */
-        .section-title { 
-            background-color: #eeeeee; 
-            padding: 6px 10px; 
-            font-weight: bold; 
-            font-size: 12pt; 
-            margin-top: 20px; 
+        .watermark { position: fixed; top: 50%; left: 35%; width: 350px; height: auto; opacity: 0.08; transform: translate(-50%, -50%); z-index: -1; }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border-bottom: 3px double #333;
+            padding-bottom: 5px;
+        }
+        .header-logo {
+            width: 20%;
+            vertical-align: middle;
+            text-align: left;
+        }
+        .header-text {
+            width: 60%;
+            vertical-align: middle;
+            text-align: center;
+            padding: 0 5px;
+        }
+        .header-spacer {
+            width: 20%;
+        }
+        .logo-image {
+            max-height: 70px;
+            width: auto;
+            display: block;
+        }
+
+        .header h1 { margin: 0; font-size: 14pt; text-transform: uppercase; font-weight: bold; line-height: 1.1; }
+        .header p { margin: 2px 0; font-size: 11pt; line-height: 1.1; }
+        .header .sub-title { font-weight: bold; font-size: 11pt; }
+        .header .address { font-size: 9pt; }
+
+        .section-title {
+            background-color: #eeeeee;
+            padding: 6px 10px;
+            font-weight: bold;
+            font-size: 12pt;
+            margin-top: 20px;
             margin-bottom: 10px;
             border-left: 5px solid #333;
             text-transform: uppercase;
-            page-break-after: avoid; /* Mencegah judul terpisah dari tabelnya */
+            page-break-after: avoid;
         }
 
         /* Container Info Personal */
         .profile-container { width: 100%; margin-bottom: 10px; border-collapse: collapse; }
         .photo-col { width: 130px; vertical-align: top; }
         .info-col { vertical-align: top; padding-left: 10px; }
-        
-        .photo-img { 
-            width: 120px; 
-            height: 150px; 
-            object-fit: cover; 
-            border: 1px solid #999; 
+
+        .photo-img {
+            width: 120px;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid #999;
             padding: 3px;
             background: #fff;
         }
 
-        /* Tabel Data Baris */
         .info-table { width: 100%; border-collapse: collapse; }
         .info-table td { padding: 3px 0; vertical-align: top; }
         .label { font-weight: bold; width: 140px; color: #555; }
 
-        /* Tabel List Data */
         .data-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 5px; page-break-inside: auto; }
         .data-table tr { page-break-inside: avoid; page-break-after: auto; }
-        .data-table th, .data-table td { 
-            border: 1px solid #999; 
-            padding: 6px 8px; 
-            text-align: left; 
-            vertical-align: top; 
+        .data-table th, .data-table td {
+            border: 1px solid #999;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
         }
-        .data-table th { 
-            background-color: #e0e0e0; 
-            font-weight: bold; 
+        .data-table th {
+            background-color: #e0e0e0;
+            font-weight: bold;
             text-align: center;
         }
-        
+
         .text-center { text-align: center; }
         .text-muted { color: #666; font-size: 9pt; font-style: italic; }
         .mb-1 { margin-bottom: 4px; display: block; }
@@ -71,35 +93,61 @@
 </head>
 <body>
 
+    {{-- HELPER FUNCTION EMBED DITAMBAHKAN DI SINI --}}
+    @php
+    $embed = function($relativePath) {
+        // Gunakan base_path() atau public_path() sesuai konfigurasi environment Laravel Anda
+        $full = public_path($relativePath);
+        // Jika Anda menggunakan Dompdf di lingkungan tertentu, mungkin perlu path absolut:
+        // $full = base_path('public/' . $relativePath);
+
+        if (!file_exists($full)) {
+            // Log error jika file tidak ditemukan
+            // error_log("File not found: " . $full);
+            return '';
+        }
+        // Mendapatkan MIME type dan meng-encode gambar ke Base64
+        $mime = @mime_content_type($full) ?: 'image/png';
+        $data = base64_encode(file_get_contents($full));
+        return "data:{$mime};base64,{$data}";
+    };
+    @endphp
+
+    {{-- 1. WATERMARK --}}
+    {{-- Asumsi path watermark Anda adalah 'images/watermark.png' atau sejenisnya. Sesuaikan jika beda. --}}
+    <img src="{{ $embed('images/logo2.jpg') }}" class="watermark" alt="Watermark">
+
     {{-- HEADER (Format Kop Surat dengan Logo) --}}
     <table class="header-table">
         <tr>
             <td class="header-logo">
-                @if(isset($logo) && $logo)
-                    <img src="{{ $logo }}" alt="Logo" class="logo-image">
-                @else
-                    <b>LOGO</b>
-                @endif
+                {{-- 2. LOGO KOP SURAT --}}
+                {{-- Memanggil logo menggunakan fungsi embed --}}
+                <img src="{{ $embed('images/logo2.jpg') }}" alt="Logo" class="logo-image">
             </td>
             <td class="header-text">
                 <div class="header">
-                    <h1>PT PALAWI RISORSIS</h1>
-                    <p style="font-weight: bold;">Area Bisnis Wisata Wilayah Timur</p>
-                    <p>Laporan Detail Data Karyawan</p>
+                    <p style="font-weight:bold; text-transform:uppercase; font-size:12pt;">PT. PALAWI RISORSIS</p>
+                    <p style="font-weight:bold; text-transform:uppercase; font-size:12pt;">Area Bisnis Wisata Wilayah Timur</p>
+                    <p style="font-weight:bold; text-transform:uppercase; font-size:12pt;">GRAHA PERHUTANI SURABAYA</p>
+                    <p class="address">JL. GENTENGKALI NO. 49 SURABAYA</p>
+                    <p style="font-weight:bold; font-size:12pt; margin-top:6px;">LAPORAN DETAIL DATA KARYAWAN</p>
                 </div>
             </td>
+            <td class="header-spacer"></td>
         </tr>
     </table>
 
+
     {{-- 1. INFORMASI PERSONAL --}}
     <div class="section-title">Informasi Personal</div>
-    
+
     <table class="profile-container">
         <tr>
             <td class="photo-col">
                 @php
                     $path = $karyawan->foto ? public_path('storage/' . $karyawan->foto) : public_path('images/default.png');
-                    $fotoSrc = file_exists($path) ? $path : public_path('images/default.png'); 
+                    $fotoSrc = file_exists($path) ? $path : public_path('images/default.png');
                 @endphp
                 <img src="{{ $fotoSrc }}" class="photo-img" alt="Foto">
             </td>
@@ -144,7 +192,7 @@
                 </td>
                 <td>{{ $riwayat->area_bekerja }}</td>
                 <td>
-                    {{ \Carbon\Carbon::parse($riwayat->tgl_mulai)->format('d/m/Y') }} - 
+                    {{ \Carbon\Carbon::parse($riwayat->tgl_mulai)->format('d/m/Y') }} -
                     @if ($riwayat->tgl_selesai)
                         {{ \Carbon\Carbon::parse($riwayat->tgl_selesai)->format('d/m/Y') }}
                     @else
@@ -321,7 +369,7 @@
 
     {{-- Footer Tanggal Cetak --}}
     <div style="margin-top: 50px; text-align: right; font-size: 10pt;">
-        <p>Dicetak pada: {{ now()->locale('id')->translatedFormat('l, d F Y H:i') }} WIB</p>
+        <p>Dicetak pada: {{ now()->locale('id')->translatedFormat('d F Y') }}</p>
     </div>
 
 </body>

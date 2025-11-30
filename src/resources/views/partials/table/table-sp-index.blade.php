@@ -29,21 +29,21 @@
                     <tr class="hover:bg-gray-50">
                         {{-- Nomor Surat --}}
                         <td class="px-4 py-3 text-gray-500">{{ $sp->no_surat ?? '-' }}</td>
-                        
+
                         {{-- Nama Karyawan (menggunakan relasi user) --}}
                         <td class="px-4 py-3 text-gray-700">
                             {{ $sp->user->nama_lengkap ?? $sp->nip_user }}
                         </td>
-                        
+
                         {{-- Tanggal SP Terbit --}}
                         <td class="px-4 py-3 text-gray-500">{{ \Carbon\Carbon::parse($sp->tgl_sp_terbit)->format('d-m-Y') }}</td>
-                        
+
                         {{-- Tanggal Mulai --}}
                         <td class="px-4 py-3 text-gray-500">{{ \Carbon\Carbon::parse($sp->tgl_mulai)->format('d-m-Y') }}</td>
-                        
+
                         {{-- Tanggal Selesai --}}
                         <td class="px-4 py-3 text-gray-500">{{ \Carbon\Carbon::parse($sp->tgl_selesai)->format('d-m-Y') }}</td>
-                        
+
                         {{-- Aksi (Download File) --}}
                         <td class="px-4 py-3 text-center">
                             @if($sp->file_sp)
