@@ -62,8 +62,8 @@ Pastikan Anda telah menginstal:
 
 1. **Clone Repository**
    ```bash
-   git clone [https://github.com/username/palawi-hris.git](https://github.com/username/palawi-hris.git)
-   cd palawi-hris
+   git clone [https://github.com/daniruliansyah/pkl_palawi.git](https://github.com/daniruliansyah/pkl_palawi.git)
+   cd pkl_palawi/src
    ```
 
 2. **Install Dependencies (Backend)**
