@@ -40,10 +40,13 @@ Sistem pengajuan cuti digital dengan mekanisme persetujuan berjenjang (Multi-lev
 2. **SDM** (Approval Tahap 2)
 3. **General Manager** (Final Approval)
 
-### ✈️ 4. Pengajuan Surat Perjalanan Dinas / SPD (Nadea Yiyian Salsabila)
+### ✈️ 4. Pengajuan Surat Perjalanan Dinas / SPPD (Nadea Yiyian Salsabila)
 Fasilitas bagi karyawan untuk mengajukan permohonan dinas luar kota. Sistem secara otomatis mengarahkan permintaan persetujuan kepada atasan yang memberikan perintah dinas.
 
-### ⚠️ 5. Pembuatan Surat Peringatan (SP)
+### ⚠️ 5. Pembuatan Bukti Transaksi Surat Perjalan Dinas /SPPD (Shofie Cilia Hermawan)
+Pencatatan transaksi selama perjalanan dinas yang dilakukan oleh karyawan
+
+### ⚠️ 6. Pembuatan Surat Peringatan (SP)
 Modul untuk pembuatan dan pencatatan Surat Peringatan secara digital sebagai bagian dari manajemen kedisiplinan karyawan.
 
 ---
