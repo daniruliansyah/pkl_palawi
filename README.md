@@ -19,7 +19,7 @@ Proyek ini dikembangkan oleh kelompok yang terdiri dari 3 anggota dengan pembagi
 | Nama Anggota | Peran & Tanggung Jawab Fitur |
 | :--- | :--- |
 | **Dani Ruliansyah** | Manajemen Data Karyawan & Manajemen Gaji (Payroll) |
-| **Shofie Ciliah Hermawan** | Pengajuan Surat Cuti (Multi-Level Approval) |
+| **Shofie Cilia Hermawan** | Pengajuan Surat Cuti (Multi-Level Approval) |
 | **Nadea Yiyian Salsabila** | Pengajuan Surat Perjalanan Dinas (SPD) |
 
 ---
@@ -34,10 +34,10 @@ Pusat database karyawan yang terintegrasi, memungkinkan pengelolaan data pribadi
 ### 💰 2. Manajemen Gaji / Payroll (Dani Ruliansyah)
 Sistem penggajian otomatis yang mengakomodasi perhitungan kompleks, termasuk **13 jenis potongan gaji** yang telah disesuaikan dengan regulasi dan data dari pimpinan SDM Head Office (HO).
 
-### 📅 3. Pengajuan Surat Cuti (Shofie Ciliah Hermawan)
+### 📅 3. Pengajuan Surat Cuti (Shofie Cilia Hermawan)
 Sistem pengajuan cuti digital dengan mekanisme persetujuan berjenjang (Multi-level approval):
 1. **Senior Divisi** (Approval Tahap 1)
-2. **SDM / HRD** (Approval Tahap 2)
+2. **SDM** (Approval Tahap 2)
 3. **General Manager** (Final Approval)
 
 ### ✈️ 4. Pengajuan Surat Perjalanan Dinas / SPD (Nadea Yiyian Salsabila)
